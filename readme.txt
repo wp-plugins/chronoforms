@@ -1,7 +1,7 @@
 === Plugin Name ===
 Tags: forms, email, file uploads, JavaScript, CSS, Auto Responder, Captcha, ReCaptcha, contact, Drag and drop, Security, Validtaion, Bootstrap
 Requires at least: 3.0
-Tested up to: 3.8
+Tested up to: 3.9.1
 Stable tag: 1.0.0
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl.html
