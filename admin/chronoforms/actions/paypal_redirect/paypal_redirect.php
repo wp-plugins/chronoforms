@@ -82,7 +82,12 @@ Class PaypalRedirect extends \GCore\Admin\Extensions\Chronoforms\Action{
 		if(strlen(trim($config->get('extra_params', '')))){
 			$extras = \GCore\Libs\Str::list_to_array($config->get('extra_params', ''));
 			foreach($extras as $k => $v){
-				$checkout_values[$k] = $form->data($v);
+				$v = str_replace(array('{', '}'), '', $v);
+				if(substr($v, 0, 1) == '"' AND substr($v, -1, 1) == '"'){
+					$checkout_values[$k] = substr($v, 1, -1);
+				}else{
+					$checkout_values[$k] = $form->data($v);
+				}
 			}
 		}
 
@@ -130,7 +135,7 @@ Class PaypalRedirect extends \GCore\Admin\Extensions\Chronoforms\Action{
 		echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][country]', array('type' => 'text', 'label' => l_('CF_PAYPAL_COUNTRY'), 'class' => 'M', 'sublabel' => l_('CF_PAYPAL_COUNTRY_DESC')));
 		echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][night_phone_a]', array('type' => 'text', 'label' => l_('CF_PAYPAL_PHONE'), 'class' => 'M', 'sublabel' => l_('CF_PAYPAL_PHONE_DESC')));
 		echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][custom]', array('type' => 'text', 'label' => l_('CF_PAYPAL_CUSTOM'), 'class' => 'M', 'sublabel' => l_('CF_PAYPAL_CUSTOM_DESC')));
-		echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][extra_params]', array('type' => 'textarea', 'label' => l_('CF_PAYPAL_EXTRA_PARAMS'), 'rows' => 5, 'cols' => 40, 'sublabel' => l_('CF_PAYPAL_EXTRA_PARAMS_DESC')));
+		echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][extra_params]', array('type' => 'textarea', 'label' => l_('CF_PAYPAL_EXTRA_PARAMS'), 'rows' => 5, 'cols' => 40, 'sublabel' => l_('CF_PAYPAL_EXTRA_PARAMS_DESC').l_('CF_EXTRA_PARAMS_LIST_DESC')));
 		echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][no_shipping]', array('type' => 'dropdown', 'label' => l_('CF_PAYPAL_NO_SHIPPING'), 'options' => array(0 => l_('NO'), 1 => l_('YES')), 'sublabel' => l_('CF_PAYPAL_NO_SHIPPING_DESC')));
 		echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][no_note]', array('type' => 'dropdown', 'label' => l_('CF_PAYPAL_NO_NOTE'), 'options' => array(0 => l_('NO'), 1 => l_('YES')), 'sublabel' => l_('CF_PAYPAL_NO_NOTE_DESC')));
 		echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][debug_only]', array('type' => 'dropdown', 'label' => l_('CF_PAYPAL_DEBUG'), 'options' => array(0 => l_('NO'), 1 => l_('YES')), 'sublabel' => l_('CF_PAYPAL_DEBUG_DESC')));

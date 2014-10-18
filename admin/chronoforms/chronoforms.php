@@ -34,6 +34,8 @@ class Chronoforms extends \GCore\Libs\GController {
 				$session->setFlash('error', "Your ChronoForms installation on <strong>".$domain."</strong> is NOT validated.");
 			}
 		}
+		parent::_settings('chronoforms');
+		$this->set('chronoforms_settings', new \GCore\Libs\Parameter($this->data['Chronoforms']));
 	}
 
 	function toggle(){
@@ -95,6 +97,9 @@ class Chronoforms extends \GCore\Libs\GController {
 			);
 			$this->data['Form']['extras']['actions_config'][6]['fonts'] = 1;
 			$this->data['Form']['extras']['actions_config'][2]['enabled'] = 0;
+			$this->data['Form']['extras']['actions_config'][9]['enabled'] = 0;
+			$this->data['Form']['extras']['actions_config'][11]['enabled'] = 0;
+			$this->data['Form']['extras']['actions_config'][12]['enabled'] = 0;
 			$this->data['Form']['extras']['actions_config'][13]['enabled'] = 1;
 		}
 		parent::_settings('chronoforms');
@@ -121,11 +126,17 @@ class Chronoforms extends \GCore\Libs\GController {
 	}
 
 	function save(){
+		$session = \GCore\Libs\Base::getSession();
 		parent::_settings('chronoforms');
 		$chronoforms_settings = new \GCore\Libs\Parameter($this->data['Chronoforms']);
 		if($chronoforms_settings->get('wizard.safe_save', 1)){
 			$s_form = array();
 			//parse_str($this->data['serialized_form_data'], $s_form);
+			if(!empty($this->data['serialized_form_data_chunks'])){
+				$chunks = $this->data['serialized_form_data_chunks'];
+				$this->data['serialized_form_data'] = implode('', $chunks);
+			}
+			
 			$pairs = explode('&', $this->data['serialized_form_data']);
 			$result = array();
 			foreach($pairs as $pair){
@@ -138,10 +149,18 @@ class Chronoforms extends \GCore\Libs\GController {
 				//check if the last path item is numeric, then its an array of values
 				if(is_numeric($new_path[count($new_path) - 1])){
 					$value = \GCore\Libs\Arr::getVal($dummy, $new_path);
+					$last_numeric_index = $new_path[count($new_path) - 1];
 					unset($new_path[count($new_path) - 1]);
 					$existing_results = (array)\GCore\Libs\Arr::getVal($result, $new_path, array());
-					$existing_results[] = $value;
+					if(!in_array($last_numeric_index, array_keys($existing_results))){
+						$existing_results[$last_numeric_index] = $value;
+					}else{
+						$existing_results[] = $value;	
+					}
 					$result = \GCore\Libs\Arr::setVal($result, $new_path, $existing_results);
+					continue;
+				}
+				if(in_array('{N}', $new_path) !== false){
 					continue;
 				}
 				$result = \GCore\Libs\Arr::setVal($result, $new_path, \GCore\Libs\Arr::getVal($dummy, $new_path));
@@ -156,12 +175,12 @@ class Chronoforms extends \GCore\Libs\GController {
 			if($this->Request->get('save_act') == 'apply'){
 				$this->redirect(r_('index.php?ext=chronoforms&act=edit&id='.$this->Form->id));
 			}else{
+				$session->setFlash('success', sprintf(l_('CF_FORM_X_HAS_BEEN_UPDATED'), $this->data['Form']['title']));
 				$this->redirect(r_('index.php?ext=chronoforms'));
 			}
 		}else{
 			$this->edit();
 			$this->view = 'edit';
-			$session = \GCore\Libs\Base::getSession();
 			$session->setFlash('error', \GCore\Libs\Arr::flatten($this->Form->errors));
 		}
 	}
@@ -578,7 +597,7 @@ class Chronoforms extends \GCore\Libs\GController {
 		$list_model = '\GCore\Models\ListData';
 		$this->delete_model = $list_model::getInstance();
 		parent::_delete();
-		$this->redirect(r_('index.php?ext=chronoforms&act=list_data&table='.$this->data['table']));
+		$this->redirect(r_('index.php?ext=chronoforms&act=list_data&table='.$this->data['table'].'&form_id='.$this->Request->data('form_id', '')));
 	}
 
 	function backup_data(){
@@ -593,6 +612,36 @@ class Chronoforms extends \GCore\Libs\GController {
 		$exporter = new \GCore\Admin\Extensions\Chronoforms\Actions\CsvExport\CsvExport();
 		$exporter->execute($form, 0);
 	}
+	
+	function backup_records(){
+		if(empty($this->data['table'])){
+			$session = \GCore\Libs\Base::getSession();
+			$session->setFlash('error', l_('CF_NO_TABLES_SELECTED'));
+			$this->redirect(r_('index.php?ext=chronoforms'));
+		}
+		
+		\GCore\Libs\Model::generateModel('ListData', array('tablename' => $this->data['table']));
+		$list_model = '\GCore\Models\ListData';
+		$list = $list_model::getInstance()->find('all', array('conditions' => array($list_model::getInstance()->pkey => $this->data['gcb'])));
+		$rows = array();
+		foreach($list as $i){
+			$rows[] = $i['ListData'];
+		}
+		
+		$form = new \stdClass();
+		$form->actions_config[0] = array('data_path' => 'ListData', 'enabled' => 1);
+		$form->data['ListData'] = $rows;
+		$exporter = new \GCore\Admin\Extensions\Chronoforms\Actions\CsvExport\CsvExport();
+		$exporter->execute($form, 0);
+	}
+	
+	function action_task(){
+		$action = \GCore\Libs\Str::camilize($this->data['action_name']);
+		$fn = $this->data['action_fn'];
+		$class = '\GCore\Admin\Extensions\Chronoforms\Actions\\'.$action.'\\'.$action;
+		$class = new $class();
+		$class->$fn($this->data);
+	}
 
 	function page_settings(){
 
@@ -601,6 +650,16 @@ class Chronoforms extends \GCore\Libs\GController {
 	function render_field(){
 		if(!empty($this->data['Form']['extras']['fields'])){
 			$config = array_values($this->data['Form']['extras']['fields']);
+			/*
+			$ids = array_keys($this->data['Form']['extras']['fields']);
+			$id = $ids[0];
+			
+			if(!empty($config[0]['code'])){
+				foreach($config[0] as $k => $v){
+					$config[0]['code'] = str_replace('$form->form["Form"]["extras"]["fields"]['.$id.']["'.$k.'"]', '"'.$v.'"', $config[0]['code']);
+				}
+			}
+			*/
 			//$multi_field = isset($this->data['multi_field']) ? 1 : 0;
 			//$this->set('multi_field', $multi_field);
 			$this->set('fdata', $config[0]);
@@ -734,6 +793,23 @@ class Chronoforms extends \GCore\Libs\GController {
 						$this->redirect(r_('index.php?ext=chronoforms'));
 					}
 				}else{
+					if(!empty($this->data['serial_number'])){
+						$blocks = explode("-", trim($this->data['serial_number']));
+						$hash = md5($this->data['pid'].$this->data['license_key'].str_replace('www.', '', $domain).$blocks[3]);
+						if(substr($hash, 0, 7) == $blocks[4]){
+							parent::_settings('chronoforms');
+							$this->data['Chronoforms'][$update_fld] = 1;
+							$result = parent::_save_settings('chronoforms');
+							if($result){
+								$session->setFlash('success', 'Validated successfully.');
+								$this->redirect(r_('index.php?ext=chronoforms'));
+							}else{
+								$session->setFlash('error', 'Validation error.');
+							}
+						}else{
+							$session->setFlash('error', 'Serial number invalid!');
+						}
+					}
 					$session->setFlash('error', 'Validation error, please try again using the Instant Code, or please contact us on www.chronoengine.com');
 					$this->redirect(r_('index.php?ext=chronoforms'));
 				}

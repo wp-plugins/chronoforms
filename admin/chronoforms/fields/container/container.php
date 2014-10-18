@@ -41,12 +41,14 @@ class Container {
 			'multi_column' => 'Columns Container',
 			'column' => 'Column (Resizable)',
 			'custom' => 'Custom',
+			'multiplier' => 'Multiplier',
 		)),
 		'title' => array('value' => 'Container #{N}', 'label' => 'Title', 'type' => 'text', 'class' => 'L', 'alt' => 'ghost'),
 		'id' => array('value' => 'chronoform-container-{N}', 'label' => 'ID', 'type' => 'text', 'class' => 'L', 'alt' => 'ghost'),
 		'class' => array('value' => 'chronoform-container', 'label' => 'Class', 'type' => 'text', 'class' => 'L', 'alt' => 'ghost'),
 		'start_code' => array('value' => '', 'label' => 'Start code', 'type' => 'textarea', 'cols' => 60, 'rows' => 5, 'alt' => 'ghost', 'sublabel' => 'The start code for a custom container.'),
 		'end_code' => array('value' => '', 'label' => 'End code', 'type' => 'textarea', 'cols' => 60, 'rows' => 5, 'alt' => 'ghost', 'sublabel' => 'The end code for a custom container.'),
+		'load-state' => array('label' => 'Load state', 'type' => 'dropdown', 'options' => array('' => 'Visible & Enabled', 'hidden' => 'Hidden')),
 	);
 
 	public static function element($data = array()){
@@ -57,21 +59,41 @@ class Container {
 
 	public static function config($data = array(), $k = '{N}'){
 		echo \GCore\Helpers\Html::formStart('original_element_config', 'container_origin_config');
-		echo \GCore\Helpers\Html::formSecStart();
-		foreach(self::$configs as $name => $params){
-			$params['value'] = isset($data[$name]) ? (($params['type'] == 'text') ? htmlspecialchars($data[$name]) : $data[$name]) : (isset($params['value']) ? $params['value'] : '');
-			$params['values'] = isset($data[$name]) ? $data[$name] : (isset($params['values']) ? $params['values'] : '');
-			echo \GCore\Helpers\Html::formLine('Form[extras][fields]['.$k.']['.$name.']', str_replace('{N}', $k, $params));
-		}
+		?>
+		<ul class="nav nav-tabs">
+			<li><a href="#general-<?php echo $k; ?>" data-g-toggle="tab"><?php echo l_('CF_GENERAL'); ?></a></li>
+			<li><a href="#multiplier-<?php echo $k; ?>" data-g-toggle="tab"><?php echo l_('CF_MULTIPLIER'); ?></a></li>
+		</ul>
+		<div class="tab-content">
+			<div id="general-<?php echo $k; ?>" class="tab-pane">
+			<?php
+			echo \GCore\Helpers\Html::formSecStart();
+			foreach(self::$configs as $name => $params){
+				$params['value'] = isset($data[$name]) ? (($params['type'] == 'text') ? htmlspecialchars($data[$name]) : $data[$name]) : (isset($params['value']) ? $params['value'] : '');
+				$params['values'] = isset($data[$name]) ? $data[$name] : (isset($params['values']) ? $params['values'] : '');
+				echo \GCore\Helpers\Html::formLine('Form[extras][fields]['.$k.']['.$name.']', str_replace('{N}', $k, $params));
+			}
 
-		//echo \GCore\Helpers\Html::input('Form[extras][fields]['.$k.'][code]', array('type' => 'hidden', 'alt' => 'ghost', 'value' => 'My container code here'));
-		echo \GCore\Helpers\Html::input('Form[extras][fields]['.$k.'][name]', array('type' => 'hidden', 'alt' => 'ghost', 'value' => 'container'));
-		echo \GCore\Helpers\Html::input('Form[extras][fields]['.$k.'][render_type]', array('type' => 'hidden', 'alt' => 'ghost', 'value' => 'container'));
-		echo \GCore\Helpers\Html::input('Form[extras][fields]['.$k.'][type]', array('type' => 'hidden', 'alt' => 'ghost', 'value' => self::$settings['type']));
-		echo \GCore\Helpers\Html::input('Form[extras][fields]['.$k.'][size][width]', array('type' => 'hidden', 'class' => 'fields_container_width', 'id' => 'fields_container_'.$k.'_width', 'value' => '99'));
-		echo \GCore\Helpers\Html::input('Form[extras][fields]['.$k.'][collapsed]', array('type' => 'hidden', 'class' => 'fields_container_collapsed', 'id' => 'fields_container_'.$k.'_collapsed', 'value' => '0'));
-		echo \GCore\Helpers\Html::input('Form[extras][fields]['.$k.'][container_id]', array('type' => 'hidden', 'id' => 'container_id'.$k, 'value' => '0'));
-		echo \GCore\Helpers\Html::formSecEnd();
+			//echo \GCore\Helpers\Html::input('Form[extras][fields]['.$k.'][code]', array('type' => 'hidden', 'alt' => 'ghost', 'value' => 'My container code here'));
+			echo \GCore\Helpers\Html::input('Form[extras][fields]['.$k.'][name]', array('type' => 'hidden', 'alt' => 'ghost', 'value' => 'container'));
+			echo \GCore\Helpers\Html::input('Form[extras][fields]['.$k.'][render_type]', array('type' => 'hidden', 'alt' => 'ghost', 'value' => 'container'));
+			echo \GCore\Helpers\Html::input('Form[extras][fields]['.$k.'][type]', array('type' => 'hidden', 'alt' => 'ghost', 'value' => self::$settings['type']));
+			echo \GCore\Helpers\Html::input('Form[extras][fields]['.$k.'][size][width]', array('type' => 'hidden', 'class' => 'fields_container_width', 'id' => 'fields_container_'.$k.'_width', 'value' => '99'));
+			echo \GCore\Helpers\Html::input('Form[extras][fields]['.$k.'][collapsed]', array('type' => 'hidden', 'class' => 'fields_container_collapsed', 'id' => 'fields_container_'.$k.'_collapsed', 'value' => '0'));
+			echo \GCore\Helpers\Html::input('Form[extras][fields]['.$k.'][container_id]', array('type' => 'hidden', 'id' => 'container_id'.$k, 'value' => '0'));
+			echo \GCore\Helpers\Html::formSecEnd();
+			?>
+			</div>
+			<div id="multiplier-<?php echo $k; ?>" class="tab-pane">
+			<?php
+			echo \GCore\Helpers\Html::formSecStart();
+			echo \GCore\Helpers\Html::formLine('Form[extras][fields]['.$k.'][multiplier][replacer]', array('type' => 'text', 'value' => '0', 'label' => l_('CF_MULTIPLIER_REPLACER'), 'sublabel' => l_('CF_MULTIPLIER_REPLACER_DESC')));
+			echo \GCore\Helpers\Html::formLine('Form[extras][fields]['.$k.'][multiplier][count]', array('type' => 'text', 'value' => '1', 'label' => l_('CF_MULTIPLIER_COUNT'), 'sublabel' => l_('CF_MULTIPLIER_COUNT_DESC')));
+			echo \GCore\Helpers\Html::formSecEnd();
+			?>
+			</div>
+		</div>
+		<?php
 		echo \GCore\Helpers\Html::formEnd();
 	}
 }

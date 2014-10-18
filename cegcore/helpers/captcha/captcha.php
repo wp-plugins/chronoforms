@@ -51,14 +51,18 @@ class Captcha {
 				$font = dirname(__FILE__).DIRECTORY_SEPARATOR.'default.ttf';
 				$image_size = imagettfbbox(20, 0, $font, 'X');
 				$image_size = 5*(abs($image_size[2] - $image_size[0])+7);
-				$im = imagecreatetruecolor($image_size, 40);
+				
+				$width = $image_size;
+				$height = 40;
+				
+				$im = imagecreatetruecolor($width, $height);
 				// Create some colors
 				$white = imagecolorallocate($im, 255, 255, 255);
 				$grey = imagecolorallocate($im, 128, 128, 128);
 				$greylight = imagecolorallocate($im, 199, 199, 199);
 				$black = imagecolorallocate($im, 0, 0, 0);
 				//create the background image rect
-				imagefilledrectangle($im, 0, 0, $image_size -1, 39, $white);
+				imagefilledrectangle($im, 0, 0, $width -1, $height - 1, $white);
 				
 				// The text to draw
 				$chars = array();
@@ -70,8 +74,23 @@ class Captcha {
 					$chars2[] = $back_chars[$i];
 				}
 				
-				// Add some shadow to the text
-				//imagettftext($im, 20, 0, 11, 21, $grey, $font, $front_chars);
+				$square_count = 6;
+				for($i = 0; $i < $square_count; $i++){
+					$cx = (int)rand(0, $width/2);
+					$cy = (int)rand(0, $height);
+					$h  = $cy + (int)rand(0, $height/5);
+					$w  = $cx + (int)rand($width/3, $width);
+					imagefilledrectangle($im, $cx, $cy, $w, $h, $greylight);
+				}
+				
+				$ellipse_count = 5;
+				for($i = 0; $i < $ellipse_count; $i++){
+					$cx = (int)rand(-1*($width/2), $width + ($width/2));
+					$cy = (int)rand(-1*($height/2), $height + ($height/2));
+					$h  = (int)rand($height/2, 2*$height);
+					$w  = (int)rand($width/2, 2*$width);
+					imageellipse($im, $cx, $cy, $w, $h, $black);
+				}
 				
 				$back_char_size = 20;
 				$back_char_angle = 0;

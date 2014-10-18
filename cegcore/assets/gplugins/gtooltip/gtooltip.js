@@ -82,7 +82,7 @@
 						$this.prop('title', '');
 					}
 					if($this.data('gtooltip_params').closable){
-						var $close_button = '<div class="gtooltip-close">x</div>';
+						var $close_button = '<div class="gtooltip-close">&times;</div>';
 					}else{
 						var $close_button = '';	
 					}

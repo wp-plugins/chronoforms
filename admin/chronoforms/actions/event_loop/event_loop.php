@@ -37,4 +37,10 @@ Class EventLoop extends \GCore\Admin\Extensions\Chronoforms\Action{
 		echo \GCore\Helpers\Html::formSecEnd();
 		echo \GCore\Helpers\Html::formEnd();
 	}
+	
+	public static function config_check($data = array()){
+		$diags = array();
+		$diags[l_('CF_DIAG_EVENT')] = !empty($data['event']) ? $data['event'] : 'load';
+		return $diags;
+	}
 }

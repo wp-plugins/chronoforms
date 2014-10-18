@@ -45,6 +45,7 @@ class Model {
 	var $chain_models = array();
 	static $_chain_models = array();
 	var $allowed_models = array();
+	static $_generated_models = array();
 	
 
 	function __construct($settings = array()){
@@ -124,22 +125,25 @@ class Model {
 	}
 	
 	public static function generateModel($model_name, $model_settings = array()){
-		$class_code = '
-			namespace GCore\Models;
-			if(!class_exists("GCore\Models\\'.$model_name.'", false)){
-				class '.$model_name.' extends \GCore\Libs\Model {';
-					foreach($model_settings as $setting => $value){
-						if(is_object($value)){
-							//$class_code .= 'var $'.$setting.' = '.unserialize(serialize($value)).';'."\n";
-						}else{
-							$class_code .= 'var $'.$setting.' = '.var_export($value, true).';'."\n";
+		if(!in_array($model_name, self::$_generated_models)){
+			self::$_generated_models[] = $model_name;
+			$class_code = '
+				namespace GCore\Models;
+				if(!class_exists("\GCore\Models\\'.$model_name.'", false)){
+					class '.$model_name.' extends \GCore\Libs\Model {';
+						foreach($model_settings as $setting => $value){
+							if(is_object($value)){
+								//$class_code .= 'var $'.$setting.' = '.unserialize(serialize($value)).';'."\n";
+							}else{
+								$class_code .= 'var $'.$setting.' = '.var_export($value, true).';'."\n";
+							}
 						}
+					$class_code .= '
 					}
-				$class_code .= '
 				}
-			}
-		';
-		eval($class_code);
+			';
+			eval($class_code);
+		}
 	}
 	
 	function setFields($fields = array()){
@@ -406,7 +410,7 @@ class Model {
 				if(!is_array($v)){
 					$v = (array)$v;
 				}
-				if($v === array_values($v) AND is_array($v[0])){
+				if(!Arr::is_assoc($v) AND is_array($v[0])){
 					$inner_op_parts = array();
 					//e.g: 'OR' => array(array('title' => 'x'), array('title' => 'y'))
 					foreach($v as $same_field_condition){
@@ -424,6 +428,8 @@ class Model {
 						$v = array(null);
 					}
 					$parts[] = $this->_prepare_field($k, false, $attach_alias).' IN ('.implode(', ', array_map(array($this->dbo, 'quote'), $v)).')';
+				}else if(is_null($v)){
+					$parts[] = $this->_prepare_field($k, false, $attach_alias).' IS NULL';
 				}else{
 					if(is_numeric($k)){
 						//custom query part
@@ -779,7 +785,7 @@ class Model {
 								if(empty($data[$k][$sub_model]) OR !is_array($data[$k][$sub_model])){
 									$data[$k][$sub_model] = array();
 								}
-								if(is_array($sub_model_data) AND $sub_model_data === array_values($sub_model_data)){
+								if(is_array($sub_model_data) AND !Arr::is_assoc($sub_model_data)){
 									$data[$k][$sub_model] = array_merge($data[$k][$sub_model], $sub_model_data);
 								}else{
 									$data[$k][$sub_model][] = $sub_model_data;
@@ -847,8 +853,11 @@ class Model {
 		$params['_alias_used'][] = $this->alias;
 		//reset fields for count type
 		if($type == 'count'){
-			$params['fields'] = array('COUNT(*)' => 'count');
+			$params['fields'] = array('COUNT('.(!empty($this->pkey) ? $this->pkey : '*').')' => 'count');
 			$params['page'] = $this->page = 0;
+		}
+		if($type == 'first'){
+			$params['limit'] = 1;
 		}
 		//fix fields list
 		if(empty($params['fields'])){
@@ -916,7 +925,11 @@ class Model {
 		
 		//build select fields list
 		$sql .= implode(', ', $fields);
-		$sql .= ' FROM '.$this->_prepare_tablename($this->tablename, true);
+		if(!empty($params['from'])){
+			$sql .= ' FROM ('.$params['from']['query'].') AS '.(!empty($params['from']['alias']) ? $params['from']['alias'] : $this->alias);
+		}else{
+			$sql .= ' FROM '.$this->_prepare_tablename($this->tablename, true);
+		}
 		
 		$sql_extensions = array();
 		//get joins if any set
@@ -927,13 +940,13 @@ class Model {
 		if(!empty($params['conditions'])){
 			$sql_extensions['where'] = ' WHERE '.$this->processConditions($params['conditions']);
 		}
-		//get having if there are any
-		if(!empty($params['having'])){
-			$sql_extensions['having'] = ' HAVING '.$this->processConditions($params['having']);
-		}
 		//get group if its set
 		if(!empty($params['group'])){
 			$sql_extensions['group'] = $this->processGroup($params['group']);
+		}
+		//get having if there are any
+		if(!empty($params['having'])){
+			$sql_extensions['having'] = ' HAVING '.$this->processConditions($params['having']);
 		}
 		
 		//get order if its set		
@@ -952,6 +965,10 @@ class Model {
 		$this->fixTypeSql($type, $sql_extensions);
 		//append the extensions to the main SQL
 		$sql .= implode('', $sql_extensions);
+		
+		if($type == 'query'){
+			return $sql;
+		}
 		//run the query and return the results
 		$qdata = $this->dbo->loadAssocList($sql);
 		//fix dots in aliases
@@ -1213,12 +1230,12 @@ class Model {
 		}
 	}
 	
-	function saveAll($data = array()){
-		if(!empty($data) AND is_array($data) AND array_values($data) === $data){
+	function saveAll($data = array(), $params = array()){
+		if(!empty($data) AND is_array($data) AND !Arr::is_assoc($data)){//array_values($data) === $data){
 			//numerically indexed list of records
 			$this->ids = array();
 			foreach($data as $k => $record){
-				$this->save($record);
+				$this->save($record, $params);
 				$this->ids[] = $this->id;
 			}
 			return true;
@@ -1277,7 +1294,7 @@ class Model {
 					if(!empty($params['on']) AND $params['on'] != $mode){
 						continue;
 					}
-					if($rule == 'function'){
+					if($rule == 'function' AND !empty($params['name']) AND is_string($params['name'])){
 						$valid = $this->{$params['name']}();
 						goto check_valid;
 					}
@@ -1552,6 +1569,8 @@ class Model {
 							//delete non existent records based on p key values
 							if(!empty($model_info['delete_non_existent']) AND (bool)$model_info['delete_non_existent'] === true){
 								$existing_keys = Arr::getVal($data, array($alias, '[n]', $className->pkey));
+								$existing_keys = array_unique($existing_keys);
+								$existing_keys = array_filter($existing_keys);
 								$delete_conditions = empty($model_info['conditions']) ? array($foreignKey => $this->id, 'NOT' => array($className->pkey => $existing_keys)) : array_merge(array($foreignKey => $this->id, 'NOT' => array($className->pkey => $existing_keys)), $model_info['conditions']);
 								$className->deleteAll($delete_conditions);
 							}

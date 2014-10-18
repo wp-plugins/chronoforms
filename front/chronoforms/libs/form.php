@@ -83,16 +83,24 @@ class Form {
 					ob_start();
 					$this->runAction($action_title, $action_id, $action_events, $event_hops);
 					$this->form_output .= ob_get_clean();
+					$this->display_errors();//add errors to session just after any action runs
 				//}
 			}
 			//$this->form_output = ob_get_clean();
-			$this->display_errors();
+			//$this->display_errors();
 			$this->display_output();
 		}
 		//$this->_val();
 	}
 
 	function runAction($action_title, $action_id, $action_events = array(), $event_hops = array()){
+		//translate
+		foreach($this->actions_config[$action_id] as $setting => $value){
+			if(is_string($value)){
+				$this->actions_config[$action_id][$setting] = $this->translate($value);
+			}
+		}
+		
 		$classname = '\GCore\Admin\Extensions\Chronoforms\Actions\\'.\GCore\Libs\Str::camilize($action_title)."\\".\GCore\Libs\Str::camilize($action_title);
 		${$classname} = new $classname();
 		${$classname}->execute($this, $action_id);

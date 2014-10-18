@@ -38,6 +38,9 @@ class Submit {
 
 	public static function element($data = array()){
 		echo \GCore\Helpers\Html::formSecStart('original_element', 'submit_origin');
+		if(!empty($data['id']) AND $data['id'] == 'submit'){
+			unset($data['id']);	
+		}
 		echo \GCore\Helpers\Html::formLine(self::$settings['name'], array_merge(self::$settings, $data, array('type' => 'button')));
 		echo \GCore\Helpers\Html::formSecEnd();
 	}

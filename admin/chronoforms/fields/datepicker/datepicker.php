@@ -23,6 +23,7 @@ class Datepicker {
 		'label' => 'Datepicker Label',
 		'sublabel' => '',
 		'placeholder' => '',
+		'size' => '',
 		'class' => '',
 		'title' => '',
 		'style' => ''
@@ -46,6 +47,7 @@ class Datepicker {
 		)),
 		'sublabel' => array('value' => '', 'label' => 'Sub Label', 'type' => 'text', 'class' => 'L'),
 		'placeholder' => array('value' => '', 'label' => 'Placeholder', 'type' => 'text', 'class' => 'L'),
+		'size' => array('value' => '', 'label' => 'Size', 'type' => 'text', 'class' => 'L'),
 		'class' => array('value' => '', 'label' => 'Class', 'type' => 'text', 'class' => 'L'),
 		'title' => array('value' => '', 'label' => 'Title', 'type' => 'text', 'class' => 'L'),
 		'style' => array('value' => '', 'label' => 'Style', 'type' => 'text', 'class' => 'L'),

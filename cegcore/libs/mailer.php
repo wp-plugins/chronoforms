@@ -17,7 +17,7 @@ class Mailer {
 		}
 
 		$mail = new \PHPMailer();
-		$mail->CharSet = 'UTF-8';
+		$mail->CharSet = 'utf-8';
 		//get recipients
 		foreach((array)$to as $address){
 			$mail->AddAddress(trim($address));
@@ -45,18 +45,20 @@ class Mailer {
 		//set CC and BCC
 		if(!empty($other['cc'])){
 			foreach($other['cc'] as $k => $cc){
-				$mail->addCC($cc);
+				$mail->AddCC($cc);
 			}
 		}
 		if(!empty($other['bcc'])){
 			foreach($other['bcc'] as $k => $bcc){
-				$mail->addBCC($bcc);
+				$mail->AddBCC($bcc);
 			}
 		}
 
 		if((bool)Base::getConfig('smtp', 0) === true){
 			$mail->IsSMTP();
-			$mail->SMTPAuth = true;
+			if(Base::getConfig('smtp_username') AND Base::getConfig('smtp_password')){
+				$mail->SMTPAuth = true;
+			}
 			if(Base::getConfig('smtp_secure')){
 				$mail->SMTPSecure = Base::getConfig('smtp_secure');
 			}

@@ -48,6 +48,8 @@ class Bootstrap {
 			\GCore\C::set('GCORE_ADMIN_URL', \JFactory::getURI()->root().'libraries/cegcore/admin/');
 			\GCore\C::set('GCORE_ROOT_URL', \JFactory::getURI()->root());
 			
+			\GCore\C::set('GCORE_ROOT_PATH', dirname(dirname(dirname(__FILE__))).DS);
+			
 			$lang = \JFactory::getLanguage();
 			\GCore\Libs\Base::setConfig('site_language', $lang->getTag());
 		}else if($plathform == 'wordpress'){
@@ -65,7 +67,11 @@ class Bootstrap {
 			\GCore\C::set('GCORE_ADMIN_URL', plugins_url().'/'.$params['component'].'/cegcore/admin/');
 			\GCore\C::set('GCORE_ROOT_URL', site_url().'/');
 			
+			\GCore\C::set('GCORE_ROOT_PATH', dirname(dirname(dirname(__FILE__))).DS);
+			
 			\GCore\Libs\Base::setConfig('site_language', get_bloginfo('language'));
+			//change the default page parameter string because WP uses the param "page"
+			\GCore\Libs\Base::setConfig('page_url_param_name', 'page_num');
 			
 			if(function_exists('wp_magic_quotes')){
 				$stripslashes_wp = function (&$value){
@@ -82,6 +88,8 @@ class Bootstrap {
 			\GCore\C::set('GCORE_FRONT_URL', \GCore\Libs\Url::root());
 			\GCore\C::set('GCORE_ADMIN_URL', \GCore\Libs\Url::root().'admin/');
 			\GCore\C::set('GCORE_ROOT_URL', \GCore\C::get('GCORE_FRONT_URL'));
+			
+			\GCore\C::set('GCORE_ROOT_PATH', dirname(__FILE__).DS);
 		}
 		\GCore\C::set('GSITE_PATH', \GCore\C::get('GCORE_'.strtoupper(GCORE_SITE).'_PATH'));
 		\GCore\C::set('GSITE_URL', \GCore\C::get('GCORE_'.strtoupper(GCORE_SITE).'_URL'));

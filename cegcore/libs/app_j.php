@@ -183,8 +183,8 @@ class AppJ {
 		date_default_timezone_set($mainframe->getCfg('offset'));
 		//site title
 		\GCore\Libs\Base::setConfig('site_title', $mainframe->getCfg('sitename'));
-		//$lang = \JFactory::getLanguage();
-		//\GCore\Libs\Base::setConfig('site_language', $lang->getTag());
+		
+		
 		/*if(!Authorize::authorized($classname, $this->action)){
 			if($content_only){
 				return;
@@ -212,7 +212,7 @@ class AppJ {
 		//set theme
 		$doc = Document::getInstance($this->site, $this->thread);
 		$doc->theme = 'bootstrap3';
-		$theme = \GCore\Helpers\Theme::getInstance();
+		//$theme = \GCore\Helpers\Theme::getInstance();
 		//load class and run the action
 		${$classname} = new $classname($this->site, $this->thread);
 		ob_start();
@@ -268,6 +268,8 @@ class AppJ {
 		ob_start();
 		${$classname}->_finalize();
 		$this->buffer .= ob_get_clean();
+		//load the theme files now
+		$theme = \GCore\Helpers\Theme::getInstance();
 
 		if($this->tvout != 'ajax' AND $doc->theme == 'bootstrap3'){
 			$this->buffer = '<div class="gbs3">'.$this->buffer.'</div>';
@@ -314,11 +316,13 @@ class AppJ {
 		}
 		</script>
 		';
+		$JDocument = \JFactory::getDocument();
 		//add css files list
 		foreach($doc->cssfiles as $k => $cssfile){
 			//if(empty($used['cssfiles'][$k])){
 				$used['cssfiles'][$k] = true;
-				$chunks[] = \GCore\Helpers\Html::_concat($cssfile, array_keys($cssfile), '<link ', '>');
+				//$chunks[] = \GCore\Helpers\Html::_concat($cssfile, array_keys($cssfile), '<link ', ' />');
+				$JDocument->addStyleSheet(\GCore\C::fix_urls($cssfile['href']));
 			//}
 		}
 		//add css code list

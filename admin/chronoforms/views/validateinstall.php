@@ -41,7 +41,8 @@ defined("GCORE_SITE") or die;
 					18 => 'ChronoForms PayPal actions Ultimate subscription',
 					7 => 'ChronoForms Authorize.net actions Ultimate subscription',
 				), 'sublabel' => 'Your subscription type')); ?>
-				<?php echo $this->Html->formLine('instantcode', array('type' => 'text', 'label' => 'Instant Code', 'class' => 'XXL', 'sublabel' => 'In some situations you may need to provide the instant code, you do not need to enter this code unless you had instructions to do so.')); ?>
+				<?php //echo $this->Html->formLine('instantcode', array('type' => 'text', 'label' => 'Instant Code', 'class' => 'XXL', 'sublabel' => 'In some situations you may need to provide the instant code, you do not need to enter this code unless you had instructions to do so.')); ?>
+				<?php echo $this->Html->formLine('serial_number', array('type' => 'text', 'label' => 'Serial number', 'class' => 'XXL', 'sublabel' => 'In most cases you will not need to use this field.')); ?>
 				<?php echo $this->Html->formSecEnd(); ?>
 				<?php echo $this->Html->formEnd(); ?>
 			</form>

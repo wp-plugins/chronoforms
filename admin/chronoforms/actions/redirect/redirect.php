@@ -21,7 +21,12 @@ Class Redirect extends \GCore\Admin\Extensions\Chronoforms\Action{
 		if(strlen(trim($config->get('extra_params', '')))){
 			$extras = \GCore\Libs\Str::list_to_array($config->get('extra_params', ''));
 			foreach($extras as $k => $v){
-				$r_params[$k] = $form->data($v);
+				$v = str_replace(array('{', '}'), '', $v);
+				if(substr($v, 0, 1) == '"' AND substr($v, -1, 1) == '"'){
+					$r_params[$k] = substr($v, 1, -1);
+				}else{
+					$r_params[$k] = $form->data($v);
+				}
 			}
 		}
 		$url = \GCore\Libs\Url::buildQuery($config->get('url', ''), $r_params);
@@ -36,9 +41,16 @@ Class Redirect extends \GCore\Admin\Extensions\Chronoforms\Action{
 		echo \GCore\Helpers\Html::formSecStart();
 
 		echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][url]', array('type' => 'text', 'label' => l_('CF_REDIRECT_URL'), 'class' => 'XL', 'sublabel' => l_('CF_REDIRECT_URL_DESC')));
-		echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][extra_params]', array('type' => 'textarea', 'label' => l_('CF_REDIRECT_EXTRA_PARAMS'), 'rows' => 5, 'cols' => 60, 'sublabel' => l_('CF_REDIRECT_EXTRA_PARAMS_DESC')));
+		echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][extra_params]', array('type' => 'textarea', 'label' => l_('CF_REDIRECT_EXTRA_PARAMS'), 'rows' => 5, 'cols' => 60, 'sublabel' => l_('CF_REDIRECT_EXTRA_PARAMS_DESC').l_('CF_EXTRA_PARAMS_LIST_DESC')));
 		
 		echo \GCore\Helpers\Html::formSecEnd();
 		echo \GCore\Helpers\Html::formEnd();
+	}
+	
+	public static function config_check($data = array()){
+		$diags = array();
+		//$diags[l_('CF_DIAG_ENABLED')] = !empty($data['enabled']);
+		$diags[l_('CF_DIAG_TARGET_URL')] = !empty($data['url']);
+		return $diags;
 	}
 }

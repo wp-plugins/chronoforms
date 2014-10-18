@@ -59,13 +59,14 @@ var GDatetimepicker = {
 		jQuery('#'+picker_id).show_picker(decade_data);
 	},*/
 	get_first_day: function (year, month){
-		var the_day = new Date(year, month, 1);
+		var the_day = new Date(year, month, 1, 0, 1, 0);
 		var offset = the_day.getTimezoneOffset();
-		if(offset >= 0){
+		return the_day.getDay();
+		/*if(offset >= 0){
 			return the_day.getUTCDay() - 1;
 		}else{
 			return the_day.getUTCDay();
-		}
+		}*/
 	},
 	get_month_length: function (year, month){
 		var next_month = new Date(year, month + 1, 1);
@@ -122,12 +123,13 @@ var GDatetimepicker = {
 		return months_header;
 	},
 	build_months_panel: function (picker_id, current_date){
+		var shortMonths = picker_id.data('shortmonths') ? picker_id.data('shortmonths') : GDatetimepicker.shortMonths;
 		var months_list = '';
 		months_list = months_list  + '<div class="gcore-months-picker">';
 		var months_rows = [1,2,3,4];
 		jQuery.each(months_rows, function(i, row){
 			months_list = months_list  + '<div class="months-row">';
-			jQuery.each(GDatetimepicker.shortMonths, function(k, month){
+			jQuery.each(shortMonths, function(k, month){
 				var active_class = '';
 				if(current_date.getUTCMonth() == k){
 					active_class = ' active_date';
@@ -142,12 +144,13 @@ var GDatetimepicker = {
 		return months_list;
 	},
 	build_days_header: function (picker_id, current_date){
+		var shortMonths = picker_id.data('shortmonths') ? picker_id.data('shortmonths') : GDatetimepicker.shortMonths;
 		var days_header = '';
 		days_header = days_header  + '<div class="gcore-days-header">';
 		var prev_month = new Date();
 		prev_month.setUTCFullYear(current_date.getUTCFullYear(), current_date.getUTCMonth() - 1, 1);
 		days_header = days_header  + '<span class="date-nav-item date-nav-left switch_month" data-year="'+prev_month.getUTCFullYear()+'" data-month="'+prev_month.getUTCMonth()+'">&lsaquo;</span>';
-		days_header = days_header  + '<span class="date-nav-item date-select select_month" data-year="'+current_date.getUTCFullYear()+'" data-month="'+current_date.getUTCMonth()+'">'+ GDatetimepicker.shortMonths[current_date.getUTCMonth()] + ' ' + current_date.getUTCFullYear() +'</span>';
+		days_header = days_header  + '<span class="date-nav-item date-select select_month" data-year="'+current_date.getUTCFullYear()+'" data-month="'+current_date.getUTCMonth()+'">'+ shortMonths[current_date.getUTCMonth()] + ' ' + current_date.getUTCFullYear() +'</span>';
 		var next_month = new Date();
 		next_month.setUTCFullYear(current_date.getUTCFullYear(), current_date.getUTCMonth() + 1, 1);
 		days_header = days_header  + '<span class="date-nav-item date-nav-right switch_month" data-year="'+next_month.getUTCFullYear()+'" data-month="'+next_month.getUTCMonth()+'">&rsaquo;</span>';
@@ -155,6 +158,7 @@ var GDatetimepicker = {
 		return days_header;
 	},
 	build_days_panel: function (picker_id, current_date){
+		var shortDays = picker_id.data('shortdays') ? picker_id.data('shortdays') : GDatetimepicker.shortDays;
 		var days_list = '';
 		days_list = days_list  + '<div class="gcore-days-picker">';
 		var days_rows = [1,2,3,4,5,6,7];
@@ -166,7 +170,7 @@ var GDatetimepicker = {
 		var prev_days_counter = GDatetimepicker.get_month_length(current_date.getUTCFullYear(), current_date.getUTCMonth() - 1) - first_day + 1;
 		jQuery.each(days_rows, function(i, row){
 			days_list = days_list  + '<div class="days-row">';
-			jQuery.each(GDatetimepicker.shortDays, function(k, day){
+			jQuery.each(shortDays, function(k, day){
 				if(i == 0){
 					days_list = days_list  + '<div class="day-title">' + day + '</div>';
 				}else{
@@ -204,7 +208,7 @@ var GDatetimepicker = {
 							}
 							
 							if(picker_id.data('open_days')){
-								if(jQuery.inArray(this_date.getUTCDay(), picker_id.data('open_days')) == -1){
+								if(jQuery.inArray(this_date.getDay(), picker_id.data('open_days')) == -1){
 									selecting_class = ' disabled_date';
 									date_data = '';
 								}
@@ -251,7 +255,7 @@ var GDatetimepicker = {
 							}
 							
 							if(picker_id.data('open_days')){
-								if(jQuery.inArray(this_date.getUTCDay(), picker_id.data('open_days')) == -1){
+								if(jQuery.inArray(this_date.getDay(), picker_id.data('open_days')) == -1){
 									selecting_class = ' disabled_date';
 									date_data = '';
 								}
@@ -274,8 +278,8 @@ var GDatetimepicker = {
 	format: 'd-m-Y',
 	shortMonths: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
     longMonths: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
-    shortDays: ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'],
-    longDays: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
+    shortDays: ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'],
+    longDays: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
 };
 
 (function($){
@@ -352,9 +356,19 @@ var GDatetimepicker = {
 						var format = $this.data('gdatetimepicker-format') ? $this.data('gdatetimepicker-format') : GDatetimepicker.format;
 						var parsed_date = date.parse_date($this.val(), format);
 					}
-					var month_data = GDatetimepicker.display_month($this, parsed_date.Y, parsed_date.m - 1, parsed_date.d);
-					//$this.show_picker(month_data);
-					$this.gdatetimepicker('show', month_data);
+					
+					if($this.data('start_view')){
+						if($this.data('start_view') == 'y'){
+							var start_view = GDatetimepicker.display_decade($this, parsed_date.Y, parsed_date.m - 1, parsed_date.d);
+						}else if($this.data('start_view') == 'm'){
+							var start_view = GDatetimepicker.display_year($this, parsed_date.Y, parsed_date.m - 1, parsed_date.d);
+						}else{
+							var start_view = GDatetimepicker.display_month($this, parsed_date.Y, parsed_date.m - 1, parsed_date.d);
+						}
+					}else{
+						var start_view = GDatetimepicker.display_month($this, parsed_date.Y, parsed_date.m - 1, parsed_date.d);
+					}
+					$this.gdatetimepicker('show', start_view);
 					/*$this.gtooltip_return().find('*').on('click', function(ch_e){
 						ch_e.stopPropagation();
 					});*/

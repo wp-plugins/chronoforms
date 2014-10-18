@@ -187,6 +187,9 @@ class Document {
 			case 'gvalidation':
 				$this->_('gtooltip');
 				$this->addJsFile(\GCore\C::get('GCORE_FRONT_URL').'assets/gplugins/gvalidation/gvalidation.js');
+				if(!empty($params['lang'])){
+					$this->addJsFile(\GCore\C::get('GCORE_FRONT_URL').'assets/gplugins/gvalidation/lang/'.$params['lang'].'.js');
+				}
 				$this->addCssFile(\GCore\C::get('GCORE_FRONT_URL').'assets/gplugins/gvalidation/gvalidation.css');
 			break;
 			case 'gdatetimepicker':

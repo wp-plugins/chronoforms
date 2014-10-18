@@ -111,6 +111,8 @@ Class XlsExport extends \GCore\Admin\Extensions\Chronoforms\Action{
 				exit;
 			}
 
+		}else{
+			$form->debug[$action_id][self::$title] = "No data could be loaded or found, please check your action settings.";
 		}
 	}
 
@@ -129,6 +131,14 @@ Class XlsExport extends \GCore\Admin\Extensions\Chronoforms\Action{
 		echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][add_bom]', array('type' => 'dropdown', 'label' => l_('CF_XLS_ADD_BOM'), 'sublabel' => l_('CF_XLS_ADD_BOM_DESC'), 'options' => array(0 => l_('NO'), 1 => l_('YES'))));
 		echo \GCore\Helpers\Html::formSecEnd();
 		echo \GCore\Helpers\Html::formEnd();
+	}
+	
+	public static function config_check($data = array()){
+		$diags = array();
+		$diags[l_('CF_DIAG_ENABLED')] = !empty($data['enabled']);
+		$diags[l_('CF_DIAG_DATAPATH_SET')] = !empty($data['data_path']);
+		$diags[l_('CF_DIAG_FILENAME_SET')] = !empty($data['file_name']);
+		return $diags;
 	}
 
 }

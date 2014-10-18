@@ -11,6 +11,7 @@ namespace GCore\Admin\Extensions\Chronoforms\Helpers;
 defined("GCORE_SITE") or die;
 class DnaBuilder {
 	var $config = true;
+	var $view;
 
 	function get_actions($dna = array()){
 		$actions = array();
@@ -69,11 +70,40 @@ class DnaBuilder {
 				'id' => 'action_icons_'.$id,
 				'class' => 'action_icons pull-right'
 			));
-			$action_title = '<div class="pull-left"><span class="form_action_label label label-primary">'.$action_class::$title.'</span><span style="" class="label label-info action_icon_number">'.$id.'</span></div>';
+			$action_title = '<div class="pull-left action-title-labels"><span class="form_action_label label label-primary">'.$action_class::$title.'</span><span style="" class="label label-info action_icon_number">'.$id.'</span>'.(!empty($configs[$id]['action_label']) ? '<span style="" class="label action_label_label">'.$configs[$id]['action_label'].'</span>' : '').'</div>';
 
 			$actions_output[] = \GCore\Helpers\Html::container('div', $action_title.$action_icons.'<div class="clearfix"></div>', array(
 				'class' => 'panel-heading'
 			));
+			//add footer with some diagnostics
+			if($this->view->vars['chronoforms_settings']->get('wizard.display_diagnostics', 1)){
+				if(method_exists($action_class, 'config_check')){
+					$footer_contents = '<span class="label label-default label_diagnostics"><i class="fa fa-puzzle-piece fa-lg"></i></span>';
+					$check_result = $action_class::config_check(isset($configs[$id]) ? $configs[$id] : array());
+					foreach($check_result as $text => $bool){
+						if($bool === true){
+							$class = 'label-success';
+							$icon_class = 'fa-check';
+							$footer_contents .= '<span class="label '.$class.'">'.$text.'&nbsp;<i class="fa '.$icon_class.' fa-lg"></i></span>';
+						}else if($bool === false){
+							$class = 'label-danger';
+							$icon_class = 'fa-times';
+							$footer_contents .= '<span class="label '.$class.'">'.$text.'&nbsp;<i class="fa '.$icon_class.' fa-lg"></i></span>';
+						}else if($bool === -1){
+							$class = 'label-warning';
+							$icon_class = 'fa-exclamation';
+							$footer_contents .= '<span class="label '.$class.'">'.$text.'&nbsp;<i class="fa '.$icon_class.' fa-lg"></i></span>';
+						}else{
+							$class = 'label-info';
+							$icon_class = 'fa-gear';
+							$footer_contents .= '<span class="label '.$class.'"><i class="fa '.$icon_class.' fa-lg"></i>&nbsp;'.$text.'&nbsp;'.$bool.'</span>';
+						}
+					}
+					$actions_output[] = \GCore\Helpers\Html::container('div', $footer_contents, array(
+						'class' => 'panel-heading action_diagnostics_area'
+					));
+				}
+			}
 
 			$action_dna = '<input type="hidden" name="'.$root.'['.$action.']" alt="ghost" class="events_dna" value="">';
 
@@ -94,7 +124,7 @@ class DnaBuilder {
 					$event_label = \GCore\Helpers\Html::container('label', 'On '.trim($event), array(
 						'class' => $label_class
 					));
-					$event_container = \GCore\Helpers\Html::container('div', $event_label.$event_dna.$this->build($info, $root.'['.$action.']['.$event.']'), array(
+					$event_container = \GCore\Helpers\Html::container('div', $event_label.$event_dna.$this->build($info, $root.'['.$action.']['.$event.']', $configs), array(
 						'id' => 'cfactionevent_'.$name.'_'.$id.'_'.$event,
 						'class' => 'form_event '.$e_cl
 					));
@@ -103,7 +133,7 @@ class DnaBuilder {
 			}
 
 			ob_start();
-			$action_class::config();
+			$action_class::config(isset($configs[$id]) ? $configs[$id] : array());
 			$action_config = ob_get_clean();
 			$action_config = str_replace('{N}', $id, $action_config);
 
@@ -114,7 +144,7 @@ class DnaBuilder {
 			$actions_output[] = \GCore\Helpers\Html::container('div', $body_contents, array(
 				'class' => 'panel-body'
 			));
-
+			
 			//$actions_output[] = $action_clear = '<div class="clear">&nbsp;</div>';
 
 			$container = \GCore\Helpers\Html::container('div', implode("\n", $actions_output), array(

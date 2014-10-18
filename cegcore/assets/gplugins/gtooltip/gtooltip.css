@@ -105,3 +105,6 @@
 .gtooltip-close:hover{
 	color:#ccc;
 }
+.gtooltip-content{
+	white-space: normal !important;
+}

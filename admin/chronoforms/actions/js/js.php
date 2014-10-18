@@ -25,7 +25,7 @@ Class Js extends \GCore\Admin\Extensions\Chronoforms\Action{
 			$files = explode("\n", $files_lines);
 			foreach($files as $file){
 				//add file
-				$doc->addJsFile($file);
+				$doc->addJsFile(trim($file));
 			}
 		}
 

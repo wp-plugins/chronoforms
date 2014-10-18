@@ -48,7 +48,15 @@ class Bootstrap3 extends \GCore\Helpers\Theme {
 	public static function html_formLine($name, $params = array()){
 		$input = self::html_formInput($name, $params);
 		$tags = array();
-		$tags[] = \GCore\Helpers\Html::container('div', $input, array('class' => 'form-group gcore-form-row', 'id' => 'form-row-__#'));
+		$id = (!empty($params['id']) ? 'form-row-'.$params['id'] : 'form-row-__#');
+		/*if(!empty($params['inputs'])){
+			reset($params['inputs']);
+			$fk = key($params['inputs']);
+			if(!empty($params['inputs'][$fk]['id'])){
+				$id = 'form-row-'.$params['inputs'][$fk]['id'];
+			}
+		}*/
+		$tags[] = \GCore\Helpers\Html::container('div', $input, array('class' => 'form-group gcore-form-row', 'id' => $id));
 		return implode("\n", $tags);
 	}
 
@@ -152,7 +160,7 @@ class Bootstrap3 extends \GCore\Helpers\Theme {
 	}
 
 	function paginator_full_nav($first, $prev, $numbers, $next, $last){
-		$full = \GCore\Helpers\Html::container('ul', $first.$prev.$numbers.$next.$last, array('class' => 'pagination pagination-sm gcore-pagination', 'style' => 'margin:0px;'));
+		$full = \GCore\Helpers\Html::container('ul', $first.$prev.$numbers.$next.$last, array('class' => 'pagination pagination-sm gcore-pagination', 'style' => 'margin:0px; padding:0px; height:auto;'));
 		return $full;
 	}
 

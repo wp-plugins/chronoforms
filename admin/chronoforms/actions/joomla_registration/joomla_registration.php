@@ -57,6 +57,7 @@ Class JoomlaRegistration extends \GCore\Admin\Extensions\Chronoforms\Action{
 		}
 		// Get required system objects
 		$user 		= clone(JFactory::getUser());
+		$mainframe = JFactory::getApplication();
 		//$config		= JFactory::getConfig();
 		$authorize	= JFactory::getACL();
 		$document   = JFactory::getDocument();
@@ -173,16 +174,21 @@ Class JoomlaRegistration extends \GCore\Admin\Extensions\Chronoforms\Action{
 			$database->setQuery( "SELECT * FROM #__comprofiler_fields WHERE `table`='#__comprofiler' AND name <>'NA' AND registration = '1'" );
 			$fields = $database->loadObjectList();
 			$default_fields_names = array('id', 'user_id');
-			$default_fields_values = array($user_data['id'], $user_data['id']);
+			$default_fields_values = array('id' => $user_data['id'], 'user_id' => $user_data['id']);
 			foreach($fields as $field){
 				$default_fields_names[] = $field->name;
 				$fieldname = $field->name;
-				$default_fields_values[] = $form->data[$fieldname];
+				$default_fields_values[$fieldname] = $form->data($fieldname, '');
 			}
-			$database->setQuery( "INSERT INTO #__comprofiler (".implode(",", $default_fields_names).") VALUES  ('".implode("','", $form->escapeVar($default_fields_values))."');" );
+			/*$database->setQuery( "INSERT INTO #__comprofiler (".implode(",", $default_fields_names).") VALUES  ('".implode("','", $form->escapeVar($default_fields_values))."');" );
 			if (!$database->query()) {
 				JError::raiseWarning(100, $database->getErrorMsg());
-			}
+			}*/
+			
+			\GCore\Libs\GModel::generateModel('Profiler', array(
+				'tablename' => '#__comprofiler',
+			));
+			\GCore\Models\Profiler::getInstance()->save($default_fields_values);
 			/**********************************************/
 		}
 		// Send registration confirmation mail
@@ -226,6 +232,7 @@ Class JoomlaRegistration extends \GCore\Admin\Extensions\Chronoforms\Action{
 		$sitename 		= $mainframe->getCfg( 'sitename' );
 		//$useractivation = $usersConfig->get( 'useractivation' );
 		$useractivation = $config->get('useractivation', $usersConfig->get('useractivation'));
+		$sendpassword	= $usersConfig->get('sendpassword', 1);
 		$mailfrom 		= $mainframe->getCfg( 'mailfrom' );
 		$fromname 		= $mainframe->getCfg( 'fromname' );
 		$siteURL		= JURI::base();
@@ -251,7 +258,7 @@ Class JoomlaRegistration extends \GCore\Admin\Extensions\Chronoforms\Action{
 				$data['name'],
 				$data['sitename']
 			);
-
+			/*
 			$emailBody = JText::sprintf(
 				'COM_USERS_EMAIL_REGISTERED_WITH_ADMIN_ACTIVATION_BODY',
 				$data['name'],
@@ -261,6 +268,27 @@ Class JoomlaRegistration extends \GCore\Admin\Extensions\Chronoforms\Action{
 				$data['username'],
 				$data['password_clear']
 			);
+			*/
+			if($sendpassword){
+				$emailBody = JText::sprintf(
+				'COM_USERS_EMAIL_REGISTERED_WITH_ADMIN_ACTIVATION_BODY',
+				$data['name'],
+				$data['sitename'],
+				$data['activate'],
+				$data['siteurl'],
+				$data['username'],
+				$data['password_clear']
+				);
+			}else{
+				$emailBody = JText::sprintf(
+				'COM_USERS_EMAIL_REGISTERED_WITH_ADMIN_ACTIVATION_BODY_NOPW',
+				$data['name'],
+				$data['sitename'],
+				$data['activate'],
+				$data['siteurl'],
+				$data['username']
+				);
+			}
 		}
 		else if ($useractivation == 1)
 		{
@@ -275,7 +303,7 @@ Class JoomlaRegistration extends \GCore\Admin\Extensions\Chronoforms\Action{
 				$data['sitename']
 			);
 
-			$emailBody = JText::sprintf(
+			/*$emailBody = JText::sprintf(
 				'COM_USERS_EMAIL_REGISTERED_WITH_ACTIVATION_BODY',
 				$data['name'],
 				$data['sitename'],
@@ -283,7 +311,27 @@ Class JoomlaRegistration extends \GCore\Admin\Extensions\Chronoforms\Action{
 				$data['siteurl'],
 				$data['username'],
 				$data['password_clear']
-			);
+			);*/
+			if($sendpassword){
+				$emailBody = JText::sprintf(
+				'COM_USERS_EMAIL_REGISTERED_WITH_ACTIVATION_BODY',
+				$data['name'],
+				$data['sitename'],
+				$data['activate'],
+				$data['siteurl'],
+				$data['username'],
+				$data['password_clear']
+				);
+			}else{
+				$emailBody = JText::sprintf(
+				'COM_USERS_EMAIL_REGISTERED_WITH_ACTIVATION_BODY_NOPW',
+				$data['name'],
+				$data['sitename'],
+				$data['activate'],
+				$data['siteurl'],
+				$data['username']
+				);
+			}
 		} else {
 
 			$emailSubject	= JText::sprintf(
@@ -292,17 +340,28 @@ Class JoomlaRegistration extends \GCore\Admin\Extensions\Chronoforms\Action{
 				$data['sitename']
 			);
 
-			$emailBody = JText::sprintf(
-				'COM_USERS_EMAIL_REGISTERED_BODY',
-				$data['name'],
-				$data['sitename'],
-				$data['siteurl']
-			);
+			if($sendpassword){
+				$emailBody = JText::sprintf(
+					'COM_USERS_EMAIL_REGISTERED_BODY',
+					$data['name'],
+					$data['sitename'],
+					$data['siteurl'],
+					$data['username'],
+					$data['password_clear']
+				);
+			}else{
+				$emailBody = JText::sprintf(
+					'COM_USERS_EMAIL_REGISTERED_BODY_NOPW',
+					$data['name'],
+					$data['sitename'],
+					$data['siteurl']
+				);
+			}
 		}
 		//pr($emailBody);
 
 		// Send the registration email.
-		$JMail = new JMail();
+		$JMail = JFactory::getMailer();
 		$return = $JMail->sendMail($data['mailfrom'], $data['fromname'], $data['email'], $emailSubject, $emailBody);
 
 		// Check for an error.
@@ -359,5 +418,15 @@ Class JoomlaRegistration extends \GCore\Admin\Extensions\Chronoforms\Action{
 		echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][enable_cb_support]', array('type' => 'dropdown', 'label' => l_('CF_JOOMLA_REG_ENABLE_CB_SUPPORT'), 'options' => array(0 => l_('NO'), 1 => l_('YES')), 'sublabel' => l_('CF_JOOMLA_REG_ENABLE_CB_SUPPORT_DESC')));
 		echo \GCore\Helpers\Html::formSecEnd();
 		echo \GCore\Helpers\Html::formEnd();
+	}
+	
+	public static function config_check($data = array()){
+		$diags = array();
+		$diags[l_('CF_DIAG_NAME_SET')] = !empty($data['name']);
+		$diags[l_('CF_DIAG_USERNAME_SET')] = !empty($data['username']);
+		$diags[l_('CF_DIAG_EMAIL_SET')] = !empty($data['email']);
+		$diags[l_('CF_DIAG_PASSWORD_SET')] = !empty($data['password']);
+		$diags[l_('CF_DIAG_PASSWORD2_SET')] = !empty($data['password2']);
+		return $diags;
 	}
 }

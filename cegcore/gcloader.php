@@ -73,6 +73,7 @@ namespace GCore{
 		static $GSITE_PATH = '';
 		static $GSITE_URL = '';
 		static $GSITE_PLATFORM = '';
+		static $GCORE_ROOT_PATH = '';
 		static $GCORE_ROOT_URL = '';
 		static $EXTENSIONS_PATHS = array();
 		static $EXTENSIONS_URLS = array();

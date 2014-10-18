@@ -31,7 +31,7 @@ Class LoadRecaptcha extends \GCore\Admin\Extensions\Chronoforms\Action{
 		if(!defined('RECAPTCHA_API_SECURE_SERVER')){
 			define('RECAPTCHA_API_SECURE_SERVER', $config->get('api_secure_server'));
 		}
-		$recaptcha_load = "<div id='recaptcha'>".$this->recaptcha_get_html($config->get('public_key'))."</div>";
+		$recaptcha_load = "<div id='recaptcha'>".$this->recaptcha_get_html($config->get('public_key'), null, (bool)$config->get('ssl_server'))."</div>";
 		$script = "
 	var RecaptchaOptions = {
 		theme : '".$config->get('theme', 'red')."',

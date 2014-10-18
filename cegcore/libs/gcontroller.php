@@ -307,9 +307,10 @@ class GController extends Controller {
 				unset($this->helpers[$k]);
 			}
 
-			$page = Request::data('page', $session->get(get_class($this).$prefix.'.'.$model_class->alias.'.page', 1));
+			$page = Request::data(\GCore\Libs\Base::getConfig('page_url_param_name', 'page'), $session->get(get_class($this).$prefix.'.'.$model_class->alias.'.page', 1));
 			$page = ($page < 1) ? 1 : $page;
-			$limit = Request::data('limit', $session->get(get_class($this).$prefix.'.'.$model_class->alias.'.limit', Base::getConfig('list_limit', 30)));
+			$active_limit = !empty($model_class->page_limit) ? $model_class->page_limit : Base::getConfig('list_limit', 30);
+			$limit = Request::data('limit', $session->get(get_class($this).$prefix.'.'.$model_class->alias.'.limit', $active_limit));
 			if($limit == 0 OR $limit > Base::getConfig('max_list_limit', 1000)){
 				$limit = Base::getConfig('max_list_limit', 1000);
 			}
@@ -320,7 +321,7 @@ class GController extends Controller {
 				$page = $model_class->page;
 			}
 			$offset = ($page - 1) * (int)$limit;
-			$total = $model_class->find('count', array('cache' => true));
+			$total = !empty($this->paginate_total) ? $this->paginate_total : $model_class->find('count', array('cache' => true));
 
 			$bad_page = false;
 			if($offset >= $total){
@@ -330,9 +331,11 @@ class GController extends Controller {
 				$offset = $limit * ($page - 1);
 			}
 			$page = ($page < 1) ? 1 : $page;
+			$offset = ($offset < 0) ? 0 : $offset;
 			$this->helpers['\GCore\Helpers\Paginator']['limit'] = $limit;
 			$this->helpers['\GCore\Helpers\Paginator']['page'] = $page;
 			$this->helpers['\GCore\Helpers\Paginator']['offset'] = $offset;
+			$this->helpers['\GCore\Helpers\Paginator']['page_param'] = \GCore\Libs\Base::getConfig('page_url_param_name', 'page');
 
 			if(!$bad_page){
 				$session->set(get_class($this).$prefix.'.'.$model_class->alias.'.page', $page);

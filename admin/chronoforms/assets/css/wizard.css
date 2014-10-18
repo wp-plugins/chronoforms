@@ -16,6 +16,11 @@
 .action_icon{margin:0px 2px !important;cursor: pointer;}
 .form_action_label{font-size:11px !important;}
 .action_icon_number{margin:0px 2px !important;font-size:11px !important;}
+.action_label_label{margin:0px 2px !important;font-size:11px !important; background-color:#999999 !important;}
+.action_diagnostics_area{padding:2px 5px 2px 5px !important; opacity:0.75;}
+.action_diagnostics_area:hover{opacity:1.0;}
+.action_diagnostics_area .label{margin:0px 2px !important;font-size:10px !important;}
+.label_diagnostics{background-color:#000000 !important;}
 
 .field_source_item .original_element_config{display:none;}
 .field_source_item{font-weight:bold;display:block;min-height:10px;min-width:150px;background-color:white;cursor:move;}

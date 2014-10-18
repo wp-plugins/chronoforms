@@ -31,10 +31,11 @@ class Url {
 	public static function domain(){
 		$dURL = (isset($_SERVER['HTTPS']) AND ($_SERVER['HTTPS'] == 'on')) ? 'https://' : 'http://';
 		$dURL .= !empty($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : $_SERVER['SERVER_NAME'];
-		if ($_SERVER['SERVER_PORT'] != '80'){
-			$dURL .= ':'.$_SERVER['SERVER_PORT'];
+		if($_SERVER['SERVER_PORT'] != '80' AND $_SERVER['SERVER_PORT'] != '443'){
+			if(strpos($dURL, ':'.$_SERVER['SERVER_PORT']) === false){
+				$dURL .= ':'.$_SERVER['SERVER_PORT'];
+			}
 		}
-		
 		return $dURL;
 	}
 	

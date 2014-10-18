@@ -14,6 +14,7 @@ defined("GCORE_SITE") or die;
 	//$this->Toolbar->setTitle(l_('CF_LIST_DATA_TITLE'));
 	$this->Toolbar->addButton('remove', r_('index.php?ext=chronoforms&act=delete_data&table='.$this->data['table']), l_('CF_DELETE'), $this->Assets->image('remove', 'toolbar/'), 'submit_selectors');
 	$this->Toolbar->addButton('backup', r_('index.php?ext=chronoforms&act=backup_data&table='.$this->data['table']), l_('CF_BACKUP_TABLE'), \GCore\C::get('GCORE_ADMIN_URL').'extensions/chronoforms/assets/images/backup.png', 'link');
+	$this->Toolbar->addButton('backup_records', r_('index.php?ext=chronoforms&act=backup_records&table='.$this->data['table']), l_('CF_BACKUP_RECORDS'), \GCore\C::get('GCORE_ADMIN_URL').'extensions/chronoforms/assets/images/backup.png', 'submit_selectors');
 	$this->Toolbar->addButton('cancel', r_('index.php?ext=chronoforms'), l_('CF_CANCEL'), $this->Assets->image('cancel', 'toolbar/'), 'link');
 ?>
 <div class="row">

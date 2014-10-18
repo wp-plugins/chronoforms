@@ -162,7 +162,7 @@ class App {
 		//set theme
 		$doc = Document::getInstance($this->site, $this->thread);
 		$doc->theme = 'bootstrap3';//'gcoreui';//'semantic1';
-		$theme = \GCore\Helpers\Theme::getInstance();
+		$theme = \GCore\Helpers\Theme::getInstance();// in gcore app, bootstrap should be always loaded first with jquery
 		//load class and run the action
 		${$classname} = new $classname($this->site, $this->thread);
 		ob_start();
@@ -218,6 +218,8 @@ class App {
 		ob_start();
 		${$classname}->_finalize();
 		$this->buffer .= ob_get_clean();
+		//now load the theme files
+		//$theme = \GCore\Helpers\Theme::getInstance();
 
 		if($this->tvout != 'ajax' AND $doc->theme == 'bootstrap3'){
 			$this->buffer = '<div class="gbs3">'.$this->buffer.'</div>';

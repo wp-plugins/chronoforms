@@ -94,10 +94,12 @@ if(empty($fails)){
 			}else{
 				ob_start();
 				$toolbar = \GCore\Helpers\Module::render(array('type' => 'toolbar', 'site' => 'admin', 'params' => ''));
-				$messages = \GCore\Libs\AppJ::getSystemMessages();;
-				echo \GCore\Libs\AppJ::getHeader();
-				echo $toolbar;
-				echo '<div style="clear:both;"></div>';
+				$messages = \GCore\Libs\AppWp::getSystemMessages();;
+				echo \GCore\Libs\AppWp::getHeader();
+				if($toolbar){
+					echo $toolbar;
+					echo '<div style="clear:both;"></div>';
+				}
 				echo $messages;
 				//echo \GCore\Libs\AppJ::getHeader();
 				$system_output = ob_get_clean();

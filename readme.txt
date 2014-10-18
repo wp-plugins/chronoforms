@@ -1,8 +1,9 @@
 === Plugin Name ===
-Tags: forms, email, file uploads, JavaScript, CSS, Auto Responder, Captcha, ReCaptcha, contact, Drag and drop, Security, Validtaion, Bootstrap
+Contributors: maxpayne-1, rm2773
+Tags: email, form, contact form, web form, contact us, feedback, AJAX, uploads, Auto Responder, Captcha, ReCaptcha, contact, PayPal, Google spreadsheets, Authorize.net, 2Checkout, Bootstrap
 Requires at least: 3.0
-Tested up to: 3.9.1
-Stable tag: 1.0.0
+Tested up to: 4.0
+Stable tag: 5.0.3
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl.html
 
@@ -20,10 +21,15 @@ All support/docs/FAQs on our website www.ChronoEngine.com
 
 == Changelog ==
 
-= 1.0 =
-* V1.0 complete
+= 5.0.3 =
+* added diagnostics support to the forms manager.
+* added new 2Checkout actions for extra payment support.
+* made few enhancements to few actions.
+
+= 5.0 =
+* V5.0 complete
 
 == Upgrade Notice ==
 
-= 1.0 =
-* V1.0 complete
+= 5.0 =
+* V5.0 complete

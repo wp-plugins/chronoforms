@@ -13,6 +13,10 @@ defined("GCORE_SITE") or die;
 	$doc->addCssCode('
 		.gbs3 .panel-body{padding:5px;}
 		.gbs3 .panel{margin-bottom:5px;}
+		.gbs3 .alert{
+			margin:3px 0px;
+			padding:5px;
+		}
 	');
 
 	//$this->Toolbar->setTitle(l_('FORMS_MANAGER'));
@@ -38,17 +42,20 @@ defined("GCORE_SITE") or die;
 			echo $this->DataTable->headerPanel($this->DataTable->_l('<h4>'.l_('FORMS_MANAGER').'</h4>').$this->DataTable->_r($this->Toolbar->renderBar()));
 			echo $this->DataTable->headerPanel($this->DataTable->_r($this->Paginator->getNav()));
 			$this->DataTable->create();
-			$this->DataTable->header(
-				array(
-					'CHECK' => $this->Toolbar->selectAll(),
-					'Form.title' => $this->Sorter->link(l_('CF_FORM_NAME'), 'Form.title'),
-					'Form.view' => l_('CF_FRONT_VIEW'),
-					'Form.tables' => l_('CF_CONNECTED_TABLES'),
-					'Form.app' => $this->Sorter->link(l_('CF_FORM_APP'), 'Form.app'),
-					'Form.published' => l_('CF_PUBLISHED'),
-					'Form.id' => $this->Sorter->link(l_('CF_FORM_ID'), 'Form.id')
-				)
+			$columns_list = array(
+				'CHECK' => $this->Toolbar->selectAll(),
+				'Form.title' => $this->Sorter->link(l_('CF_FORM_NAME'), 'Form.title'),
+				'Form.diagnostics' => l_('CF_DIAGNOSTICS'),
+				'Form.view' => l_('CF_FRONT_VIEW'),
+				'Form.tables' => l_('CF_CONNECTED_TABLES'),
+				'Form.app' => $this->Sorter->link(l_('CF_FORM_APP'), 'Form.app'),
+				'Form.published' => l_('CF_PUBLISHED'),
+				'Form.id' => $this->Sorter->link(l_('CF_FORM_ID'), 'Form.id')
 			);
+			if(!$chronoforms_settings->get('wizard.display_diagnostics', 1)){
+				unset($columns_list['Form.diagnostics']);
+			}
+			$this->DataTable->header($columns_list);
 
 			foreach($forms as $k => $form){
 				$tables = array();
@@ -57,6 +64,7 @@ defined("GCORE_SITE") or die;
 						$tables[] = $action_config['tablename'];
 					}
 				}
+				$tables = array_unique($tables);
 				$list = '';
 				foreach($tables as $table){
 					$list .= '<li><a href="'.r_('index.php?ext=chronoforms&form_id={Form.id}&act=list_data&table='.$table).'">'.$table.'</a></li>';
@@ -72,6 +80,63 @@ defined("GCORE_SITE") or die;
 						</ul>
 					</div>
 					';
+				}
+				
+				$form_errors = 0;
+				$form_errors_list = array();
+				$form_warnings = 0;
+				$form_warnings_list = array();
+				$actions = $this->DnaBuilder->get_actions($forms[$k]['Form']['extras']['DNA']);
+				foreach($actions as $id => $action){
+					$id = str_replace('_', '', $id);
+					$action_class = '\GCore\Admin\Extensions\Chronoforms\Actions\\'.\GCore\Libs\Str::camilize($action).'\\'.\GCore\Libs\Str::camilize($action);
+					if(class_exists($action_class) AND isset($action_class::$title)){
+						$action_class = new $action_class();
+						if(method_exists($action_class, 'config_check')){
+							$check_result = $action_class::config_check(!empty($forms[$k]['Form']['extras']['actions_config'][$id]) ? $forms[$k]['Form']['extras']['actions_config'][$id] : array());
+							foreach($check_result as $text => $bool){
+								if($bool === false){
+									$class = 'label-danger';
+									$icon_class = 'fa-times';
+									$form_errors++;
+									$form_errors_list[] = $text;
+								}else if($bool === -1){
+									$class = 'label-warning';
+									$icon_class = 'fa-exclamation';
+									$form_warnings++;
+									$form_warnings_list[] = $text;
+								}
+							}
+							
+						}
+					}
+				}
+				$forms[$k]['Form']['diagnostics'] = $form_errors > 0 ? '<span class="label label-danger">'.$form_errors.' '.l_('CF_ISSUES').'&nbsp;<i class="fa fa-times fa-lg"></i></span>' : '<span class="label label-success">'.$form_errors.' '.l_('CF_ISSUES').'&nbsp;<i class="fa fa-check fa-lg"></i></span>';
+				$forms[$k]['Form']['diagnostics'] .= '&nbsp;';
+				$forms[$k]['Form']['diagnostics'] .= $form_warnings > 0 ? '<span class="label label-warning">'.$form_warnings.' '.l_('CF_NOTICES').'&nbsp;<i class="fa fa-exclamation fa-lg"></i></span>' : '<span class="label label-success">'.$form_warnings.' '.l_('CF_NOTICES').'&nbsp;<i class="fa fa-check fa-lg"></i></span>';
+				//$forms[$k]['Form']['diagnostics'] .= '<div class="alert alert-danger"><ol><li>'.implode('</li><li>', $form_errors_list).'</li></ol></div>';
+				
+				$field_name_errors = false;
+				$field_name_warnings = false;
+				//check invalid fields names
+				if(!empty($forms[$k]['Form']['extras']['fields'])){
+					foreach($forms[$k]['Form']['extras']['fields'] as $field){
+						if(strpos($field['name'], ' ') !== false){// OR strpos($field['name'], '-') !== false){
+							$field_name_errors = true;
+						}
+						if(preg_match("/^\d/", $field['name']) === 1){
+							$field_name_errors = true;
+						}
+						if($field['name'] == 'event' OR $field['name'] == 'option'){
+							$field_name_warnings = true;
+						}
+					}
+				}
+				if($field_name_errors){
+					$forms[$k]['Form']['diagnostics'] .= '<div class="alert alert-danger">'.l_('CF_FIELD_NAME_ERRORS').'</div>';
+				}
+				if($field_name_warnings){
+					$forms[$k]['Form']['diagnostics'] .= '<div class="alert alert-warning">'.l_('CF_FIELD_NAME_WARNINGS').'</div>';
 				}
 			}
 
@@ -91,9 +156,10 @@ defined("GCORE_SITE") or die;
 				'Form.title' => array(
 					//'link' => r_('index.php?ext=chronoforms&act=edit&id={Form.id}'),
 					'function' => $title_width_desc,
-					'style' => array('text-align' => 'left')
+					'style' => array('text-align' => 'left', 'width' => '20%')
 				),
 				'Form.view' => array(
+					'style' => array('width' => '10%'),
 					'html' => '<a href="'.r_(\GCore\C::get('GCORE_ROOT_URL').'index.php?ext=chronoforms&chronoform={Form.title}').'" target="_blank">'.l_('CF_VIEW_FORM').'</a>',
 				),
 				/*'Form.tables' => array(
@@ -108,13 +174,22 @@ defined("GCORE_SITE") or die;
 						</div>
 						',
 				),*/
+				'Form.diagnostics' => array(
+					'style' => array('width' => '25%'),
+				),
+				'Form.tables' => array(
+					'style' => array('width' => '10%'),
+				),
+				'Form.app' => array(
+					'style' => array('width' => '10%'),
+				),
 				'Form.published' => array(
 					'link' => array(r_('index.php?ext=chronoforms&act=toggle&gcb={Form.id}&val=1&fld=published'), r_('index.php?ext=chronoforms&act=toggle&gcb={Form.id}&val=0&fld=published')),
 					'image' => array($this->Assets->image('disabled.png'), $this->Assets->image('enabled.png')),
-					'style' => array('width' => '15%'),
+					'style' => array('width' => '5%'),
 				),
 				'Form.id' => array(
-					'style' => array('width' => '15%'),
+					'style' => array('width' => '5%'),
 				)
 			));
 			echo $this->DataTable->build();

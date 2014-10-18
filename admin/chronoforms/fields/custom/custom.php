@@ -22,16 +22,18 @@ class Custom {
 		'sublabel' => '',
 		'class' => '',
 		'title' => '',
+		'pure_code' => 0,
 		'code' => 'The custom element code should go here.',
 	);
 	
 	static $configs = array(
 		'label' => array('value' => 'Custom Code', 'label' => 'Label', 'type' => 'text', 'class' => 'L', 'alt' => 'ghost'),
+		'pure_code' => array('values' => 0, 'label' => 'Pure code', 'sublabel' => 'Use the code below only and do NOT embed it inside any containers, if this setting is enabled then it may cause layout problems.', 'type' => 'dropdown', 'options' => array(0 => 'No', 1 => 'Yes'), 'alt' => 'ghost'),
 		'code' => array('value' => 'The custom element code should go here.', 'label' => 'Code', 'type' => 'textarea', 'id' => 'custom_field_code_{N}', 'rows' => 15, 'cols' => 70, 'alt' => 'ghost', ':data-render' => 'no'),
 	);
 	
 	public static function element($data = array()){
-		if(!empty($data['code'])){
+		if(!empty($data['code']) OR !isset($data['code'])){
 			$data['code'] = '';
 		}
 		echo \GCore\Helpers\Html::formSecStart('original_element', 'custom_origin');
@@ -43,7 +45,7 @@ class Custom {
 		echo \GCore\Helpers\Html::formStart('original_element_config single_element_config', 'custom_origin_config');
 		echo \GCore\Helpers\Html::formSecStart();
 		foreach(self::$configs as $name => $params){
-			$params['value'] = isset($data[$name]) ? (($params['type'] == 'text') ? htmlspecialchars($data[$name]) : $data[$name]) : (isset($params['value']) ? $params['value'] : '');
+			$params['value'] = isset($data[$name]) ? ((in_array($params['type'], array('text', 'textarea'))) ? htmlspecialchars($data[$name]) : $data[$name]) : (isset($params['value']) ? $params['value'] : '');
 			$params['values'] = isset($data[$name]) ? $data[$name] : (isset($params['values']) ? $params['values'] : '');
 			echo \GCore\Helpers\Html::formLine('Form[extras][fields]['.$k.']['.$name.']', $params);
 		}

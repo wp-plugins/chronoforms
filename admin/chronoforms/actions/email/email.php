@@ -39,12 +39,14 @@ Class Email extends \GCore\Admin\Extensions\Chronoforms\Action{
 		<ul class="nav nav-tabs">
 			<li class="active"><a href="#basic-{N}" data-g-toggle="tab"><?php echo l_('CF_BASIC'); ?></a></li>
 			<li><a href="#advanced-{N}" data-g-toggle="tab"><?php echo l_('CF_ADVANCED'); ?></a></li>
+			<li><a href="#encryption-{N}" data-g-toggle="tab"><?php echo l_('CF_ENCRYPTION'); ?></a></li>
+			<li><a href="#body-template-{N}" data-g-toggle="tab"><?php echo l_('CF_EMAIL_BODY_TEMPLATE'); ?></a></li>
 		</ul>
 		<div class="tab-content">
 			<div id="basic-{N}" class="tab-pane active">
 			<?php
 			echo \GCore\Helpers\Html::formSecStart();
-			echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][action_label]', array('type' => 'text', 'label' => l_('CF_EMAIL_LABEL'), 'class' => 'XL', 'sublabel' => l_('CF_EMAIL_LABEL_DESC')));
+			echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][action_label]', array('type' => 'text', 'label' => l_('CF_ACTION_LABEL'), 'class' => 'XL', 'sublabel' => l_('CF_ACTION_LABEL_DESC')));
 			echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][enabled]', array('type' => 'dropdown', 'label' => l_('CF_ENABLED'), 'options' => array(0 => l_('NO'), 1 => l_('YES')), 'sublabel' => l_('CF_ENABLED_DESC')));
 			echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][to]', array('type' => 'text', 'label' => l_('CF_TO'), 'class' => 'XL', 'sublabel' => l_('CF_TO_DESC')));
 			echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][subject]', array('type' => 'text', 'label' => l_('CF_SUBJECT'), 'class' => 'XL', 'sublabel' => l_('CF_SUBJECT_DESC')));
@@ -52,6 +54,7 @@ Class Email extends \GCore\Admin\Extensions\Chronoforms\Action{
 			echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][from_email]', array('type' => 'text', 'label' => l_('CF_FROM_EMAIL'), 'class' => 'XL', 'sublabel' => l_('CF_FROM_EMAIL_DESC')));
 			echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][email_type]', array('type' => 'dropdown', 'label' => l_('CF_EMAIL_TYPE'), 'options' => array('html' => l_('CF_HTML'), 'text' => l_('CF_TEXT')), 'sublabel' => l_('CF_EMAIL_TYPE_DESC')));
 			//echo \GCore\Helpers\Html::formLine('email_template_loader', array('type' => 'custom', 'code' => '<input type="button" class="email_template_loader" id="email_template_loader_{N}" value="'.l_('CF_GENERATE_TEMPLATE').'" />', 'sublabel' => l_('CF_GENERATE_TEMPLATE_DESC')));
+			echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][template_generation]', array('type' => 'dropdown', 'label' => l_('CF_EMAIL_TEMPLATE_GENERATION'), 'values' => 0, 'options' => array(0 => l_('CF_CUSTOM'), 1 => l_('CF_AUTO')), 'sublabel' => l_('CF_EMAIL_TEMPLATE_GENERATION_DESC')));
 			echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][load_editor]', array('type' => 'button', 'class' => 'btn btn-primary', 'value' => l_('CF_LOAD_EDITOR'), 'onclick' => 'toggleEditor(this, \'email_template_{N}\');'));
 			echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][template]', array('type' => 'textarea', 'label' => l_('CF_EMAIL_TEMPLATE'), 'id' => 'email_template_{N}', 'style' => 'width:auto;', 'rows' => 20, 'cols' => 70, 'sublabel' => l_('CF_EMAIL_TEMPLATE_DESC')));
 			echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][attach]', array('type' => 'text', 'label' => l_('CF_ATTACHMENT_FILES'), 'class' => 'XL', 'sublabel' => l_('CF_ATTACHMENT_FILES_DESC')));
@@ -78,14 +81,42 @@ Class Email extends \GCore\Admin\Extensions\Chronoforms\Action{
 			echo \GCore\Helpers\Html::formSecEnd();
 			?>
 			</div>
+			<div id="encryption-{N}" class="tab-pane">
+			<?php
+			echo \GCore\Helpers\Html::formSecStart();
+			echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][encrypt_enabled]', array('type' => 'dropdown', 'label' => l_('CF_EMAIL_ENABLE_ENCRYPTION'), 'values' => 0, 'options' => array(0 => l_('NO'), 1 => l_('YES')), 'sublabel' => l_('CF_EMAIL_ENABLE_ENCRYPTION_DESC')));
+			echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][gpg_sec_key]', array('type' => 'text', 'label' => l_('CF_EMAIL_ENCRYPTION_KEY'), 'class' => 'XL', 'sublabel' => l_('CF_EMAIL_ENCRYPTION_KEY_DESC')));
+			echo \GCore\Helpers\Html::formSecEnd();
+			?>
+			</div>
+			<div id="body-template-{N}" class="tab-pane">
+			<?php
+			echo \GCore\Helpers\Html::formSecStart();
+			echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][template_header]', array('type' => 'textarea', 'label' => l_('CF_EMAIL_TEMPLATE_HEADER'), 'rows' => 5, 'cols' => 70, 'sublabel' => l_('CF_EMAIL_TEMPLATE_HEADER_DESC')));
+			echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][template_body]', array('type' => 'textarea', 'label' => l_('CF_EMAIL_TEMPLATE_BODY'), 'rows' => 5, 'cols' => 70, 'sublabel' => l_('CF_EMAIL_TEMPLATE_BODY_DESC')));
+			echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][template_footer]', array('type' => 'textarea', 'label' => l_('CF_EMAIL_TEMPLATE_FOOTER'), 'rows' => 5, 'cols' => 70, 'sublabel' => l_('CF_EMAIL_TEMPLATE_FOOTER_DESC')));
+			echo \GCore\Helpers\Html::formSecEnd();
+			?>
+			</div>
 		</div>
 		<?php
 		echo \GCore\Helpers\Html::formEnd();
 	}
+	
+	public static function config_check($data = array()){
+		$diags = array();
+		$diags[l_('CF_DIAG_ENABLED')] = !empty($data['enabled']);
+		$diags[l_('CF_DIAG_TO_ADDRESS_SET')] = !empty($data['to']) OR !empty($data['dto']);
+		$diags[l_('CF_DIAG_SUBJECT_SET')] = !empty($data['subject']);
+		$diags[l_('CF_DIAG_FROMNAME_SET')] = !empty($data['from_name']) OR !empty($data['dfrom_name']);
+		$diags[l_('CF_DIAG_FROMEMAIL_SET')] = !empty($data['from_email']) OR !empty($data['dfrom_email']);
+		$diags[l_('CF_DIAG_TEMPLATE_SET')] = !empty($data['template']);
+		return $diags;
+	}
 
 	function on_form_save(&$data, $action_id){
-		if(!empty($data['content']) AND empty($data['extras']['actions_config'][$action_id]['template'])){
-			$data['extras']['actions_config'][$action_id]['template'] = $this->field_replacer($data);
+		if(!empty($data['content']) AND (empty($data['extras']['actions_config'][$action_id]['template']) OR !empty($data['extras']['actions_config'][$action_id]['template_generation']))){
+			$data['extras']['actions_config'][$action_id]['template'] = $this->field_replacer($data, $action_id);
 		}
 	}
 
@@ -95,6 +126,7 @@ Class Email extends \GCore\Admin\Extensions\Chronoforms\Action{
 		ob_start();
 		eval('?>'.$config->get('template', ''));
 		$body = ob_get_clean();
+		$others = array();
 		//get recipient
 		$tos = array();
 		if(strlen(trim($config->get('to', '')))){
@@ -136,7 +168,6 @@ Class Email extends \GCore\Admin\Extensions\Chronoforms\Action{
 		//subject
 		$subject = trim($config->get('subject', '')) ? $config->get('subject', '') : $form->data($config->get('dsubject', ''));
 		//from
-		$others = array();
 		$others['from_name'] = trim($config->get('from_name', '')) ? $config->get('from_name', '') : $form->data($config->get('dfrom_name'), null);
 		$others['from_email'] = trim($config->get('from_email', '')) ? $config->get('from_email', '') : $form->data($config->get('dfrom_email'), null);
 		//reply to
@@ -145,13 +176,16 @@ Class Email extends \GCore\Admin\Extensions\Chronoforms\Action{
 		$others['type'] = $config->get('email_type', 'html');
 		
 		$form->data['ip_address'] = $_SERVER['REMOTE_ADDR'];
-		if($config->get('append_ip_address', 1)){
-			$body = $body."\n\n"."Poster's IP address:{ip_address}";
-		}
 		
 		if($others['type'] == 'html'){
+			if($config->get('append_ip_address', 1)){
+				$body = $body."<br /><br />"."IP: {ip_address}";
+			}
 			$body = \GCore\Libs\Str::replacer($body, $form->data, array('replace_null' => true, 'nl2br' => true));
 		}else{
+			if($config->get('append_ip_address', 1)){
+				$body = $body."\n\n"."IP: {ip_address}";
+			}
 			$body = \GCore\Libs\Str::replacer($body, $form->data, array('replace_null' => true));
 		}
 
@@ -172,6 +206,14 @@ Class Email extends \GCore\Admin\Extensions\Chronoforms\Action{
 				\GCore\Libs\Base::setConfig($k, $v);
 			}
 		}
+		
+		//encrypt the email
+		if($config->get('encrypt_enabled', 0) == 1 AND class_exists('Crypt_GPG')){
+			$mySecretKeyId = trim($config->get('gpg_sec_key', '')); //Add Encryption key here
+			$gpg = new Crypt_GPG();
+			$gpg->addEncryptKey($mySecretKeyId);
+			$body = $gpg->encrypt($body);
+		}
 
 		$sent = \GCore\Libs\Mailer::send($tos, $subject, $body, $attachments, $others);
 		if($sent){
@@ -191,32 +233,43 @@ Class Email extends \GCore\Admin\Extensions\Chronoforms\Action{
 		$form->debug[$action_id][self::$title][] = "Body:\n".$body;
 	}
 
-	function field_replacer($data){
+	function field_replacer($data, $action_id){
 		$htmlcode = $data['content'];
+		
+		$email_template_header = trim($data['extras']['actions_config'][$action_id]['template_header']) ? $data['extras']['actions_config'][$action_id]['template_header'] : '<table>';
+		$email_template_body = trim($data['extras']['actions_config'][$action_id]['template_body']) ? $data['extras']['actions_config'][$action_id]['template_body'] : '<tr><td>{label}</td><td>{name}</td></tr>'."\n";
+		$email_template_footer = trim($data['extras']['actions_config'][$action_id]['template_footer']) ? $data['extras']['actions_config'][$action_id]['template_footer'] : '</table>';
+		
 		if(!empty($data['form_type'])){
-			$html_string = '<table>';
+			$html_string = $email_template_header;
 			$html_string .= "\n";
 			foreach($data['extras']['fields'] as $k => $field){
-				if(!in_array($field['type'], array('button', 'submit', 'reset', 'captcha', 'multi'))){
-					$html_string .= '<tr>';
+				if(!in_array($field['type'], array('button', 'submit', 'reset', 'captcha', 'multi', 'container'))){
+					$field['label'] = (!empty($field['label']['text']) ? $field['label']['text'] : $field['label']);
+					$field['name'] = '{'.implode('.', explode('[', str_replace(']', '', str_replace('[]', '', $field['name'])))).'}';
+					/*$html_string .= '<tr>';
 					$html_string .= '<td>'.(!empty($field['label']['text']) ? $field['label']['text'] : $field['label']).'</td>';
 					$html_string .= '<td>{'.str_replace('[]', '', $field['name']).'}</td>';
 					$html_string .= '</tr>';
-					$html_string .= "\n";
+					$html_string .= "\n";*/
+					$html_string .= \GCore\Libs\Str::replacer($email_template_body, $field);
 				}
 				if(!empty($field['inputs'])){
 					foreach($field['inputs'] as $fn => $field_input){
 						if(!in_array($field_input['type'], array('button', 'submit', 'reset', 'captcha', 'multi'))){
-							$html_string .= '<tr>';
+							$field_input['label'] = (!empty($field_input['label']['text']) ? $field_input['label']['text'] : $field_input['label']);
+							$field_input['name'] = '{'.implode('.', explode('[', str_replace(']', '', str_replace('[]', '', $field_input['name'])))).'}';
+							/*$html_string .= '<tr>';
 							$html_string .= '<td>'.(!empty($field_input['label']['text']) ? $field_input['label']['text'] : $field_input['label']).'</td>';
 							$html_string .= '<td>{'.str_replace('[]', '', $field_input['name']).'}</td>';
 							$html_string .= '</tr>';
-							$html_string .= "\n";
+							$html_string .= "\n";*/
+							$html_string .= \GCore\Libs\Str::replacer($email_template_body, $field_input);
 						}
 					}
 				}
 			}
-			$html_string .= '</table>';
+			$html_string .= $email_template_footer;
 			return $html_string;
 		}
 		//find any style code in the email template and get it here

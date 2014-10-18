@@ -102,6 +102,7 @@ class Str {
 	//generate slug of a string
 	public static function slug($str, $limiter = '-'){
 		$str = mb_convert_encoding((string)$str, 'UTF-8', mb_list_encodings());
+		$str = str_replace(array("'", "-", '"'), '', $str);
 		$str = preg_replace('/[^A-Za-z0-9-]+/', $limiter, $str);;
 		$str = str_replace($limiter.$limiter, $limiter, $str);
 		$str = trim($str, $limiter);
@@ -124,7 +125,7 @@ class Str {
 			$list = explode("\n", trim($str));
 			foreach($list as $item){
 				$fields_data = explode($separator, $item, 2);
-				$array[$fields_data[0]] = !empty($fields_data[1]) ? trim($fields_data[1]) : trim($fields_data[0]);
+				$array[trim($fields_data[0])] = !empty($fields_data[1]) ? trim($fields_data[1]) : trim($fields_data[0]);
 			}
 		}
 		return $array;

@@ -27,10 +27,29 @@ defined("GCORE_SITE") or die;
 
 	$save_ext = '';
 	if($chronoforms_settings->get('wizard.safe_save', 1)){
-		$save_ext = '
-		jQuery("#serialized_form_data").val(jQuery("#admin_form").serialize());
+		if(!(int)$chronoforms_settings->get('wizard.safe_save_chunk_size', 0)){
+			$save_ext .= '
+			jQuery("#serialized_form_data").val(jQuery("#admin_form").serialize());
+			';
+		}else{
+			$save_ext .= '
+			var chunks_counter = 0;
+			var chunks = jQuery("#admin_form").serialize().match(/.{1,'.$chronoforms_settings->get('wizard.safe_save_chunk_size', 0).'}/g);
+			
+			jQuery.each(chunks, function(i, c){
+				var $chunk_clone = jQuery("<textarea></textarea>");
+				$chunk_clone.prop("class", "serialized_form_data_chunks");
+				$chunk_clone.prop("name", "serialized_form_data_chunks["+chunks_counter+"]");
+				$chunk_clone.val(c);
+				jQuery("#serialized_form_chunks_area").append($chunk_clone);
+				chunks_counter++;
+			});
+			';
+		}
+		$save_ext .= '
 		jQuery("#admin_form :input").prop("disabled", true);
 		jQuery("#serialized_form_data").prop("disabled", false);
+		jQuery(".serialized_form_data_chunks").prop("disabled", false);
 		';
 	}
 	$doc->addJsCode('
@@ -42,6 +61,7 @@ defined("GCORE_SITE") or die;
 				alert("'.l_('CF_FORM_TITLE_REQUIRED').'");
 			}else{
 				'.$save_ext.'
+				jQuery(".toolbar-button").prop("disabled", true);
 				jQuery("#admin_form").submit();
 			}
 		}
@@ -207,10 +227,8 @@ jQuery(window).scroll(function(){
 		return false;
 	}
 	jQuery(document).ready(function($){
-		//$('.action_config').css('display', 'none');
-		//$('.hidden_event').css('display', 'none');
-		$('.collapse').on('show.bs.collapse', function(){
-			$(this).closest('.panel-group').find('.in').each(function(i, inp){
+		$('.panel-collapse').on('show.bs.collapse', function(){
+			$.each($(this).closest('.panel-group').find('.in'), function(i, inp){
 				$(inp).collapse('hide');
 			});
 		});
@@ -336,7 +354,7 @@ jQuery(window).scroll(function(){
 					var Element = copy_code_p.children().first();
 					Element.find('.panel-heading').first().find('.action_icon').remove();
 					Element.find('.panel-heading').first().find('.clearfix').remove();
-					Element.children('.config_box').find('[id^=container_id]').first().val(container.attr('container_num'));
+					Element.children('.config_box').find('[id^=container_id]').last().val(container.attr('container_num'));
 					addLinks(Element);
 					//copy_code = copy_code_p.html();
 					//console.log(copy_code);
@@ -366,6 +384,11 @@ jQuery(window).scroll(function(){
 				$('#modal_generic_config').find('.modal-title').html('<?php echo l_('CF_EDIT_CONTAINER_SETTINGS'); ?>');
 				var Element_Config = Element.find('.config_box').first();
 				Element_Config.css('display', 'block');
+				Element_Config.find('.nav > li').removeClass('active');
+				Element_Config.find('.nav > li:first-child').addClass('active');
+				Element_Config.find('.tab-content > div.tab-pane').removeClass('active');
+				Element_Config.find('.tab-content > div.tab-pane:first-child').addClass('active');
+				
 				$('#modal_generic_config').find('.modal-body').append(Element_Config);
 				$('#modal_generic_config').css('top', jQuery(window).scrollTop());
 				$('#modal_generic_config').modal();
@@ -512,7 +535,7 @@ jQuery(window).scroll(function(){
 				'class':'paste_icon paste_container_icon action_icon label label-default',
 				'title':'<?php echo l_('CF_PASTE'); ?>',
 				'text':'<?php echo l_('CF_PASTE'); ?>',
-			}).on('click', function(){
+			});/*.on('click', function(){
 				if(typeof ChronoformWizard.fields_clipboard != 'undefined'){
 					var field_number = ChronoformWizard.fields_clipboard.find('span.field_icon_number').first().text();
 					//console.log(field_number);
@@ -533,7 +556,7 @@ jQuery(window).scroll(function(){
 					$(this).closest('.element_box').children('.fields_container').first().append(Element);
 					fields_count = fields_count + 1;
 				}
-			});
+			});*/
 
 			container_icons.append(pasteLink);
 			container_icons.append(collapseLink);
@@ -678,7 +701,7 @@ jQuery(window).scroll(function(){
 						var obj = {};
 						Element_Config.find(':input').each(function(i, inp){
 							var inpData = $(inp).val();
-							if($(inp).attr('alt') == 'options'){
+							if($(inp).attr('alt') == 'options' && $(inp).val().length < 3000){
 								inpData = {};
 								var lines = $(inp).val().split("\n");
 								$.each(lines, function(ln, ld){
@@ -818,7 +841,7 @@ jQuery(window).scroll(function(){
 				var Element = $(this).closest('.form_action');
 				//$(this).closest('.form_action').find('.action_config').last().modal();
 				$('#modal_generic_config').find('.modal-body').empty();
-				$('#modal_generic_config').find('.modal-title').html('<?php echo l_('CF_EDIT_ACTION_SETTINGS'); ?>');
+				$('#modal_generic_config').find('.modal-title').html('<?php echo l_('CF_EDIT_ACTION_SETTINGS'); ?>:'+'&nbsp;'+$(this).closest('.panel-heading').find('.action-title-labels').html());
 				var Element_Config = Element.children('.panel-body').children('.action_config').last();
 				Element_Config.css('display', 'block');
 				$('#modal_generic_config').find('.modal-body').append(Element_Config);
@@ -846,7 +869,7 @@ jQuery(window).scroll(function(){
 					'class':'cfaction_'+ui.draggable.attr('id')+'_element_view wizard_element form_action panel panel-default',
 					'item_id':ui.draggable.attr('id'),
 				});
-				form_action.append('<div class="panel-heading"><div class="pull-left"><span class="form_action_label label label-primary">'+ui.draggable.attr('title')+'</span><span class="label label-info action_icon_number" style="">'+action_count+'</span></div></div>');
+				form_action.append('<div class="panel-heading"><div class="pull-left action-title-labels"><span class="form_action_label label label-primary">'+ui.draggable.attr('title')+'</span><span class="label label-info action_icon_number" style="">'+action_count+'</span></div></div>');
 
 				var action_icons = $('<div/>', {
 					'id':'action_icons_'+action_count,
@@ -959,9 +982,16 @@ jQuery(window).scroll(function(){
 	</div>
 </div>
 <div class="row">
+	<div class="col-md-12 pull-left text-left help-block">
+		<?php echo !empty($this->data['Form']['params']['description']) ? $this->data['Form']['params']['description'] : ''; ?>
+	</div>
+</div>
+<div class="row">
 <form action="<?php echo r_('index.php?ext=chronoforms&act=save'); ?>" method="post" enctype="multipart/form-data" name="admin_form" id="admin_form">
 	<?php echo $this->Html->input('Form[id]', array('type' => 'hidden')); ?>
 	<?php echo $this->Html->input('serialized_form_data', array('type' => 'textarea', 'id' => 'serialized_form_data', 'style' => 'display:none;')); ?>
+	<div id="serialized_form_chunks_area" style="display:none;">
+	</div>
 	<div id="details-panel">
 		<div class="panel panel-default">
 			<div class="panel-heading">
@@ -972,6 +1002,8 @@ jQuery(window).scroll(function(){
 					<li><a href="#events-list" id="events-list-tab-key" data-g-toggle="tab"><?php echo l_('CF_SETUP'); ?></a></li>
 					<li><a href="#locales" data-g-toggle="tab"><?php echo l_('CF_LOCALES'); ?></a></li>
 					<li><a href="#db_settings" data-g-toggle="tab"><?php echo l_('CF_DB_SETTINGS'); ?></a></li>
+					<li><a href="#style" data-g-toggle="tab"><?php echo l_('CF_STYLE'); ?></a></li>
+					<li><a href="#validation" data-g-toggle="tab"><?php echo l_('CF_VALIDATION'); ?></a></li>
 				</ul>
 			</div>
 			<div class="panel-body">
@@ -984,8 +1016,6 @@ jQuery(window).scroll(function(){
 						<?php echo $this->Html->formLine('Form[published]', array('type' => 'dropdown', 'label' => l_('CF_PUBLISHED'), 'options' => array(0 => l_('NO'), 1 => l_('YES')), 'values' => 1)); ?>
 						<?php echo $this->Html->formLine('Form[params][setup]', array('type' => 'dropdown', 'id' => 'cform_setup', 'label' => l_('CF_SETUP_MODE'), 'values' => (!empty($this->data['setup']) ? 1 : 0), 'options' => array(0 => l_('CF_ADVANCED'), 1 => l_('CF_SIMPLE')), 'sublabel' => l_('CF_SETUP_MODE_DESC'))); ?>
 						<?php //echo $this->Html->formLine('Form[params][html_helper_set]', array('type' => 'dropdown', 'label' => l_('CF_DESIGNER_SET'), 'options' => array('div' => 'DIV', 'table' => 'TABLE', 'ul' => 'UL'), 'sublabel' => l_('CF_DESIGNER_SET_DESC'))); ?>
-						<?php echo $this->Html->formLine('Form[params][theme]', array('type' => 'dropdown', 'id' => 'cform_bootstrap', 'label' => l_('CF_FORM_THEME'), 'values' => 'bootstrap3', 'options' => array('gcoreui' => l_('GCoreUI'), 'bootstrap3' => l_('Bootstrap3'), 'none' => l_('CF_NONE')/*, 'semantic1' => l_('Semantic 1')*/), 'sublabel' => l_('CF_FORM_THEME_DESC'))); ?>
-						<?php echo $this->Html->formLine('Form[params][tight_layout]', array('type' => 'dropdown', 'label' => l_('CF_TIGHT_LAYOUT'), 'options' => array(0 => l_('NO'), 1 => l_('YES')), 'sublabel' => l_('CF_TIGHT_LAYOUT_DESC'))); ?>
 						<?php //echo $this->Html->formLine('Form[params][jquery]', array('type' => 'dropdown', 'label' => l_('CF_LOAD_JQUERY'), 'values' => 1, 'options' => array(0 => l_('NO'), 1 => l_('YES')), 'sublabel' => l_('CF_LOAD_JQUERY_DESC'))); ?>
 						<?php echo $this->Html->formLine('Form[app]', array('type' => 'text', 'label' => l_('CF_FORM_APP'), 'class' => 'M', 'sublabel' => l_('CF_FORM_APP_DESC'))); ?>
 						<?php echo $this->Html->formSecEnd(); ?>
@@ -1195,7 +1225,7 @@ jQuery(window).scroll(function(){
 							<?php
 								foreach($fields_types as $type){
 									$class = '\GCore\Admin\Extensions\Chronoforms\Fields\\'.\GCore\Libs\Str::camilize($type).'\\'.\GCore\Libs\Str::camilize($type);
-									$class::element();
+									$class::element($class::$settings);
 									$class::config();
 								}
 							?>
@@ -1230,28 +1260,30 @@ jQuery(window).scroll(function(){
 											<?php foreach($easy_actions as $easy_action_id => $easy_action_name): ?>
 												<?php
 													$action_class = '\GCore\Admin\Extensions\Chronoforms\Actions\\'.\GCore\Libs\Str::camilize($easy_action_name).'\\'.\GCore\Libs\Str::camilize($easy_action_name);
-													if(class_exists($action_class) AND property_exists($action_class, 'setup')):
-												?>
-													<div id="<?php echo $easy_action_name.$easy_action_id; ?>" class="tab-pane <?php echo (empty($counter)) ? 'active' : ''; ?>">
-														<?php
-															ob_start();
-															$action_class::config();
-															$action_config = ob_get_clean();
-															$action_config = str_replace('{N}', str_replace('_', '', $easy_action_id), $action_config);
-															echo $action_config;
+													if(class_exists($action_class)):
+														ob_start();
+														$action_class = new $action_class();
+														$action_class::config();
+														$action_config = ob_get_clean();
+														if(isset($action_class->defaults)){
+															$action_config = \GCore\Helpers\DataLoader::load($action_config, array('Form' => array('extras' => array('actions_config' => array('{N}' => $action_class->defaults)))));
+														}
+														$action_config = str_replace('{N}', str_replace('_', '', $easy_action_id), $action_config);
+														if(property_exists($action_class, 'setup')):
 														?>
-													</div>
-												<?php $counter++; ?>
-												<?php else: ?>
-													<div style="display:none;">
-														<?php
-															ob_start();
-															$action_class::config();
-															$action_config = ob_get_clean();
-															$action_config = str_replace('{N}', str_replace('_', '', $easy_action_id), $action_config);
-															echo $action_config;
-														?>
-													</div>
+														<div id="<?php echo $easy_action_name.$easy_action_id; ?>" class="tab-pane <?php echo (empty($counter)) ? 'active' : ''; ?>">
+															<?php
+																echo $action_config;
+															?>
+														</div>
+														<?php $counter++; ?>
+														<?php else: ?>
+														<div style="display:none;">
+															<?php
+																echo $action_config;
+															?>
+														</div>
+													<?php endif; ?>
 												<?php endif; ?>
 											<?php endforeach; ?>
 										</div>
@@ -1455,10 +1487,58 @@ jQuery(window).scroll(function(){
 								}
 							}
 						}
+						$tables = array_unique($tables);
 						?>
 						<?php foreach($tables as $table): ?>
 							<?php echo $this->Html->formLine('Form[extras][db_fields_list]['.$table.']', array('type' => 'textarea', 'label' => array('text' => sprintf(l_('CF_DB_FIELDS_LIST'), $table), 'position' => 'top'), 'style' => 'width:auto;', 'rows' => 7, 'cols' => 100, 'sublabel' => l_('CF_DB_FIELDS_LIST_DESC'))); ?>
 						<?php endforeach; ?>
+						<?php echo $this->Html->formSecEnd(); ?>
+						<?php echo $this->Html->formEnd(); ?>
+					</div>
+					
+					<div id="style" class="tab-pane">
+						<?php echo $this->Html->formStart(); ?>
+						<?php echo $this->Html->formSecStart(); ?>
+						<?php echo $this->Html->formLine('Form[params][theme]', array('type' => 'dropdown', 'id' => 'cform_bootstrap', 'label' => l_('CF_FORM_THEME'), 'values' => 'bootstrap3', 'options' => array('gcoreui' => l_('GCoreUI'), 'bootstrap3' => l_('Bootstrap3'), 'none' => l_('CF_NONE')/*, 'semantic1' => l_('Semantic 1')*/), 'sublabel' => l_('CF_FORM_THEME_DESC'))); ?>
+						<?php echo $this->Html->formLine('Form[params][responsive_layout]', array('type' => 'dropdown', 'label' => l_('CF_RESPONSIVE_LAYOUT'), 'options' => array(0 => l_('NO'), 1 => l_('YES')), 'sublabel' => l_('CF_RESPONSIVE_LAYOUT_DESC'))); ?>
+						<?php echo $this->Html->formLine('Form[params][tight_layout]', array('type' => 'dropdown', 'label' => l_('CF_TIGHT_LAYOUT'), 'options' => array(0 => l_('NO'), 1 => l_('YES')), 'sublabel' => l_('CF_TIGHT_LAYOUT_DESC'))); ?>
+						<?php echo $this->Html->formLine('Form[params][rtl_support]', array('type' => 'dropdown', 'label' => l_('CF_RTL_SUPPORT'), 'options' => array(0 => l_('NO'), 1 => l_('YES')), 'sublabel' => l_('CF_RTL_SUPPORT_DESC'))); ?>
+						<?php echo $this->Html->formLine('Form[params][labels_right_aligned]', array('type' => 'dropdown', 'label' => l_('CF_LABELS_RIGHT_ALIGNED'), 'options' => array(0 => l_('NO'), 1 => l_('YES')), 'sublabel' => l_('CF_LABELS_RIGHT_ALIGNED_DESC'))); ?>
+						<?php echo $this->Html->formLine('Form[params][labels_auto_width]', array('type' => 'dropdown', 'label' => l_('CF_LABELS_AUTO_WIDTH'), 'options' => array(0 => l_('NO'), 1 => l_('YES')), 'sublabel' => l_('CF_LABELS_AUTO_WIDTH_DESC'))); ?>
+						<?php echo $this->Html->formSecEnd(); ?>
+						<?php echo $this->Html->formEnd(); ?>
+					</div>
+					
+					<div id="validation" class="tab-pane">
+						<?php echo $this->Html->formStart(); ?>
+						<?php echo $this->Html->formSecStart(); ?>
+						<?php echo $this->Html->formLine('Form[params][js_validation_language]', array('type' => 'dropdown', 'label' => l_('CF_JS_VALIDATION_LANGUAGE'), 'options' => 
+						array(
+							'' => l_('CF_JS_VALIDATION_LANGUAGE_DYNAMIC'),
+							'en' => 'English', 
+							'fr' => 'French', 
+							'de' => 'Deutsch', 
+							'nl' => 'Dutch', 
+							'es' => 'Spanish', 
+							'da' => 'Danish', 
+							'it' => 'Italian', 
+							'jp' => 'Japanese', 
+							'cn' => 'Chinese', 
+							'ru' => 'Russain', 
+							'pt' => 'Portugese', 
+							'gr' => 'Greek', 
+							'tr' => 'Turkish', 
+							'pl' => 'Polish', 
+							'ro' => 'Romanian', 
+							'no' => 'Norwegian bokmål', 
+							'fa' => 'Farsi', 
+							'lv' => 'Latvian', 
+							'sl' => 'Slovenščina', 
+							'sk' => 'Slovak', 
+							'cz' => 'Čeština', 
+							'th' => 'Thai'
+						), 
+						'sublabel' => l_('CF_JS_VALIDATION_LANGUAGE_DESC'))); ?>
 						<?php echo $this->Html->formSecEnd(); ?>
 						<?php echo $this->Html->formEnd(); ?>
 					</div>

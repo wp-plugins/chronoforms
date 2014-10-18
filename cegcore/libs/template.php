@@ -61,7 +61,7 @@ class Template {
 		$chunks = array($this->doc->getBase(), $this->doc->getMeta(), $this->doc->getTitle(), $this->doc->getFavicon());
 		//add css files list
 		foreach($this->doc->cssfiles as $cssfile){
-			$chunks[] = \GCore\Helpers\Html::_concat($cssfile, array_keys($cssfile), '<link ', '>');
+			$chunks[] = \GCore\Helpers\Html::_concat($cssfile, array_keys($cssfile), '<link ', ' />');
 		}
 		//add css code list
 		foreach($this->doc->csscodes as $media => $codes){

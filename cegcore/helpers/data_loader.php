@@ -142,6 +142,9 @@ class DataLoader {
 				$v_pat = '/ value=("|\')(.*?)("|\')/i';
 				$n_pat = '/ name=("|\')(.*?)("|\')/i';
 				preg_match($n_pat, $field, $name_attr);
+				if(empty($name_attr[2])){
+					continue;
+				}
 				
 				$name = self::_dotname($name_attr[2]);
 				$value = \GCore\Libs\Arr::getVal($data, explode('.', $name));

@@ -17,16 +17,16 @@ Class LoadCaptcha extends \GCore\Admin\Extensions\Chronoforms\Action{
 		$config =  $form->actions_config[$action_id];
 		$config = new \GCore\Libs\Parameter($config);
 		if((bool)$config->get('refresh_button', 0) === true){
-			$form->form['Form']['content'] = str_replace('{captcha_img}', '<img src="'.r_(\GCore\C::get('GCORE_ROOT_URL').'index.php?ext=chronoforms&act=render&action=load_captcha&chronoform='.$form->form['Form']['title'].'&action_id='.$action_id.'&tvout=ajax').'" alt="" id="gcaptcha_'.$action_id.'" /><img src="'.\GCore\C::get('GCORE_FRONT_URL').'admin/extensions/chronoforms/actions/load_captcha/refresh.png" border="0" style="padding:0px 0px 15px 10px;" alt="refresh" onclick="document.getElementById(\'gcaptcha_'.$action_id.'\').src = \''.r_(\GCore\C::get('GCORE_ROOT_URL').'index.php?ext=chronoforms&act=render&tvout=ajax&action=load_captcha&action_id='.$action_id.'&chronoform=').$form->form['Form']['title'].'\' + \'&\' + Math.random();" />', $form->form['Form']['content']);
+			$form->form['Form']['content'] = str_replace('{captcha_img}', '<img src="'.r_(\GCore\C::get('GCORE_ROOT_URL').'index.php?ext=chronoforms&act=render&action=load_captcha&chronoform='.$form->form['Form']['title'].'&action_id='.$action_id.'&tvout=ajax&rand='.mt_rand()).'" alt="" id="gcaptcha_'.$action_id.'" /><img src="'.\GCore\C::get('GCORE_FRONT_URL').'admin/extensions/chronoforms/actions/load_captcha/refresh.png" border="0" style="padding:0px 0px 15px 10px;" alt="refresh" onclick="document.getElementById(\'gcaptcha_'.$action_id.'\').src = \''.r_(\GCore\C::get('GCORE_ROOT_URL').'index.php?ext=chronoforms&act=render&tvout=ajax&action=load_captcha&action_id='.$action_id.'&chronoform=').$form->form['Form']['title'].'\' + \'&\' + Math.random();" />', $form->form['Form']['content']);
 		}else{
-			$form->form['Form']['content'] = str_replace('{captcha_img}', '<img src="'.r_(\GCore\C::get('GCORE_ROOT_URL').'index.php?ext=chronoforms&act=render&action=load_captcha&chronoform='.$form->form['Form']['title'].'&action_id='.$action_id.'&tvout=ajax').'" alt="" />', $form->form['Form']['content']);
+			$form->form['Form']['content'] = str_replace('{captcha_img}', '<img src="'.r_(\GCore\C::get('GCORE_ROOT_URL').'index.php?ext=chronoforms&act=render&action=load_captcha&chronoform='.$form->form['Form']['title'].'&action_id='.$action_id.'&tvout=ajax&rand='.mt_rand()).'" alt="" />', $form->form['Form']['content']);
 		}
 	}
 
 	function render(&$form, $action_id){
 		$config = !empty($form->actions_config[$action_id]) ? $form->actions_config[$action_id] : array();
 		$config = new \GCore\Libs\Parameter($config);
-		\GCore\Helpers\Captcha\Captcha::display($config->get('fonts', 0));
+		\GCore\Helpers\Captcha\Captcha::display($config->get('fonts', 0), $form->form['Form']['title'].'_captcha');
 	}
 
 	public static function config(){

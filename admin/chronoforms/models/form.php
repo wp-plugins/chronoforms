@@ -108,33 +108,29 @@ class Form extends \GCore\Libs\GModel {
 							}
 						}
 
-						if($field['type'] == 'hidden'){
+						if($field['type'] == 'hidden' OR !empty($field['pure_code'])){
 							echo \GCore\Helpers\Html::input($field['name'], $field);
 						}else{
 							if(!empty($field['dynamic_data']['enabled']) AND !empty($field['dynamic_data']['data_path']) AND !empty($field['dynamic_data']['value_key']) AND !empty($field['dynamic_data']['text_key'])){
-								echo '<?php';
-								echo "\n";
-								echo '$keys = \GCore\Libs\Arr::getVal(\GCore\Libs\Arr::getVal($form->data, explode(".", "'.$field['dynamic_data']['data_path'].'")), explode(".", "[n].'.$field['dynamic_data']['value_key'].'"));';
-								echo "\n";
-								echo '$values = \GCore\Libs\Arr::getVal(\GCore\Libs\Arr::getVal($form->data, explode(".", "'.$field['dynamic_data']['data_path'].'")), explode(".", "[n].'.$field['dynamic_data']['text_key'].'"));';
-								echo "\n";
-								echo '$options = array_combine($keys, $values);';
-								$front_field = $field;
-								unset($front_field['validation'], $front_field['events'], $front_field['dynamic_data']);
-								echo "\n";
-								echo '$field = '.var_export($front_field, true).';';
-								echo "\n";
-								echo '$field["options"] = $options;';
-								echo "\n";
-								echo 'echo \GCore\Helpers\Html::formLine($field["name"], $field);';
-								echo "\n";
-								echo '?>';
+								echo $this->build_dynamic_element($field);
 							}else{
 								/*if(isset($field['label'])){
 									$position = isset($field['label_pos']) ? $field['label_pos'] : 'left';
 									$field['label'] = array('text' => $field['label'], 'position' => $position);
 								}*/
-								echo \GCore\Helpers\Html::formLine($field['name'], $field);
+								if($field['type'] == 'multi' AND isset($field['inputs'])){
+									foreach($field['inputs'] as $sub_id => $input){
+										if(!empty($input['dynamic_data']['enabled']) AND !empty($input['dynamic_data']['data_path']) AND !empty($input['dynamic_data']['value_key']) AND !empty($input['dynamic_data']['text_key'])){
+											$field['inputs'][$sub_id]['code'] = $this->build_dynamic_element($input, true);
+											$field['inputs'][$sub_id]['type'] = 'custom';
+											//$field['inputs'][$sub_id]['label'] = '';
+										}
+									}
+									echo \GCore\Helpers\Html::formLine($field['name'], $field);
+								}else{
+									echo \GCore\Helpers\Html::formLine($field['name'], $field);
+								}
+								//echo \GCore\Helpers\Html::formLine($field['name'], $field);
 							}
 						}
 					}
@@ -202,7 +198,12 @@ class Form extends \GCore\Libs\GModel {
 				$lines = explode("\n", $field['params']);
 				foreach($lines as $line){
 					$opts = explode("=", $line);
-					$field[':'.trim($opts[0])] = isset($opts[1]) ? trim($opts[1]) : trim($opts[0]);
+					if(isset($field[trim($opts[0])])){
+						//here we override any existing field parameter using th extra params box
+						$field[trim($opts[0])] = isset($opts[1]) ? trim($opts[1]) : trim($opts[0]);
+					}else{
+						$field[':'.trim($opts[0])] = isset($opts[1]) ? trim($opts[1]) : trim($opts[0]);
+					}
 				}
 			}
 		}
@@ -232,32 +233,35 @@ class Form extends \GCore\Libs\GModel {
 
 	function build_container_code($field = array(), $tag = 'start', $id){
 		if($tag == 'start'){
+			$attachment = !empty($field['load-state']) ? ' data-load-state="'.$field['load-state'].'"' : '';
 			switch($field['container_type']){
 				case '':
 					return '';
 				case 'div':
-					return '<div class="'.$field['class'].'" id="'.$field['id'].'">';
+					return '<div class="'.$field['class'].'" id="'.$field['id'].'"'.$attachment.'>';
+				case 'multiplier':
+					return '<div class="'.$field['class'].'" id="'.$field['id'].'"'.$attachment.'><div class="multiplier-contents">';
 				case 'custom':
 					return $field['start_code'];
 				case 'column':
-					return '<div class="'.$field['class'].'" id="'.$field['id'].'" style="float:left; width:'.$field['size']['width'].'%">';
+					return '<div class="'.$field['class'].'" id="'.$field['id'].'" style="float:left; width:'.$field['size']['width'].'%"'.$attachment.'>';
 				case 'multi_column':
-					return '<div class="'.$field['class'].'" id="'.$field['id'].'" style="overflow:auto;">';
+					return '<div class="'.$field['class'].'" id="'.$field['id'].'" style="overflow:auto;"'.$attachment.'>';
 				case 'page':
 					return '';
 				case 'fieldset':
-					return '<fieldset class="'.$field['class'].'" id="'.$field['id'].'">
+					return '<fieldset class="'.$field['class'].'" id="'.$field['id'].'"'.$attachment.'>
 					<legend>'.$field['title'].'</legend>';
 				case 'panel':
-					return '<div class="panel panel-default '.$field['class'].'" id="'.$field['id'].'">
+					return '<div class="panel panel-default '.$field['class'].'" id="'.$field['id'].'"'.$attachment.'>
 					<div class="panel-heading">'.$field['title'].'</div>
 					<div class="panel-body">';
 				case 'tabs_area':
-					return '<div class="'.$field['class'].'" id="'.$field['id'].'">
+					return '<div class="'.$field['class'].'" id="'.$field['id'].'"'.$attachment.'>
 					<ul class="nav nav-tabs">'.'__TABS_TITLES__'.$id.'__'.'</ul>
 					<div class="tab-content">';
 				case 'pills_area':
-					return '<div class="'.$field['class'].'" id="'.$field['id'].'">
+					return '<div class="'.$field['class'].'" id="'.$field['id'].'"'.$attachment.'>
 					<ul class="nav nav-pills">'.'__TABS_TITLES__'.$id.'__'.'</ul>
 					<div class="tab-content">';
 				case 'tab':
@@ -269,7 +273,7 @@ class Form extends \GCore\Libs\GModel {
 					return '<div id="'.$field['id'].'" class="'.$class.'">';
 				case 'sliders_area':
 					self::$sliders[$id]['id'] = $field['id'];
-					return '<div class="panel-group '.$field['class'].'" id="'.$field['id'].'">';
+					return '<div class="panel-group '.$field['class'].'" id="'.$field['id'].'"'.$attachment.'>';
 				case 'slider':
 					$class = ' collapse';
 					if(empty(self::$sliders[$field['container_id']]['class'])){
@@ -287,6 +291,12 @@ class Form extends \GCore\Libs\GModel {
 					return '';
 				case 'div':
 					return '</div>';
+				case 'multiplier':
+					return '
+					<span class="btn btn-danger btn-xs multiplier-remove-button"><i class="fa fa-times fa-lg"></i></span>
+					</div>
+					<span class="btn btn-success btn-sm multiplier-add-button" data-replacer="'.$field['multiplier']['replacer'].'" data-count="'.$field['multiplier']['count'].'"><i class="fa fa-plus fa-lg"></i></span>
+					</div>';
 				case 'custom':
 					return $field['end_code'];
 				case 'column':
@@ -311,5 +321,31 @@ class Form extends \GCore\Libs\GModel {
 					return '</div></div></div>';
 			}
 		}
+	}
+	
+	function build_dynamic_element($field, $input_only = false){
+		$code = '';
+		$code .= '<?php';
+		$code .= "\n";
+		$code .= '$keys = \GCore\Libs\Arr::getVal(\GCore\Libs\Arr::getVal($form->data, explode(".", "'.$field['dynamic_data']['data_path'].'")), explode(".", "[n].'.$field['dynamic_data']['value_key'].'"));';
+		$code .= "\n";
+		$code .= '$values = \GCore\Libs\Arr::getVal(\GCore\Libs\Arr::getVal($form->data, explode(".", "'.$field['dynamic_data']['data_path'].'")), explode(".", "[n].'.$field['dynamic_data']['text_key'].'"));';
+		$code .= "\n";
+		$code .= '$options = array_combine($keys, $values);';
+		$front_field = $field;
+		unset($front_field['validation'], $front_field['events'], $front_field['dynamic_data']);
+		$code .= "\n";
+		$code .= '$field = '.var_export($front_field, true).';';
+		$code .= "\n";
+		$code .= '$field["options"] = $options;';
+		$code .= "\n";
+		if($input_only){
+			$code .= 'echo \GCore\Helpers\Html::input($field["name"], $field);';
+		}else{
+			$code .= 'echo \GCore\Helpers\Html::formLine($field["name"], $field);';
+		}
+		$code .= "\n";
+		$code .= '?>';
+		return $code;
 	}
 }

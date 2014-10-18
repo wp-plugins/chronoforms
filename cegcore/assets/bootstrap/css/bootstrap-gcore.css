@@ -1,5 +1,12 @@
 .gbs3 .container{
 	width:100%;
+	margin:0;
+	padding:0;
+}
+.gbs3 .container .row{
+	width:100%;
+	margin:0;
+	padding:0;
 }
 .gbs3 .tab-content{
 	padding-top:7px;
@@ -31,10 +38,12 @@
 .gbs3 .gcore-form-row > .gcore-label-checkbox{
 	float:left !important;
 	min-width:160px;
-	max-width:160px;
 	padding-right:7px;
-	padding-top: 3px !important;
+	padding-top: 1px !important;
 	text-align:left !important;
+}
+.gbs3 .gcore-form-row > .gcore-label-checkbox.gcore-label-left{
+	max-width:160px;
 }
 .gbs3 .gcore-form-row > .gcore-label-checkbox.gcore-label-top{
 	float:none !important;

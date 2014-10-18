@@ -42,7 +42,7 @@ defined("GCORE_SITE") or die;
 						<?php echo $this->Html->formLine('Chronoforms[mail][mail_reply_name]', array('type' => 'text', 'label' => l_('CF_MAIL_REPLY_NAME'), 'sublabel' => l_('CF_MAIL_REPLY_NAME_DESC'), 'class' => 'L')); ?>
 						<?php echo $this->Html->formLine('Chronoforms[mail][mail_reply_email]', array('type' => 'text', 'label' => l_('CF_MAIL_REPLY_EMAIL'), 'sublabel' => l_('CF_MAIL_REPLY_EMAIL_DESC'), 'class' => 'L')); ?>
 						<?php echo $this->Html->formLine('Chronoforms[mail][smtp]', array('type' => 'dropdown', 'label' => l_('CF_ENABLE_SMTP'), 'options' => array(0 => l_('NO'), 1 => l_('YES')))); ?>
-						<?php echo $this->Html->formLine('Chronoforms[mail][smtp_secure]', array('type' => 'text', 'label' => l_('CF_SMTP_SECURE'), 'sublabel' => l_('CF_SMTP_SECURE_DESC'))); ?>
+						<?php echo $this->Html->formLine('Chronoforms[mail][smtp_secure]', array('type' => 'text', 'label' => l_('CF_SMTP_SECURE'), 'placeholder' => 'tls or ssl', 'sublabel' => l_('CF_SMTP_SECURE_DESC'))); ?>
 						<?php echo $this->Html->formLine('Chronoforms[mail][smtp_host]', array('type' => 'text', 'class' => 'L', 'label' => l_('CF_SMTP_HOST'))); ?>
 						<?php echo $this->Html->formLine('Chronoforms[mail][smtp_port]', array('type' => 'text', 'label' => l_('CF_SMTP_PORT'))); ?>
 						<?php echo $this->Html->formLine('Chronoforms[mail][smtp_username]', array('type' => 'text', 'class' => 'L', 'label' => l_('CF_SMTP_USERNAME'))); ?>
@@ -54,7 +54,9 @@ defined("GCORE_SITE") or die;
 						<?php echo $this->Html->formStart(); ?>
 						<?php echo $this->Html->formSecStart(); ?>
 						<?php echo $this->Html->formLine('Chronoforms[wizard][safe_save]', array('type' => 'dropdown', 'label' => l_('CF_WIZARD_SAFE_SAVE'), 'values' => 1, 'sublabel' => l_('CF_WIZARD_SAFE_SAVE_DESC'), 'options' => array(0 => l_('NO'), 1 => l_('YES')))); ?>
+						<?php echo $this->Html->formLine('Chronoforms[wizard][safe_save_chunk_size]', array('type' => 'text', 'label' => l_('CF_WIZARD_SAFE_SAVE_CHUNK_SIZE'), 'value' => 0, 'sublabel' => l_('CF_WIZARD_SAFE_SAVE_CHUNK_SIZE_DESC'))); ?>
 						<?php echo $this->Html->formLine('Chronoforms[wizard][safe_loading_fields_count]', array('type' => 'text', 'label' => l_('CF_WIZARD_SAFE_LOADING_FIELDS_COUNT'), 'value' => 20, 'sublabel' => l_('CF_WIZARD_SAFE_LOADING_FIELDS_COUNT_DESC'))); ?>
+						<?php echo $this->Html->formLine('Chronoforms[wizard][display_diagnostics]', array('type' => 'dropdown', 'label' => l_('CF_WIZARD_DISPLAY_DIAGNOSTICS'), 'values' => 1, 'sublabel' => l_('CF_WIZARD_DISPLAY_DIAGNOSTICS_DESC'), 'options' => array(0 => l_('NO'), 1 => l_('YES')))); ?>
 						<?php echo $this->Html->formSecEnd(); ?>
 						<?php echo $this->Html->formEnd(); ?>
 					</div>

@@ -21,7 +21,7 @@ class Checkbox {
 		'value' => '',
 		'label' => 'Checkbox Label',
 		'sublabel' => '',
-		'secondary_label' => '',
+		'secondary_label' => 'Secondary checkbox label.',
 		'class' => '',
 		'title' => '',
 		'style' => ''
@@ -34,7 +34,7 @@ class Checkbox {
 		'label.text' => array('value' => 'Checkbox Label', 'label' => 'Label', 'type' => 'text', 'class' => 'L'),
 		'label.position' => array('values' => 'left', 'label' => 'Label position', 'type' => 'dropdown', 'options' => array('left' => 'Left', 'top' => 'Top')),
 		'sublabel' => array('value' => '', 'label' => 'Sub Label', 'type' => 'text', 'class' => 'L'),
-		'secondary_label' => array('value' => '', 'label' => 'Secondary Label', 'type' => 'text', 'class' => 'L'),
+		'secondary_label' => array('value' => 'Secondary checkbox label.', 'label' => 'Secondary Label', 'type' => 'text', 'class' => 'L'),
 		'checked' => array('value' => '', 'label' => 'Checked', 'type' => 'dropdown', 'options' => array(0 => 'No', 1 => 'Yes')),
 		'class' => array('value' => '', 'label' => 'Class', 'type' => 'text', 'class' => 'L'),
 		'title' => array('value' => '', 'label' => 'Title', 'type' => 'text', 'class' => 'L'),
@@ -42,6 +42,8 @@ class Checkbox {
 		'params' => array('value' => '', 'label' => 'Extra params', 'type' => 'textarea', 'alt' => 'multiline', 'rows' => 5, 'cols' => 60, 'sublabel' => 'In Multiline format:param_name=param_value'),
 		':data-load-state' => array('label' => 'Load state', 'type' => 'dropdown', 'options' => array('' => 'Visible & Enabled', 'hidden' => 'Hidden', 'hidden_parent' => 'Parent hidden', 'disabled' => 'Disabled')),
 		':data-tooltip' => array('value' => '', 'label' => 'Tooltip', 'type' => 'textarea', 'rows' => 2, 'cols' => 60),
+		'ghost' => array('type' => 'dropdown', 'options' => array(0 => 'No', 1 => 'Yes'), 'label' => 'Enable ghost'),
+		'ghost_value' => array('value' => '', 'label' => 'Ghost value', 'type' => 'text'),
 	);
 
 	public static function element($data = array()){

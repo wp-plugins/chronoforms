@@ -176,16 +176,13 @@ class AppWp {
 			}
 			$session->set('user', array_merge($session->get('user', array()), $user_session));
 		}
-		//copy some config
-		$mainframe = \JFactory::getApplication();
-		//set timezone
-		date_default_timezone_set($mainframe->getCfg('offset'));
-		//site title
-		\GCore\Libs\Base::setConfig('site_title', $mainframe->getCfg('sitename'));
 		*/
+		//set timezone
+		date_default_timezone_set(get_option('timezone_string'));
+		//site title
+		\GCore\Libs\Base::setConfig('site_title', get_bloginfo('name'));
 		
-		//$lang = \JFactory::getLanguage();
-		//\GCore\Libs\Base::setConfig('site_language', $lang->getTag());
+		
 		/*if(!Authorize::authorized($classname, $this->action)){
 			if($content_only){
 				return;
@@ -212,7 +209,7 @@ class AppWp {
 		//set theme
 		$doc = Document::getInstance($this->site, $this->thread);
 		$doc->theme = 'bootstrap3';
-		$theme = \GCore\Helpers\Theme::getInstance();
+		//$theme = \GCore\Helpers\Theme::getInstance();
 		//load class and run the action
 		${$classname} = new $classname($this->site, $this->thread);
 		ob_start();
@@ -268,6 +265,8 @@ class AppWp {
 		ob_start();
 		${$classname}->_finalize();
 		$this->buffer .= ob_get_clean();
+		//now load the theme files
+		$theme = \GCore\Helpers\Theme::getInstance();
 
 		if($this->tvout != 'ajax' AND $doc->theme == 'bootstrap3'){
 			$this->buffer = '<div class="gbs3">'.$this->buffer.'</div>';

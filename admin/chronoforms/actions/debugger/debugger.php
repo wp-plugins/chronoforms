@@ -43,4 +43,10 @@ Class Debugger extends \GCore\Admin\Extensions\Chronoforms\Action{
 		echo \GCore\Helpers\Html::formSecEnd();
 		echo \GCore\Helpers\Html::formEnd();
 	}
+	
+	public static function config_check($data = array()){
+		$diags = array();
+		$diags[l_('CF_DIAG_ENABLED')] = !empty($data['enabled']);
+		return $diags;
+	}
 }

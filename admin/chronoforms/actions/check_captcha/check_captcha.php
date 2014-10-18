@@ -27,7 +27,7 @@ Class CheckCaptcha extends \GCore\Admin\Extensions\Chronoforms\Action{
 		if((bool)$config->get('enabled', 0) === false){
 			return;
 		}
-		$result = \GCore\Helpers\Captcha\Captcha::check();
+		$result = \GCore\Helpers\Captcha\Captcha::check('captcha', $form->form['Form']['title'].'_captcha');
 		if($result){
 			$this->events['success'] = 1;
 		}else{
@@ -43,5 +43,11 @@ Class CheckCaptcha extends \GCore\Admin\Extensions\Chronoforms\Action{
 		echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][error]', array('type' => 'text', 'label' => l_('CF_ERROR'), 'class' => 'XL', 'sublabel' => l_('CF_CAPTCHA_ERROR_DESC')));
 		echo \GCore\Helpers\Html::formSecEnd();
 		echo \GCore\Helpers\Html::formEnd();
+	}
+	
+	public static function config_check($data = array()){
+		$diags = array();
+		$diags[l_('CF_DIAG_ENABLED')] = !empty($data['enabled']);
+		return $diags;
 	}
 }

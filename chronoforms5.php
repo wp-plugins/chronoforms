@@ -5,7 +5,7 @@
  * Description: Add any type of forms to your WordPress site quickly & effeciently.
  * Author: chronoengine.com
  * Author URI: http://www.chronoengine.com
- * Version: 1.0.0
+ * Version: 5.0.3
  * License: GPL3
  * License URI: http://www.gnu.org/licenses/gpl.html
  */
@@ -85,8 +85,8 @@ class Chronoforms5{
 		global $chronoforms5_output;
 		ob_start();
 		$output = new WordpressGCLoader('front', 'chronoforms5', 'chronoforms', $chronoforms5_setup);
-		$chronoforms5_output = ob_get_clean();
-		$this->cf5_output();
+		return $chronoforms5_output = ob_get_clean();
+		//$this->cf5_output();
 	}
 	
 	function cf5_output(){

@@ -1,37 +1,36 @@
+var GValidation = {
+	rules : {
+		required : /[^.*]/,
+		alpha : /^[a-z ._-]+$/i,
+		alphanum : /^[a-z0-9 ._-]+$/i,
+		digit : /^[-+]?[0-9]+$/,
+		nodigit : /^[^0-9]+$/,
+		number : /^[-+]?\d*\.?\d+$/,
+		email : /^([a-zA-Z0-9_\.\-\+%])+\@(([a-zA-Z0-9\-])+\.)+([a-zA-Z0-9]{2,4})+$/,
+		image : /.(jpg|jpeg|png|gif|bmp)$/i,
+		phone : /^\+{0,1}[0-9 \(\)\.\-]+$/, // alternate regex : /^[\d\s ().-]+$/,/^((\+\d{1,3}(-| )?\(?\d\)?(-| )?\d{1,5})|(\(?\d{2,6}\)?))(-| )?(\d{3,4})(-| )?(\d{4})(( x| ext)\d{1,5}){0,1}$/
+		phone_inter : /^\+{0,1}[0-9 \(\)\.\-]+$/,
+		url : /^(http|https|ftp)\:\/\/[a-z0-9\-\.]+\.[a-z]{2,3}(:[a-z0-9]*)?\/?([a-z0-9\-\._\?\,\'\/\\\+&amp;%\$#\=~])*$/i
+	},
+	errors : {
+		required : 'This field is required.',
+		alpha : 'This field accepts alphabetic characters only.',
+		alphanum : 'This field accepts alphanumeric characters only.',
+		digit : 'Please enter a valid integer.',
+		nodigit : 'No digits are accepted.',
+		number : 'Please enter a valid number.',
+		email : 'Please enter a valid email.',
+		image : 'This field should only contain image types',
+		phone : 'Please enter a valid phone.',
+		phone_inter : 'Please enter a valid international phone number.',
+		url : 'Please enter a valid url.',
+		group: 'Please make at least %1 selection(s).',
+		confirm: 'Please make sure that the value matches the %1 field value.',
+		custom: 'The value entered is not valid.',
+	},
+	display : 'tooltip',
+};
 jQuery(document).ready(function($){
-	var GValidtaion = {
-		rules : {
-			required : /[^.*]/,
-			alpha : /^[a-z ._-]+$/i,
-			alphanum : /^[a-z0-9 ._-]+$/i,
-			digit : /^[-+]?[0-9]+$/,
-			nodigit : /^[^0-9]+$/,
-			number : /^[-+]?\d*\.?\d+$/,
-			email : /^([a-zA-Z0-9_\.\-\+%])+\@(([a-zA-Z0-9\-])+\.)+([a-zA-Z0-9]{2,4})+$/,
-			image : /.(jpg|jpeg|png|gif|bmp)$/i,
-			phone : /^\+{0,1}[0-9 \(\)\.\-]+$/, // alternate regex : /^[\d\s ().-]+$/,/^((\+\d{1,3}(-| )?\(?\d\)?(-| )?\d{1,5})|(\(?\d{2,6}\)?))(-| )?(\d{3,4})(-| )?(\d{4})(( x| ext)\d{1,5}){0,1}$/
-			phone_inter : /^\+{0,1}[0-9 \(\)\.\-]+$/,
-			url : /^(http|https|ftp)\:\/\/[a-z0-9\-\.]+\.[a-z]{2,3}(:[a-z0-9]*)?\/?([a-z0-9\-\._\?\,\'\/\\\+&amp;%\$#\=~])*$/i
-		},
-		errors : {
-			required : 'This field is required.',
-			alpha : 'This field accepts alphabetic characters only.',
-			alphanum : 'This field accepts alphanumeric characters only.',
-			digit : 'Please enter a valid integer.',
-			nodigit : 'No digits are accepted.',
-			number : 'Please enter a valid number.',
-			email : 'Please enter a valid email.',
-			image : 'This field should only contain image types',
-			phone : 'Please enter a valid phone.',
-			phone_inter : 'Please enter a valid international phone number.',
-			url : 'Please enter a valid url.',
-			group: 'Please make at least %1 selection(s).',
-			confirm: 'Please make sure that the value matches the %1 field value.',
-			custom: 'The value entered is not valid.',
-		},
-		display : 'tooltip',
-	};
-
 	$.fn.gvalidate = function(option){
 		//return this.each(function(){
 			var $this = $(this);
@@ -56,15 +55,36 @@ jQuery(document).ready(function($){
 					}
 				});
 				$this.on('submit', function(e){
-					var validation_passed = $this.gvalidate_submit();
+					var validation_passed = $this.gvalidate_scan();
 					if(validation_passed){
+						if($this.data('gvalidate_success')){
+							var gvalidate_success = $this.data('gvalidate_success');
+							if(gvalidate_success in window){
+								window[gvalidate_success](e, $this);
+							}
+						}
 						return true;
 					}else{
 						e.stopImmediatePropagation();
+						if($this.data('gvalidate_fail')){
+							var gvalidate_fail = $this.data('gvalidate_fail');
+							if(gvalidate_fail in window){
+								window[gvalidate_fail](e, $this);
+							}
+						}
 						return false;
 					}
 				});
 			}else if($.inArray($this.prop('tagName'), ['input','select','textarea'])){
+				//check if field is hidden
+				if($this.is(':hidden')){
+					if($this.closest('.tab-pane').length > 0){
+						var tab_id = $this.closest('.tab-pane').attr('id');
+						$('a[href="#'+tab_id+'"]').tab('show');
+					}else{
+						return true;
+					}
+				}
 				//get field rules and check them
 				var rules = $this.data('gvalidate_rules');
 				var result = true;
@@ -88,7 +108,7 @@ jQuery(document).ready(function($){
 				return result;
 			}else{
 				//some container, validate fields inside
-				return $this.gvalidate_submit();
+				return $this.gvalidate_scan();
 			}
 		//})
 	}
@@ -111,14 +131,24 @@ jQuery(document).ready(function($){
 		}
 		//console.log($this.prop('name'));
 		var $rule_parts = rule.split(':');
-		if(GValidtaion.rules.hasOwnProperty($rule_parts[0])){
+		if(GValidation.rules.hasOwnProperty($rule_parts[0])){
 			if($.inArray($type, ['checkbox','radio']) > -1){
 				return $this.prop('checked');
 			}else{
 				if($rule_parts[0] == 'required'){
-					return $this.val().trim().match(GValidtaion.rules[$rule_parts[0]]);
+					if($this.val() == null){
+						return false;//for multi select with nothing selected
+					}else if($.isArray($this.val())){
+						if($this.val().length == 0){
+							return false;//for multi select
+						}else{
+							return true;
+						}
+					}else{
+						return $this.val().trim().match(GValidation.rules[$rule_parts[0]]);
+					}
 				}else{
-					return (!$this.val().trim() || $this.val().trim().match(GValidtaion.rules[$rule_parts[0]]));
+					return (!$this.val().trim() || $this.val().trim().match(GValidation.rules[$rule_parts[0]]));
 				}
 			}
 		}else{
@@ -153,7 +183,7 @@ jQuery(document).ready(function($){
 		//check if field is visible
 		if($this.is(':hidden')){
 			//if field is under some tab
-			if(typeof $this.closest('.tab-pane') !== 'undefined'){
+			if($this.closest('.tab-pane').length > 0){
 				var tab_id = $this.closest('.tab-pane').attr('id');
 				$('a[href="#'+tab_id+'"]').tab('show');
 			}
@@ -175,7 +205,10 @@ jQuery(document).ready(function($){
 					$this.data('gvalidate_errors_'+rule, $this.prop('title'));
 					//$this.prop('title', '');
 				}else{
-					var error_string = GValidtaion.errors[rule];
+					var error_string = GValidation.errors[rule];
+					if(rule == "group" && typeof $rule_parts[2] == 'undefined'){//dirty fix for the group validtaions
+						$rule_parts[1] = 1;
+					}
 					$.each($rule_parts, function(i, val){
 						error_string = error_string.replace('%'+i, val);
 					});
@@ -185,7 +218,7 @@ jQuery(document).ready(function($){
 
 			//$this.data('title', function(){return false;});
 			$this.data('content', '<span class="gvalidation-error-text">'+$this.data('gvalidate_errors_'+rule)+'</span>');
-			if(GValidtaion.display == 'tooltip'){
+			if(GValidation.display == 'tooltip'){
 				$this.gtooltip({'tipclass':'gtooltip gvalidation-error-tip', 'closable': 1});
 
 				//$this.addClass('gvalidate_error_shown');
@@ -210,7 +243,7 @@ jQuery(document).ready(function($){
 		})
 	}
 
-	$.fn.gvalidate_submit = function(){
+	$.fn.gvalidate_scan = function(){
 		var $this = $(this);
 		//check if there are any errors astray
 		/*$this.find('.gvalidate_has_errors').each(function(i, inp){

@@ -21,9 +21,16 @@ class Toolbar extends \GCore\Libs\Helper{
 	}
 	*/
 	public static function addButton($id, $link, $text = '', $image = '', $type = 'submit', $alert = ''){
+		if(strpos($text, '<') === false){
+			$html = '';
+		}else{
+			$html = $text;
+			$text = '';
+		}
 		self::$buttons[$id] = array(
 			'link' => $link,
 			'text' => $text,
+			'html' => $html,
 			'image' => $image,
 			'type' => $type,
 			'group' => self::getGroup(),
@@ -32,13 +39,14 @@ class Toolbar extends \GCore\Libs\Helper{
 	}
 	
 	public static function renderButton($id, $link, $text = '', $image = '', $type = 'submit', $alert = ''){
+		$html_id = 'toolbar-button-'.$id;
 		?>
 		<?php ob_start(); ?>
 			jQuery(document).ready(function($) {
 				<?php if(!empty($image)): ?>
-					jQuery("#toolbar-button-<?php echo $id; ?>").css('background', 'url("<?php echo $image; ?>") no-repeat top center #F6F6F6');
+					jQuery("#<?php echo $html_id; ?>").css('background', 'url("<?php echo $image; ?>") no-repeat top center #F6F6F6');
 				<?php endif; ?>
-				jQuery("#toolbar-button-<?php echo $id; ?>").on('click',
+				jQuery("#<?php echo $html_id; ?>").on('click',
 					function(){
 						<?php if($type == 'link'): ?>
 							window.location.href = '<?php echo $link; ?>';
@@ -68,7 +76,13 @@ class Toolbar extends \GCore\Libs\Helper{
 			self::loadFiles();
 			$doc = \GCore\Libs\Document::getInstance();
 			$doc->addJsCode($buffer);
-			return '<button id="toolbar-button-'.$id.'" class="toolbar-button">'.$text.'</button>';
+			
+			$html = self::$buttons[$id]['html'];
+			if($html){
+				return $html;
+			}else{
+				return '<input type="button" value="'.$text.'" id="'.$html_id.'" class="toolbar-button" />';
+			}
 		?>
 		<?php
 	}

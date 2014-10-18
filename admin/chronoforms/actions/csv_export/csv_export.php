@@ -13,6 +13,7 @@ Class CsvExport extends \GCore\Admin\Extensions\Chronoforms\Action{
 	static $title = 'CSV Export';
 	static $group = array('data_management' => 'Data Management');
 	//var $events = array('success' => 0, 'fail' => 0);
+	var $delimiter = ',';
 
 	var $defaults = array(
 		'tablename' => '',
@@ -27,10 +28,11 @@ Class CsvExport extends \GCore\Admin\Extensions\Chronoforms\Action{
 		'download_nosave' => '',
 		'where' => '',
 		'data_path' => '',
-		'titles' => '',
+		'excluded_columns' => '',
 		'post_file_name' => '',
 		'order_by' => '',
 		'columns' => '',
+		'delimiter' => ',',
 	);
 
 	function execute(&$form, $action_id){
@@ -41,20 +43,22 @@ Class CsvExport extends \GCore\Admin\Extensions\Chronoforms\Action{
 			return;
 		}
 		$tablename = $config->get('tablename', '');
+		$titles = array();
+		$this->delimiter = $config->get('delimiter', ',');
+		
+		if($config->get('columns', '')){
+			$columns = \GCore\Libs\Str::list_to_array($config->get('columns', ''));
+			$titles = $columns;
+			$columns = array_keys($columns);
+		}
+		
 		if(!empty($tablename)){
 			\GCore\Libs\Model::generateModel('ListData', array('tablename' => $tablename));
 			$list_model = '\GCore\Models\ListData';
-
-			if($config->get('columns', '')){
-				$columns = array_map('trim', explode("\n", $config->get('columns', '')));
-			}else{
+			
+			if(!$config->get('columns', '')){
 				$columns = $list_model::getInstance()->dbo->getTableColumns($tablename);
-			}
-
-			if($config->get('titles', '')){
-				$titles = array_map('trim', explode("\n", $config->get('titles', '')));
-			}else{
-				$titles = $columns;
+				$titles = array_combine($columns, $columns);
 			}
 
 			if($config->get('order_by', '')){
@@ -70,7 +74,20 @@ Class CsvExport extends \GCore\Admin\Extensions\Chronoforms\Action{
 				return;
 			}
 			$rows = \GCore\Libs\Arr::getVal($form->data, explode('.', $config->get('data_path', '')), array());
-			$file_name = 'csv_export_'.date('YmdHi').'.csv';
+			$rows = array_values($rows);
+			
+			if(!$config->get('columns', '')){
+				$columns = array_keys($rows[0]);
+				$titles = array_combine($columns, $columns);
+			}
+			$file_name = 'csv_export_'.date('YmdHis').'.csv';
+		}
+		
+		if($config->get('excluded_columns', '')){
+			$excluded_columns = array_map('trim', explode("\n", $config->get('excluded_columns', '')));
+			$columns = array_diff($columns, $excluded_columns);
+		}else{
+			$excluded_columns = array();//$columns;
 		}
 
 		header('Content-type: text/csv');
@@ -78,26 +95,44 @@ Class CsvExport extends \GCore\Admin\Extensions\Chronoforms\Action{
 		header('Pragma: no-cache');
 		header('Expires: 0');
 
-		$data = array($titles);
+		//$data = array($titles);
+		foreach($titles as $k => $v){
+			if(in_array($k, $columns)){
+				$data[0][$k] = $v;
+			}
+		}
 
 		if(!empty($rows)){
 			foreach($rows as $row){
-				$data[] = $row['ListData'];
+				$csv_data_row = array();
+				
+				if(!empty($tablename)){
+					$row_path = $row['ListData'];
+				}else{
+					$row_path = $row;
+				}
+				
+				foreach($row_path as $k => $v){
+					if(in_array($k, $columns)){
+						$csv_data_row[$k] = $v;
+					}
+				}
+				$data[] = $csv_data_row;
 			}
 		}
 		@ob_end_clean();
-		self::outputCSV($data);
+		$this->outputCSV($data);
 		exit;
 	}
 
-	public static function outputCSV($data){
+	public function outputCSV($data){
 		$outstream = fopen('php://output', 'w');
-		array_walk($data, array('self', 'insert_data'), $outstream);
+		array_walk($data, array($this, 'insert_data'), $outstream);
 		fclose($outstream);
 	}
 
-	public static function insert_data(&$vals, $key, $filehandler){
-		fputcsv($filehandler, $vals); // add parameters if you want
+	public function insert_data(&$vals, $key, $filehandler){
+		fputcsv($filehandler, $vals, $this->delimiter); // add parameters if you want
 	}
 
 	public static function config(){
@@ -110,9 +145,10 @@ Class CsvExport extends \GCore\Admin\Extensions\Chronoforms\Action{
 		echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][enabled]', array('type' => 'dropdown', 'label' => l_('CF_ENABLED'), 'options' => array(0 => l_('NO'), 1 => l_('YES'))));
 		echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][tablename]', array('type' => 'dropdown', 'label' => l_('CF_CSV_TABLENAME'), 'options' => $tables, 'sublabel' => l_('CF_CSV_TABLENAME_DESC')));
 		echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][data_path]', array('type' => 'text', 'class' => 'M', 'label' => l_('CF_CSV_DATA_PATH'), 'sublabel' => l_('CF_CSV_DATA_PATH_DESC')));
-		echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][columns]', array('type' => 'text', 'class' => 'XL', 'label' => l_('CF_CSV_COLUMNS'), 'sublabel' => l_('CF_CSV_COLUMNS_DESC')));
-		echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][titles]', array('type' => 'text', 'class' => 'XL', 'label' => l_('CF_CSV_TITLES'), 'sublabel' => l_('CF_CSV_TITLES_DESC')));
+		echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][columns]', array('type' => 'textarea', 'class' => 'XL', 'rows' => 7, 'cols' => 60, 'label' => l_('CF_CSV_COLUMNS'), 'sublabel' => l_('CF_CSV_COLUMNS_DESC')));
+		echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][excluded_columns]', array('type' => 'textarea', 'class' => 'XL', 'rows' => 7, 'cols' => 60, 'label' => l_('CF_CSV_EXCLUDED_COLUMNS'), 'sublabel' => l_('CF_CSV_EXCLUDED_COLUMNS_DESC')));
 		echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][order_by]', array('type' => 'text', 'class' => 'XL', 'label' => l_('CF_CSV_ORDER_BY'), 'sublabel' => l_('CF_CSV_ORDER_BY_DESC')));
+		echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][delimiter]', array('type' => 'text', 'class' => 'SS', 'label' => l_('CF_CSV_DELIMITER'), 'sublabel' => l_('CF_CSV_DELIMITER_DESC')));
 		echo \GCore\Helpers\Html::formSecEnd();
 		echo \GCore\Helpers\Html::formEnd();
 	}

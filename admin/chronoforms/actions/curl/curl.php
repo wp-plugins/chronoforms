@@ -33,7 +33,12 @@ Class Curl extends \GCore\Admin\Extensions\Chronoforms\Action{
 		if($content){
 			$curl_values = \GCore\Libs\Str::list_to_array($content);
 			foreach($curl_values as $k => $v){
-				$curl_values[$k] = $form->data($v);
+				$v = str_replace(array('{', '}'), '', $v);
+				if(substr($v, 0, 1) == '"' AND substr($v, -1, 1) == '"'){
+					$curl_values[$k] = substr($v, 1, -1);
+				}else{
+					$curl_values[$k] = $form->data($v);
+				}
 			}
 		}
 		$query = http_build_query($curl_values);
@@ -61,9 +66,16 @@ Class Curl extends \GCore\Admin\Extensions\Chronoforms\Action{
 
 		echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][target_url]', array('type' => 'text', 'label' => l_('CF_CURL_TARGET_URL'), 'class' => 'XL', 'sublabel' => l_('CF_CURL_TARGET_URL_DESC')));
 		echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][header_in_response]', array('type' => 'dropdown', 'label' => l_('CF_CURL_HEADER_RESPONSE'), 'options' => array(0 => l_('NO'), 1 => l_('YES')), 'sublabel' => l_('CF_CURL_HEADER_RESPONSE_DESC')));
-		echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][content]', array('type' => 'textarea', 'label' => l_('CF_CURL_PARAMS'), 'rows' => '10', 'cols' => '60', 'sublabel' => l_('CF_CURL_PARAMS_DESC')));
+		echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][content]', array('type' => 'textarea', 'label' => l_('CF_CURL_PARAMS'), 'rows' => '10', 'cols' => '60', 'sublabel' => l_('CF_CURL_PARAMS_DESC').l_('CF_EXTRA_PARAMS_LIST_DESC')));
 
 		echo \GCore\Helpers\Html::formSecEnd();
 		echo \GCore\Helpers\Html::formEnd();
+	}
+	
+	public static function config_check($data = array()){
+		$diags = array();
+		//$diags[l_('CF_DIAG_ENABLED')] = !empty($data['enabled']);
+		$diags[l_('CF_DIAG_TARGET_URL')] = !empty($data['target_url']);
+		return $diags;
 	}
 }

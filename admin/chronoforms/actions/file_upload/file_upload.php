@@ -18,7 +18,7 @@ Class FileUpload extends \GCore\Admin\Extensions\Chronoforms\Action{
 		'files' => '',
 		'array_fields' => '',
 		'upload_path' => '',
-		'forced_file_name' => '',
+		'dynamic_file_name' => '',
 		'max_size' => '100',
 		'min_size' => '0',
 		'enabled' => 1,
@@ -32,6 +32,8 @@ Class FileUpload extends \GCore\Admin\Extensions\Chronoforms\Action{
 	function execute(&$form, $action_id){
 		$config =  $form->actions_config[$action_id];
 		$this->config = $config = new \GCore\Libs\Parameter($config);
+		$this->action_id = $action_id;
+		
 		if((bool)$config->get('enabled', 0) === false){
 			return;
 		}
@@ -54,7 +56,7 @@ Class FileUpload extends \GCore\Admin\Extensions\Chronoforms\Action{
 			//return;
 		}
 		if(!file_exists($this->upload_path.DS.'index.html')){
-			if(!\GCore\Libs\Folder::create($this->upload_path)){
+			if(!file_exists($this->upload_path) AND !\GCore\Libs\Folder::create($this->upload_path)){
 				$form->errors[] = "Couldn't create upload directory: ".$this->upload_path;
 				$this->events['fail'] = 1;
 				return;
@@ -89,7 +91,7 @@ Class FileUpload extends \GCore\Admin\Extensions\Chronoforms\Action{
 				$file_post = $_FILES[$field_name];
 				if(in_array($field_name, $array_fields) AND !empty($file_post['name']) AND ($file_post['name'] === array_values($file_post['name']))){
 					foreach($file_post['name'] as $k => $v){
-						$uploaded_file_data = $this->processUpload($form, array('name' => $file_post['name'][$k], 'tmp_name' => $file_post['tmp_name'][$k], 'error' => $file_post['error'][$k], 'size' => $file_post['size'][$k]), $file_data[0], $file_extensions);
+						$uploaded_file_data = $this->processUpload($form, array('name' => $file_post['name'][$k], 'tmp_name' => $file_post['tmp_name'][$k], 'type' => $file_post['type'][$k], 'error' => $file_post['error'][$k], 'size' => $file_post['size'][$k]), $file_data[0], $file_extensions);
 						if(is_array($uploaded_file_data)){
 							$form->files[$field_name][] = $uploaded_file_data;
 							$form->data[$field_name][] = $uploaded_file_data['name'];
@@ -122,13 +124,13 @@ Class FileUpload extends \GCore\Admin\Extensions\Chronoforms\Action{
 		//check errors
 		if(!isset($file_post['tmp_name']) OR !is_uploaded_file($file_post['tmp_name'])){
 			if(!empty($file_post['error']) AND $file_post['error'] !== UPLOAD_ERR_OK){
-				$form->debug[$action_id][self::$title][] = 'PHP returned this error for file upload by : '.$field_name.', PHP error is: '.$file_post['error'];
+				$form->debug[$this->action_id][self::$title][] = 'PHP returned this error for file upload by : '.$field_name.', PHP error is: '.$file_post['error'];
 				$form->errors[$field_name] = $file_post['error'];
 			}
 			$this->events['fail'] = 1;
 			return false;
 		}else{
-			$form->debug[$action_id][self::$title][] = 'Upload routine started for file upload by : '.$field_name;
+			$form->debug[$this->action_id][self::$title][] = 'Upload routine started for file upload by : '.$field_name;
 		}
 		if((bool)$this->config->get('safe_file_name', 1) === true){
 			$file_name = \GCore\Libs\File::makeSafe($file_post['name']);
@@ -139,8 +141,9 @@ Class FileUpload extends \GCore\Admin\Extensions\Chronoforms\Action{
 		$file_tmp_name = $file_post['tmp_name'];
 		$file_info = pathinfo($file_name);
 		//mask the file name
-		if(strlen($this->config->get('forced_file_name', '')) > 0){
-			$file_name = str_replace('FILE_NAME', $file_name, $this->config->get('forced_file_name', ''));
+		if(strlen($this->config->get('dynamic_file_name', '')) > 0){
+			$dynamic_file_name = eval('?>'.$this->config->get('dynamic_file_name', ''));
+			$file_name = $dynamic_file_name;//str_replace('FILE_NAME', $file_name, $this->config->get('forced_file_name', ''));
 		}else{
 			$file_name = date('YmdHis').'_'.$file_name;
 		}
@@ -148,22 +151,22 @@ Class FileUpload extends \GCore\Admin\Extensions\Chronoforms\Action{
 		if($file_tmp_name){
 			//check max size
 			if($file_post['error'] === UPLOAD_ERR_INI_SIZE){
-				$form->debug[$action_id][self::$title][] = 'File : '.$field_name.' size is over the max PHP configured limit.';
+				$form->debug[$this->action_id][self::$title][] = 'File : '.$field_name.' size is over the max PHP configured limit.';
 				$form->errors[$field_name] = $this->config->get('max_error', 'Sorry, Your uploaded file size ('.($file_post["size"] / 1024).' KB) exceeds the allowed limit.');
 				$this->events['fail'] = 1;
 				return false;
 			}elseif(($file_post["size"] / 1024) > (int)$this->config->get('max_size', 100)){
-				$form->debug[$action_id][self::$title][] = 'File : '.$field_name.' size is over the max limit.';
+				$form->debug[$this->action_id][self::$title][] = 'File : '.$field_name.' size is over the max limit.';
 				$form->errors[$field_name] = $this->config->get('max_error', 'Sorry, Your uploaded file size ('.($file_post["size"] / 1024).' KB) exceeds the allowed limit.');
 				$this->events['fail'] = 1;
 				return false;
 			}elseif(($file_post["size"] / 1024) < (int)$this->config->get('min_size', 0)){
-				$form->debug[$action_id][self::$title][] = 'File : '.$field_name.' size is less than the minimum limit.';
+				$form->debug[$this->action_id][self::$title][] = 'File : '.$field_name.' size is less than the minimum limit.';
 				$form->errors[$field_name] = $this->config->get('min_error', 'Sorry, Your uploaded file size ('.($file_post["size"] / 1024).' KB) is less than the minimum limit.');
 				$this->events['fail'] = 1;
 				return false;
 			}elseif(!in_array(strtolower($file_info['extension']), $file_extensions)){
-				$form->debug[$action_id][self::$title][] = 'File : '.$field_name.' extension is not allowed.';
+				$form->debug[$this->action_id][self::$title][] = 'File : '.$field_name.' extension is not allowed.';
 				$form->errors[$field_name] = $this->config->get('type_error', 'Sorry, Your uploaded file type is not allowed.');
 				$this->events['fail'] = 1;
 				return false;
@@ -173,17 +176,17 @@ Class FileUpload extends \GCore\Admin\Extensions\Chronoforms\Action{
 					$uploaded_file_data = array();
 					$uploaded_file_data = array('name' => $file_name, 'original_name' => $real_file_name, 'path' => $this->upload_path.$file_name, 'size' => $file_post["size"]);
 					//Try to generate an auto file link
-					$site_link = \GCore\C::get('GCORE_FRONT_URL');
-					if(substr($site_link, -1) == "/"){
-						$site_link = substr_replace($site_link, '', -1);
+					$site_link = \GCore\C::get('GCORE_ROOT_URL');
+					if(substr($site_link, -1) != "/"){
+						$site_link = $site_link.'/';//substr_replace($site_link, '', -1);
 					}
-					$uploaded_file_data['link'] = str_replace(array(\GCore\C::get('GCORE_FRONT_PATH'), DS), array($site_link, "/"), $this->upload_path.$file_name);
+					$uploaded_file_data['link'] = str_replace(array(\GCore\C::get('GCORE_ROOT_PATH'), DS), array($site_link, "/"), $this->upload_path.$file_name);
 					//$form->data[$field_name] = $file_name;
-					$form->debug[$action_id][self::$title][] = $this->upload_path.$file_name.' has been uploaded successfully.';
+					$form->debug[$this->action_id][self::$title][] = $this->upload_path.$file_name.' has been uploaded successfully.';
 					$this->events['success'] = 1;
 					return $uploaded_file_data;
 				}else{
-					$form->debug[$action_id][self::$title][] = $this->upload_path.$file_name.' could not be uploaded!!';
+					$form->debug[$this->action_id][self::$title][] = $this->upload_path.$file_name.' could not be uploaded!!';
 					$this->events['fail'] = 1;
 					return false;
 				}
@@ -202,8 +205,21 @@ Class FileUpload extends \GCore\Admin\Extensions\Chronoforms\Action{
 		echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][max_error]', array('type' => 'text', 'label' => l_('CF_MAX_SIZE_ERROR'), 'class' => 'XL', 'sublabel' => l_('CF_MAX_SIZE_ERROR_DESC')));
 		echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][min_error]', array('type' => 'text', 'label' => l_('CF_MIN_SIZE_ERROR'), 'class' => 'XL', 'sublabel' => l_('CF_MIN_SIZE_ERROR_DESC')));
 		echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][type_error]', array('type' => 'text', 'label' => l_('CF_FILE_TYPE_ERROR'), 'class' => 'XL', 'sublabel' => l_('CF_FILE_TYPE_ERROR_DESC')));
+		echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][array_fields]', array('type' => 'text', 'label' => l_('CF_FILE_ARRAY_FIELDS'), 'class' => 'XL', 'sublabel' => l_('CF_FILE_ARRAY_FIELDS_DESC')));
+		echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][dynamic_file_name]', array('type' => 'textarea', 'label' => l_('CF_FILE_DYNAMIC_FILE_NAME'), 'rows' => 5, 'cols' => 70, 'placeholder' => '<?php return date("YmdHis")."_".$file_name;', 'sublabel' => l_('CF_FILE_DYNAMIC_FILE_NAME_DESC')));
 		echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][extensions_separator]', array('type' => 'text', 'label' => l_('CF_FILE_UPLOAD_EXT_SEPARATOR'), 'class' => 'S', 'sublabel' => l_('CF_FILE_UPLOAD_EXT_SEPARATOR_DESC')));
 		echo \GCore\Helpers\Html::formSecEnd();
 		echo \GCore\Helpers\Html::formEnd();
+	}
+	
+	public static function config_check($data = array()){
+		$diags = array();
+		$diags[l_('CF_DIAG_ENABLED')] = !empty($data['enabled']);
+		$diags[l_('CF_DIAG_FILES_CONFIG_SET')] = !empty($data['files']);
+		$diags[l_('CF_DIAG_UPLOAD_PATH_DEFAULT')] = empty($data['upload_path']) ? true : -1;
+		$diags[l_('CF_DIAG_MAX_FILE_SIZE_SET')] = strlen($data['max_size']) > 0;
+		$diags[l_('CF_DIAG_MIN_FILE_SIZE_SET')] = strlen($data['min_size']) > 0;
+		$diags[l_('CF_DIAG_EXT_SEPARATOR_SET')] = !empty($data['extensions_separator']);
+		return $diags;
 	}
 }
