@@ -1,0 +1,62 @@
+.field > .gcore-label-left{
+	float:left !important;
+	min-width: 160px;
+	max-width: 20%;
+	padding-right:7px;
+	text-align: right;
+	font-weight: bold;
+	padding-top: 0.8em;
+	font-size: 0.875em !important;
+}
+.field > .gcore-label{
+	font-weight: bold;
+	font-size: 0.875em !important;
+}
+.fields .field:not(:first-child){
+	padding-left: 10px;
+}
+.field > .ui.input > .gcore-checkbox-item .gcore-label, .field > .ui.input > .gcore-radio-item .gcore-label{
+	font-weight: normal;
+}
+.field > .gcore-label-checkbox{
+	padding-top: 0px !important;
+}
+.gcore-height-auto{
+	height: auto !important;
+}
+.gcore-sub-input{
+	padding-right: 5px !important;
+}
+.gcore-radio-item.ui.radio.checkbox, .gcore-checkbox-item.ui.checkbox{
+	display: block;
+}
+.gcore-multiple-column .gcore-checkbox-item, .gcore-multiple-column .gcore-radio-item{
+	float: left;
+}
+.gcore-multiple-column .gcore-checkbox-item:not(:first-child), .gcore-multiple-column .gcore-radio-item:not(:first-child){
+	padding-left: 5px;
+}
+.gcore-help-block{
+	white-space:normal;
+	word-wrap:break-word;
+}
+.gcore-black-text{
+	color:#000000;
+}
+.gcore-display-table{
+	display:table;
+}
+.SSS {width: 30px !important;}
+.SS {width: 70px !important;}
+.S {width: 110px !important;}
+.M {width: 230px !important;}
+.L {width: 350px !important;}
+.XL{width:430px !important;}
+.XXL{width:500px !important;}
+.A{width:auto !important;}
+@media(min-width:900px){
+	
+}
+@media(max-width:800px){
+	
+}
