@@ -37,9 +37,14 @@ if(empty($fails)){
 		}
 	}
 	
-	class WordpressGCLoader{		
+	class WordpressGCLoader{
 		function __construct($area, $joption, $extension, $setup = null, $cont_vars = array()){
 			require_once(dirname(__FILE__).DIRECTORY_SEPARATOR.'cegcore'.DIRECTORY_SEPARATOR.'gcloader.php');
+			
+			$plugin_path = plugin_dir_url(__FILE__);
+			$plugin_path_parts = array_filter(explode('/', $plugin_path));
+			$plugin_name = array_pop($plugin_path_parts);
+			$joption = $plugin_name;
 			
 			if(phpversion('pdo') !== false AND in_array('mysql', PDO::getAvailableDrivers())){
 				//good, we use PDO
