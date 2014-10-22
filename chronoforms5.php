@@ -55,7 +55,7 @@ class Chronoforms5{
 		
 		global $chronoforms5_output;
 		ob_start();
-		$output = new WordpressGCLoader('admin', 'chronoforms5', 'chronoforms');
+		$output = new WordpressGCLoader('admin', self::get_plugin_name(), 'chronoforms');
 		$chronoforms5_output = ob_get_clean();
 	}
 	
@@ -84,7 +84,7 @@ class Chronoforms5{
 
 		global $chronoforms5_output;
 		ob_start();
-		$output = new WordpressGCLoader('front', 'chronoforms5', 'chronoforms', $chronoforms5_setup);
+		$output = new WordpressGCLoader('front', self::get_plugin_name(), 'chronoforms', $chronoforms5_setup);
 		return $chronoforms5_output = ob_get_clean();
 		//$this->cf5_output();
 	}
@@ -92,6 +92,13 @@ class Chronoforms5{
 	function cf5_output(){
 		global $chronoforms5_output;
 		echo $chronoforms5_output;
+	}
+	
+	function get_plugin_name(){
+		$plugin_path = plugin_dir_url(__FILE__);
+		$plugin_path_parts = array_filter(explode('/', $plugin_path));
+		$plugin_name = array_pop($plugin_path_parts);
+		return $plugin_name;
 	}
 }
 $Chronoforms5 = new Chronoforms5();
