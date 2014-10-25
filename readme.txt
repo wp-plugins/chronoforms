@@ -3,7 +3,7 @@ Contributors: maxpayne-1, rm2773
 Tags: email, form, contact form, web form, contact us, feedback, AJAX, uploads, Auto Responder, Captcha, ReCaptcha, contact, PayPal, Google spreadsheets, Authorize.net, 2Checkout, Bootstrap
 Requires at least: 3.0
 Tested up to: 4.0
-Stable tag: 5.0.3
+Stable tag: 5.0.3.1
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl.html
 
