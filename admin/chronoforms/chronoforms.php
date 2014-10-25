@@ -30,6 +30,7 @@ class Chronoforms extends \GCore\Libs\GController {
 			$domain = str_replace(array('http://', 'https://'), '', \GCore\Libs\Url::domain());
 			if(\GCore\C::get('GSITE_PLATFORM') == 'wordpress'){
 				$session->setFlash('error', "Your ChronoForms installation on <strong>".$domain."</strong> is NOT validated, the number of published forms has been limited to 1 form only per website.");
+				$session->setFlash('info', "You can add any form to any of your website pages using this shortcode: [Chronoforms5 chronoform=\"FORM_NAME\"]");
 			}else{
 				$session->setFlash('error', "Your ChronoForms installation on <strong>".$domain."</strong> is NOT validated.");
 			}

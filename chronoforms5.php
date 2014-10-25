@@ -16,6 +16,16 @@ class Chronoforms5{
 		add_action('admin_init', array($this, 'cf5_admin')); //admin initializing
 		add_shortcode('Chronoforms5', array($this, 'cf5_front'));
 		add_action('admin_menu', array($this, 'cf5_admin_menu'));
+		
+		if(!is_admin()){
+			if(!empty($_GET['page']) AND $_GET['page'] == 'Chronoforms5' AND !empty($_GET['chronoform'])){
+				add_filter('the_content', array($this, 'cf5_preview_post_content'));
+				add_filter('posts_results', array($this, 'cf5_preview_trim_posts'));
+			}
+			if(!empty($_GET['tvout']) AND $_GET['tvout'] == 'ajax'){
+				add_filter('parse_request', array($this, 'cf5_front_ajax'));
+			}
+		}
 	}
 	
 	function cf5_admin_menu(){
@@ -35,6 +45,21 @@ class Chronoforms5{
 		ob_start();
 		$output = new WordpressGCLoader('admin', '', '');
 		$chronoforms5_output = ob_get_clean();*/
+	}
+	
+	function cf5_preview_post_content($content){
+		echo $this->cf5_front();
+		echo '<br><br><br>';
+		echo $content;
+	}
+	
+	function cf5_preview_trim_posts($posts){
+		return array(array_pop($posts));
+	}
+	
+	function cf5_front_ajax(){
+		echo $this->cf5_front();
+		die();
 	}
 	
 	function cf5_admin(){
