@@ -92,6 +92,10 @@ class GModel extends Model {
 			}
 			$data['alias'] = $test;
 		}
+		if($mode == 'create' AND in_array('user_id', $this->table_fields) AND !isset($data['user_id'])){
+			$user = Base::getUser();
+			$data['user_id'] = $user['id'];
+		}
 	}
 	
 	function _get_params_fields(){

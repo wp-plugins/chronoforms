@@ -1,4 +1,4 @@
-GValidation.errors = {
+jQuery.gvalidation.errors = jQuery.extend(jQuery.gvalidation.errors, {
 	required : "Campo obbligatorio",
 	alpha : "Non sono ammessi caratteri speciali e cifre",
 	alphanum : "In questo campo sono ammessi solo lettere e cifre. I caratteri speciali non sono accettati",
@@ -21,4 +21,4 @@ GValidation.errors = {
 	group: 'Please make at least %1 selection(s).',
 	custom : "selezionare un valore",
 	select : "selezionare un valore"
-}
+});

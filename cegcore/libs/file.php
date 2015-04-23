@@ -52,4 +52,16 @@ class File {
 		return sprintf("%.{$decimals}f", $bytes/pow(1024, $factor)).@$sz[$factor];
 	}
 	
+	public static function exists($path){
+		if(strpos($path, 'http') === 0){
+			//check if url exists
+			return true;
+		}else{
+			if(file_exists($path)){
+				return true;
+			}
+		}
+		return false;
+	}
+	
 }

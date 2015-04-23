@@ -16,7 +16,8 @@ Class SessionToData extends \GCore\Admin\Extensions\Chronoforms\Action{
 	var $defaults = array(
 		'namespace' => '',
 		'key' => '',
-		'clear' => 0
+		'clear' => 0,
+		'overwrite_old_data' => 0,
 	);
 
 	function execute(&$form, $action_id){
@@ -32,7 +33,11 @@ Class SessionToData extends \GCore\Admin\Extensions\Chronoforms\Action{
 		if(empty($session_ns)){
 			$session_ns = 'default';
 		}
-		$form->data = array_merge($form->data, $session->get('_chronoform_data_'.$session_key, array()));
+		if(!$config->get('overwrite_old_data', 0)){
+			$form->data = array_merge($form->data, $session->get('_chronoform_data_'.$session_key, array()));
+		}else{
+			$form->data = array_merge($session->get('_chronoform_data_'.$session_key, array()), $form->data);
+		}
 		//clear the session if the clear option is set to yes
 		if((bool)$config->get('clear', 0) === true){
 			$session->clear('_chronoform_data_'.$session_key);
@@ -44,6 +49,7 @@ Class SessionToData extends \GCore\Admin\Extensions\Chronoforms\Action{
 		echo \GCore\Helpers\Html::formSecStart();
 		echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][clear]', array('type' => 'dropdown', 'label' => l_('CF_SESSION_CLEAR'), 'options' => array(0 => l_('NO'), 1 => l_('YES')), 'sublabel' => l_('CF_SESSION_CLEAR_DESC')));
 		echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][key]', array('type' => 'text', 'label' => l_('CF_SESSION_KEY'), 'sublabel' => l_('CF_SESSION_KEY_DESC')));
+		echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][overwrite_old_data]', array('type' => 'dropdown', 'label' => l_('CF_SESSION_DATA_OVERWRITE_OLD_DATA'), 'options' => array(0 => l_('NO'), 1 => l_('YES')), 'sublabel' => l_('CF_SESSION_DATA_OVERWRITE_OLD_DATA_DESC')));
 		echo \GCore\Helpers\Html::formSecEnd();
 		echo \GCore\Helpers\Html::formEnd();
 	}

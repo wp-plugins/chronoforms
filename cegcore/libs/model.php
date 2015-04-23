@@ -47,8 +47,12 @@ class Model {
 	var $allowed_models = array();
 	static $_generated_models = array();
 	
-
+	function start(){
+		
+	}
+	
 	function __construct($settings = array()){
+		$this->start();
 		if(empty($settings['dbo'])){
 			$dbo = Database::getInstance($this->dbo_config);
 		}else{
@@ -130,7 +134,7 @@ class Model {
 			$class_code = '
 				namespace GCore\Models;
 				if(!class_exists("\GCore\Models\\'.$model_name.'", false)){
-					class '.$model_name.' extends \GCore\Libs\Model {';
+					class '.$model_name.' extends \\'.get_called_class().' {';
 						foreach($model_settings as $setting => $value){
 							if(is_object($value)){
 								//$class_code .= 'var $'.$setting.' = '.unserialize(serialize($value)).';'."\n";
@@ -295,7 +299,8 @@ class Model {
 		}
 		if(strpos($field, '(') !== false){
 			//there is a function used, extract the field name inside
-			preg_match('/\(([^)]+)\)/', $field, $field_name);
+			//preg_match('/\(([^)]+)\)/', $field, $field_name);
+			preg_match('/[(](\w+|\*)[)]/', $field, $field_name);
 			if(!empty($field_name[1])){
 				$field = $field_name[1];
 			}
@@ -477,7 +482,7 @@ class Model {
 	
 	function processLimit($limit){
 		if(!empty($limit) AND is_numeric($limit)){
-			return ' LIMIT '.$limit;
+			return ' LIMIT '.$limit;//$this->dbo->processor->limit($limit);
 		}
 		return '';
 	}
@@ -672,7 +677,8 @@ class Model {
 				}
 				
 				$params['group'] = !isset($params['group']) ? array() : $params['group'];
-				if((bool)array_search($this->alias, $this->chain_models) === false){
+				//make sure that there is 1 record loaded for each primary model record and avoid duplicates in case the secondary model has more than 1 record (hasMany attached as hasOne)
+				if(empty($params['group']) AND (bool)array_search($this->alias, $this->chain_models) === false){
 					$params['group'] = array_merge(array($this->alias.'.'.$this->pkey), (array)$params['group']);
 				}				
 				
@@ -780,18 +786,30 @@ class Model {
 						//get the foreign key value of associated record and compare to primary value of this row
 						$f_value = Arr::getVal($record, array($className->alias, $foreignKey));
 						if($f_value == $p_value){
-							//inject the record of he associated record
-							foreach($record as $sub_model => $sub_model_data){
-								if(empty($data[$k][$sub_model]) OR !is_array($data[$k][$sub_model])){
-									$data[$k][$sub_model] = array();
-								}
-								if(is_array($sub_model_data) AND !Arr::is_assoc($sub_model_data)){
-									$data[$k][$sub_model] = array_merge($data[$k][$sub_model], $sub_model_data);
-								}else{
-									$data[$k][$sub_model][] = $sub_model_data;
+							if(!empty($model_info['sub_group'])){
+								$data[$k][$className->alias][] = $record;
+							}else{
+								//inject the record of he associated record
+								foreach($record as $sub_model => $sub_model_data){
+									if(empty($data[$k][$sub_model]) OR !is_array($data[$k][$sub_model])){
+										$data[$k][$sub_model] = array();
+									}
+									if(is_array($sub_model_data) AND !Arr::is_assoc($sub_model_data)){
+										$data[$k][$sub_model] = array_merge($data[$k][$sub_model], $sub_model_data);
+									}else{
+										//if we are grouping by the foreign key field only then the data should be inserted directly 
+										if(!empty($model_info['single']) OR (!empty($model_info['group']) AND (($foreignKey == $model_info['group']) OR (is_array($model_info['group']) AND count($model_info['group']) == 1 AND array_pop($model_info['group']) == $foreignKey)))){
+											$data[$k][$sub_model] = $sub_model_data;
+										}else{
+											$data[$k][$sub_model][] = $sub_model_data;
+										}
+									}
 								}
 							}
 						}
+					}
+					if(!empty($model_info['single'])){
+						$data[$k][$alias][$foreignKey] = $p_value;
 					}
 				}
 			}
@@ -907,6 +925,9 @@ class Model {
 		$sql = 'SELECT ';
 		//get the fields list of this model		
 		$fields = $this->processFields($params['fields']);
+		if(!empty($params['extra_fields'])){
+			$fields = array_merge($fields, $this->processFields($params['extra_fields']));
+		}
 		//check relationships and modify $params
 		if($params['recursive'] != -1){
 			$this->processRelations('find', array('hasOne', 'belongsTo'), $params);
@@ -1080,11 +1101,12 @@ class Model {
 		return $data;
 	}
 	
-	function build_threaded_list(array &$elements, $parentId = 0){
+	function build_threaded_list(array &$elements, $parentId = 0, $_depth = 0){
 		$branch = array();
 		foreach($elements as $k => $element){
 			if($element[$this->alias][$this->parent_id] == $parentId){
-				$children = $this->build_threaded_list($elements, $element[$this->alias][$this->pkey]);
+				$element[$this->alias]['_depth'] = $_depth;
+				$children = $this->build_threaded_list($elements, $element[$this->alias][$this->pkey], ($_depth + 1));
 				if($children){
 					$element[$this->alias]['children'] = $children;
 				}
@@ -1095,12 +1117,13 @@ class Model {
 		return $branch;
 	}
 	
-	function build_flat_list(array &$elements, $parentId = 0){
+	function build_flat_list(array &$elements, $parentId = 0, $_depth = 0){
 		$branch = array();
 		foreach($elements as $k => $element){
 			if($element[$this->alias][$this->parent_id] == $parentId){
+				$element[$this->alias]['_depth'] = $_depth;
 				$branch[] = $element;
-				$children = $this->build_flat_list($elements, $element[$this->alias][$this->pkey]);
+				$children = $this->build_flat_list($elements, $element[$this->alias][$this->pkey], ($_depth + 1));
 				if($children){
 					$branch = array_merge($branch, $children);
 				}
@@ -1205,6 +1228,26 @@ class Model {
 						foreach($parents as $parent){
 							$className->id = $parent;
 							$className->updateField($counter_field, '- 1');
+						}
+					}
+					//check cache fields
+					if(!empty($model_info['cache']) AND !empty($ids)){
+						//get affected parents
+						$parents = $this->find('list', array('recursive' => -1, 'fields' => array($this->pkey, $foreignKey), 'conditions' => array($this->pkey => $ids)));
+						$parents = array_values(array_unique(array_filter($parents)));
+						
+						foreach($model_info['cache'] as $field => $info){
+							if(in_array($field, $className->table_fields)){
+								if(!empty($parents)){
+									foreach($parents as $parent){
+										//select records not matching the delete condition and update the cache
+										$default_conditions = array($foreignKey => $parent, 'NOT' => array($this->pkey => $ids));
+										$info['conditions'] = !empty($info['conditions']) ? array_merge($info['conditions'], $default_conditions) : $default_conditions;
+										$cache_result = $this->find('first', $info);
+										$className->updateAll(array($field => $cache_result[$this->alias][$field]), array($className->pkey => $parent), array_merge(array('modified' => false, 'cleanlist' => array($field), 'validate' => false, 'callbacks' => false, 'recursive' => -1)));
+									}
+								}
+							}
 						}
 					}
 				}
@@ -1517,10 +1560,22 @@ class Model {
 						//update existing associated record
 						if(!empty($data[$alias])){
 							//unset the associated record pkey if its set, we should run the update based on the foreign key value only
+							//NO, if the primary key exists then update, if not then insert a new record, same method used in saveMany
+							$exists = false;
 							if(!empty($data[$alias][$className->pkey])){
-								unset($data[$alias][$className->pkey]);
+								//unset($data[$alias][$className->pkey]);
+								$fkey = $className->field($foreignKey, array($className->pkey => $data[$alias][$className->pkey]));
+								$exists = ($fkey == $this->id) ? true : false;
+							}else{
+								//$exists = $className->field($foreignKey, array($foreignKey => $this->id));
 							}
-							$className->updateAll($data[$alias], array($foreignKey => $this->id));
+							if($exists){
+								//$className->updateAll($data[$alias], array($foreignKey => $this->id));
+								$className->updateAll($data[$alias], array($className->pkey => $data[$alias][$className->pkey]));
+							}else{
+								$data[$alias][$foreignKey] = $this->id;
+								$className->save($data[$alias]);
+							}
 						}
 					}
 				}
@@ -1540,6 +1595,29 @@ class Model {
 						if(!empty($model_info['counterCache'])){
 							$counter_field = $model_info['counterCache'];
 							$className->updateAll(array($counter_field => $this->dbo->quoteName($counter_field).' + 1'), array($className->pkey => $this->data[$foreignKey]), array('cleanlist' => array($counter_field), 'modified' => false));
+						}
+					}
+					//check cache fields
+					if(!empty($model_info['cache'])){
+						foreach($model_info['cache'] as $field => $info){
+							if(in_array($field, $className->table_fields)){
+								$info['conditions'] = !empty($info['conditions']) ? array_merge($info['conditions'], array($foreignKey => $this->data[$foreignKey])) : array($foreignKey => $this->data[$foreignKey]);
+								$cache_result = $this->find('first', $info);
+								if(!empty($this->id)){
+									$className->updateAll(array($field => $cache_result[$this->alias][$field]), array($className->pkey => $this->data[$foreignKey]), array_merge(array('modified' => false, 'cleanlist' => array($field), 'validate' => false, 'callbacks' => false, 'recursive' => -1)));
+								}
+								//check if this is an updated record and lets do cache processing for the old parent which this model belongs to
+								if(!$this->created AND !empty($info['xforeignKey']) AND !empty($this->data[$info['xforeignKey']])){
+									$xforeignKey = $info['xforeignKey'];
+									if($this->data[$xforeignKey] != $this->data[$foreignKey]){
+										$info['conditions'] = !empty($info['conditions']) ? array_merge($info['conditions'], array($foreignKey => $this->data[$xforeignKey])) : array($foreignKey => $this->data[$xforeignKey]);
+										$cache_result = $this->find('first', $info);
+										if(!empty($this->id)){
+											$className->updateAll(array($field => $cache_result[$this->alias][$field]), array($className->pkey => $this->data[$xforeignKey]), array_merge(array('modified' => false, 'cleanlist' => array($field), 'validate' => false, 'callbacks' => false, 'recursive' => -1)));
+										}
+									}
+								}
+							}
 						}
 					}
 				}

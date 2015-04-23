@@ -40,7 +40,7 @@ class DataLoader {
 		
 		if(!empty($matches)){
 			foreach($matches[0] as $field){
-				$ghost_pat = '/alt=("|\')ghost("|\')/i';
+				$ghost_pat = '/alt=["-\']ghost["-\']|data-ghost=["-\']1["-\']/i';
 				preg_match($ghost_pat, $field, $ghost_attr);
 				if(!empty($ghost_attr[0])){
 					continue;
@@ -72,7 +72,7 @@ class DataLoader {
 		
 		if(!empty($matches)){
 			foreach($matches[0] as $field){
-				$ghost_pat = '/alt=("|\')ghost("|\')/i';
+				$ghost_pat = '/alt=["-\']ghost["-\']|data-ghost=["-\']1["-\']/i';
 				preg_match($ghost_pat, $field, $ghost_attr);
 				if(!empty($ghost_attr[0])){
 					continue;
@@ -134,7 +134,7 @@ class DataLoader {
 		
 		if(!empty($matches)){
 			foreach($matches[0] as $field){
-				$ghost_pat = '/alt=("|\')ghost("|\')/i';
+				$ghost_pat = '/alt=["-\']ghost["-\']|data-ghost=["-\']1["-\']/i';
 				preg_match($ghost_pat, $field, $ghost_attr);
 				if(!empty($ghost_attr[0])){
 					continue;
@@ -167,7 +167,7 @@ class DataLoader {
 
 		if(!empty($matches)){
 			foreach($matches[0] as $field){
-				$ghost_pat = '/alt=("|\')ghost("|\')/i';
+				$ghost_pat = '/alt=["-\']ghost["-\']|data-ghost=["-\']1["-\']/i';
 				preg_match($ghost_pat, $field, $ghost_attr);
 				if(!empty($ghost_attr[0])){
 					continue;

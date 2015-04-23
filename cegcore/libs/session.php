@@ -155,8 +155,9 @@ class Session {
 		if(!$this->is_alive()){
 			return null;
 		}
-		if(isset($this->_data[$namespace][$name])){
-			return $this->_data[$namespace][$name];
+		$value = Arr::getVal($this->_data, explode('.', $namespace.'.'.$name));
+		if($value !== null){
+			return $value;
 		}
 		return $default;
 	}
@@ -165,7 +166,7 @@ class Session {
 		if(!$this->is_alive()){
 			return null;
 		}
-		$this->_data[$namespace][$name] = $value;
+		$this->_data = Arr::setVal($this->_data, explode('.', $namespace.'.'.$name), $value);
 		return true;
 	}
 	
@@ -173,18 +174,15 @@ class Session {
 		if(!$this->is_alive()){
 			return null;
 		}
-		return isset($this->_data[$namespace][$name]);
+		return (Arr::getVal($this->_data, explode('.', $namespace.'.'.$name)) !== null);
 	}
 	
 	function clear($name, $namespace = 'gcore'){
 		if(!$this->is_alive()){
 			return null;
 		}
-		if(isset($this->_data[$namespace][$name])){
-			unset($this->_data[$namespace][$name]);
-			return true;
-		}
-		return false;
+		$this->_data = Arr::setVal($this->_data, explode('.', $namespace.'.'.$name), null);
+		return true;
 	}
 	
 	function setFlash($type, $msg = '', $group = ''){

@@ -1,4 +1,4 @@
-GValidation.errors = {
+jQuery.gvalidation.errors = jQuery.extend(jQuery.gvalidation.errors, {
 	required: "必須項目です",
 	alpha: "アルファベットを入力してください。",
 	alphanum: "アルファベットと数字を入力してください。",
@@ -21,4 +21,4 @@ GValidation.errors = {
 	group: 'Please make at least %1 selection(s).',
 	custom: "項目を選択してください。",
 	select: "項目を選択してください。"
-}
+});

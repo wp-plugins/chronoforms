@@ -1,4 +1,4 @@
-GValidation.errors = {
+jQuery.gvalidation.errors = jQuery.extend(jQuery.gvalidation.errors, {
     required: "To pole jest wymagane.",
     alpha: "W tym polu dozwolone są wyłącznie litery.",
     alphanum: "W tym polu dozwolone sa wyłącznie litery i cyfry.",
@@ -26,4 +26,4 @@ GValidation.errors = {
     custom: "Proszę wybrać jedną z opcji",
     select: "Proszę wybrać opcję z tego z menu",
     select_multiple : "Proszę wybrać przynajmniej jedną opcję"
-}
+});

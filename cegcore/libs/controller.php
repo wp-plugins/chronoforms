@@ -49,6 +49,7 @@ class Controller {
 				}else{
 					$this->$alias = new $lib();
 				}
+				$this->$alias->controller = &$this;
 			}			
 		}
 	}
@@ -81,6 +82,9 @@ class Controller {
 	}
 	
 	function get_main_model(){
+		if(!empty($this->model)){
+			return Base::getClassName($this->model);
+		}
 		if(!empty($this->models)){
 			return Base::getClassName($this->models[0]);
 		}

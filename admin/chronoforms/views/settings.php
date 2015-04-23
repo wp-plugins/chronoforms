@@ -41,12 +41,14 @@ defined("GCORE_SITE") or die;
 						<?php echo $this->Html->formLine('Chronoforms[mail][mail_from_email]', array('type' => 'text', 'label' => l_('CF_MAIL_FROM_EMAIL'), 'sublabel' => l_('CF_MAIL_FROM_EMAIL_DESC'), 'class' => 'L')); ?>
 						<?php echo $this->Html->formLine('Chronoforms[mail][mail_reply_name]', array('type' => 'text', 'label' => l_('CF_MAIL_REPLY_NAME'), 'sublabel' => l_('CF_MAIL_REPLY_NAME_DESC'), 'class' => 'L')); ?>
 						<?php echo $this->Html->formLine('Chronoforms[mail][mail_reply_email]', array('type' => 'text', 'label' => l_('CF_MAIL_REPLY_EMAIL'), 'sublabel' => l_('CF_MAIL_REPLY_EMAIL_DESC'), 'class' => 'L')); ?>
-						<?php echo $this->Html->formLine('Chronoforms[mail][smtp]', array('type' => 'dropdown', 'label' => l_('CF_ENABLE_SMTP'), 'options' => array(0 => l_('NO'), 1 => l_('YES')))); ?>
+						<?php //echo $this->Html->formLine('Chronoforms[mail][smtp]', array('type' => 'dropdown', 'label' => l_('CF_ENABLE_SMTP'), 'options' => array(0 => l_('NO'), 1 => l_('YES')))); ?>
+						<?php echo $this->Html->formLine('Chronoforms[mail][mail_method]', array('type' => 'dropdown', 'label' => l_('CF_MAILING_METHOD'), 'values' => (!empty($this->data['Chronoforms']['mail']['smtp']) ? 'smtp' : 'phpmail'), 'options' => array('phpmail' => l_('PHP Mailer'), 'sendmail' => l_('SENDMAIL'), 'smtp' => l_('SMTP')))); ?>
 						<?php echo $this->Html->formLine('Chronoforms[mail][smtp_secure]', array('type' => 'text', 'label' => l_('CF_SMTP_SECURE'), 'placeholder' => 'tls or ssl', 'sublabel' => l_('CF_SMTP_SECURE_DESC'))); ?>
 						<?php echo $this->Html->formLine('Chronoforms[mail][smtp_host]', array('type' => 'text', 'class' => 'L', 'label' => l_('CF_SMTP_HOST'))); ?>
 						<?php echo $this->Html->formLine('Chronoforms[mail][smtp_port]', array('type' => 'text', 'label' => l_('CF_SMTP_PORT'))); ?>
 						<?php echo $this->Html->formLine('Chronoforms[mail][smtp_username]', array('type' => 'text', 'class' => 'L', 'label' => l_('CF_SMTP_USERNAME'))); ?>
 						<?php echo $this->Html->formLine('Chronoforms[mail][smtp_password]', array('type' => 'text', 'class' => 'L', 'label' => l_('CF_SMTP_PASSWORD'))); ?>
+						<?php echo $this->Html->formLine('Chronoforms[mail][smtp_debug]', array('type' => 'dropdown', 'class' => 'SS', 'options' => array(0 => 0, 1 => 1, 2 => 2, 3 => 3, 4 => 4), 'label' => l_('CF_SMTP_DEBUG'))); ?>
 						<?php echo $this->Html->formSecEnd(); ?>
 						<?php echo $this->Html->formEnd(); ?>
 					</div>

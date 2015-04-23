@@ -35,6 +35,9 @@
 .gbs3 .gcore-checkbox-item label, .gbs3 .gcore-checkbox-item input, .gbs3 .gcore-radio-item label, .gbs3 .gcore-radio-item input{
 	margin:0;
 }
+.gbs3 .gcore-checkbox-item label input, .gbs3 .gcore-radio-item label input{
+	margin:0px 3px 3px 0px;
+}
 .gbs3 .gcore-form-row > .gcore-label-checkbox{
 	float:left !important;
 	min-width:160px;

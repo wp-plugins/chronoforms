@@ -172,6 +172,11 @@ class GController extends Controller {
 
 			$field = Request::data('orderfld', $session->get(get_class($this).$prefix.'.'.$model_class->alias.'.orderfld', null));
 			$drc = Request::data('orderdrc', $session->get(get_class($this).$prefix.'.'.$model_class->alias.'.orderdrc', 'ASC'));
+			//filtering
+			if(!in_array(strtolower($drc), array('asc', 'desc'))){
+				$drc = '';
+			}
+			$field = str_replace(array(':', ' ', '"', "'", '('), '', $field);
 
 			$this->helpers['\GCore\Helpers\Sorter']['direction'] = $drc;
 			$this->helpers['\GCore\Helpers\Sorter']['active_field'] = $field;

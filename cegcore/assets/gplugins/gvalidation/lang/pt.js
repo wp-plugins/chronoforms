@@ -1,4 +1,4 @@
-GValidation.errors = {
+jQuery.gvalidation.errors = jQuery.extend(jQuery.gvalidation.errors, {
 	required: "Campo Obrigatório.",
 	alpha: "Apenas caractéres alfabéticos são aceites.",
 	alphanum: "Apenas caractéres Alfa-numericos aceites.",
@@ -21,4 +21,4 @@ GValidation.errors = {
 	group: 'Please make at least %1 selection(s).',
 	custom: "Seleccione uma opção",
 	select: "Seleccione um valor"
-}
+});

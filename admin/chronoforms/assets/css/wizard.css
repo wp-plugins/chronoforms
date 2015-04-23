@@ -14,8 +14,10 @@
 .main_event{min-height:100px !important;}
 .form_event_label{font-size:11px !important;}
 .action_icon{margin:0px 2px !important;cursor: pointer;}
+.jsevent_icon{margin:0px 2px !important;cursor: pointer;}
 .form_action_label{font-size:11px !important;}
 .action_icon_number{margin:0px 2px !important;font-size:11px !important;}
+.jsevent_icon_number{margin:0px 2px !important;font-size:11px !important;}
 .action_label_label{margin:0px 2px !important;font-size:11px !important; background-color:#999999 !important;}
 .action_diagnostics_area{padding:2px 5px 2px 5px !important; opacity:0.75;}
 .action_diagnostics_area:hover{opacity:1.0;}
@@ -36,8 +38,14 @@
 .original_element{padding:4px !important;}
 .element_box{margin:3px 4px !important;}
 .element_box .panel-heading{padding:4px !important;}
+#wizard-area > .panel > .panel-heading{padding-bottom:0px !important;}
+.jsevent_box .panel-heading{padding:4px !important;}
+.jsevent_box .panel-body{padding:4px 15px !important;}
+.jsevent_box.panel{margin-bottom: 3px!important;}
+.jsevent_box .form-group{margin-bottom: 3px!important;}
 .element_box{float:left; width:99%;}
 .form_field_label{font-size:11px !important;}
+.form_jsevent_label{font-size:11px !important;}
 .field_icon_number{margin:0px 2px !important;font-size:11px !important;}
 .field_icon{margin:0px 2px !important;cursor: pointer;}
 .field_icons{}
@@ -131,6 +139,9 @@
 	color:#05f;
 }
 
+
+.jsevent_source_item .jsevent_config{display:none;}
+.jsevent_source_item{font-weight:bold;display:block;min-height:10px;min-width:150px;background-color:white;cursor:move;}
 
 .action_source_item .action_config{display:none;}
 .form_action .action_config{display:none;}

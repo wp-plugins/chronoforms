@@ -16,12 +16,13 @@
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE.
  */
-/*** FILE_DIRECT_ACCESS_HEADER ***/
-defined("GCORE_SITE") or die;
+
 /**
  * PHPMailer SPL autoloader.
  * @param string $classname The name of the class to load
  */
+/*** FILE_DIRECT_ACCESS_HEADER ***/
+defined("GCORE_SITE") or die;
 function PHPMailerAutoload($classname)
 {
     //Can't use __DIR__ as it's only in PHP 5.3+

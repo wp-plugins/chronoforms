@@ -22,6 +22,7 @@ class Chronoforms extends \GCore\Libs\GController {
 	function index(){
 		$this->Form->order_by = 'Form.id';
 		$this->_sortable();
+		$this->_search(array('Form.title', 'Form.app', 'Form.params'));
 		$this->_paginate();
 		$forms = $this->Form->find('all');
 		$this->set('forms', $forms);
@@ -44,7 +45,11 @@ class Chronoforms extends \GCore\Libs\GController {
 		$this->_limit_forms();
 		$this->redirect(r_('index.php?ext=chronoforms'));
 	}
-
+	
+	function edit2(){
+		$this->edit();
+		$this->view = 'edit2';
+	}
 	//data reading
 	function edit(){
 		$id = $this->Request->data('id', null);
@@ -73,8 +78,20 @@ class Chronoforms extends \GCore\Libs\GController {
 		$actions = \GCore\Libs\Folder::getFiles(dirname(__FILE__).DS.'actions'.DS);
 		foreach($actions as $k => $action){
 			$actions[$k] = str_replace(dirname(__FILE__).DS.'actions'.DS, '', $action);
+			if(strpos($actions[$k], '.') !== false){
+				unset($actions[$k]);
+			}
 		}
 		$this->set('actions_list', $actions);
+		
+		$jsevents = \GCore\Libs\Folder::getFiles(dirname(__FILE__).DS.'events'.DS);
+		foreach($jsevents as $k => $jsevent){
+			$jsevents[$k] = str_replace(dirname(__FILE__).DS.'events'.DS, '', $jsevent);
+			if(strpos($jsevent, '.php') !== false){
+				unset($jsevents[$k]);
+			}
+		}
+		$this->set('jsevents_types', $jsevents);
 
 		if(empty($this->data['Form']['id']) AND !empty($this->data['setup'])){
 			$this->data['Form']['extras']['DNA'] = array(
@@ -568,6 +585,7 @@ class Chronoforms extends \GCore\Libs\GController {
 		$rows = $list_model::getInstance()->find('all');
 		$this->set('rows', $rows);
 		$this->set('form', $form);
+		$this->set('pkey', $list_model::getInstance()->pkey);
 	}
 
 	function show_data(){
@@ -581,8 +599,12 @@ class Chronoforms extends \GCore\Libs\GController {
 
 		$fields = $list_model::getInstance()->dbo->getTableColumns($this->data['table']);
 		$this->set('fields', $fields);
-
-		$id = $this->Request->data('id', null);
+		
+		if(!empty($this->data['gcb'])){
+			$id = $this->data['gcb'];
+		}else{
+			$id = $this->Request->data($list_model::getInstance()->pkey, null);
+		}
 		$list_model::getInstance()->id = $id;
 		$row = $list_model::getInstance()->load();
 		$this->set('row', $row);
@@ -727,6 +749,9 @@ class Chronoforms extends \GCore\Libs\GController {
 			if($this->data['pid'] == 7){
 				$update_fld = 'validated_authorize';
 			}
+			if($this->data['pid'] == 31){
+				$update_fld = 'validated_2checkout';
+			}
 			//$postfields = array();
 			unset($this->data['option']);
 			unset($this->data['act']);
@@ -759,7 +784,7 @@ class Chronoforms extends \GCore\Libs\GController {
 				$this->data['Chronoforms'][$update_fld] = 1;
 				$result = parent::_save_settings('chronoforms');
 				if($result){
-					$session->setFlash('success', 'Validated successflly.');
+					$session->setFlash('success', 'Validated successfully.');
 					$this->redirect(r_('index.php?ext=chronoforms'));
 				}else{
 					$session->setFlash('error', 'Validation error.');
@@ -784,7 +809,7 @@ class Chronoforms extends \GCore\Libs\GController {
 						$this->data['Chronoforms'][$update_fld] = 1;
 						$result = parent::_save_settings('chronoforms');
 						if($result){
-							$session->setFlash('success', 'Validated successflly.');
+							$session->setFlash('success', 'Validated successfully.');
 							$this->redirect(r_('index.php?ext=chronoforms'));
 						}else{
 							$session->setFlash('error', 'Validation error.');

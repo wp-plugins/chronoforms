@@ -84,6 +84,7 @@ class Password {
 			echo \GCore\Helpers\Html::formLine('Form[extras][fields]['.$k.'][validation][alphanum]', array('type' => 'dropdown', 'label' => l_('CF_ALPHA_NUMERIC'), 'options' => array('' => l_('NO'), 1 => l_('YES'))));
 			echo \GCore\Helpers\Html::formLine('Form[extras][fields]['.$k.'][validation][digit]', array('type' => 'dropdown', 'label' => l_('CF_DIGIT'), 'options' => array('' => l_('NO'), 1 => l_('YES'))));
 			echo \GCore\Helpers\Html::formLine('Form[extras][fields]['.$k.'][validation][nodigit]', array('type' => 'dropdown', 'label' => l_('CF_NO_DIGIT'), 'options' => array('' => l_('NO'), 1 => l_('YES'))));
+			echo \GCore\Helpers\Html::formLine('Form[extras][fields]['.$k.'][validation][nospace]', array('type' => 'dropdown', 'label' => l_('CF_NO_SPACE'), 'options' => array('' => l_('NO'), 1 => l_('YES'))));
 			echo \GCore\Helpers\Html::formLine('Form[extras][fields]['.$k.'][validation][number]', array('type' => 'dropdown', 'label' => l_('CF_NUMBER'), 'options' => array('' => l_('NO'), 1 => l_('YES'))));
 			echo \GCore\Helpers\Html::formLine('Form[extras][fields]['.$k.'][validation][confirm]', array('type' => 'text', 'label' => l_('CF_VALIDATE_CONFIRM'), 'sublabel' => l_('CF_VALIDATE_CONFIRM_DESC')));
 			echo \GCore\Helpers\Html::formLine('Form[extras][fields]['.$k.'][validation][custom]', array('type' => 'text', 'label' => l_('CF_VALIDATE_CUSTOM'), 'sublabel' => l_('CF_VALIDATE_CUSTOM_DESC')));

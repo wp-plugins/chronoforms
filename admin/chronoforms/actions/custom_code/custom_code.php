@@ -19,7 +19,7 @@ Class CustomCode extends \GCore\Admin\Extensions\Chronoforms\Action{
 		ob_start();
 		eval('?>'.$content);
 		$output = ob_get_clean();
-		echo \GCore\Libs\Str::replacer($output, $form->data);
+		echo \GCore\Libs\Str::replacer($output, $form->data, array('repeater' => 'repeater'));
 	}
 
 	public static function config($configs = array(), $extra_config = array()){

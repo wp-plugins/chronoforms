@@ -1,4 +1,4 @@
-GValidation.errors = {
+jQuery.gvalidation.errors = jQuery.extend(jQuery.gvalidation.errors, {
 	required: "Dette felt skal udfyldes.",
 	alpha: "Dette felt accepterer kun alfabetiske tegn.",
 	alphanum: "Dette felt accepterer kun alfanumeriske tegn.",
@@ -25,4 +25,4 @@ GValidation.errors = {
 	group : 'Afkryds venligst mindst %1 boks(e)',
 	custom: "Afkryds venligst en af mulighederne.",
 	select: "Vælg venligst en af værdierne."
-}
+});

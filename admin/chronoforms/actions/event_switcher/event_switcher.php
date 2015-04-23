@@ -47,8 +47,9 @@ Class EventSwitcher extends \GCore\Admin\Extensions\Chronoforms\Action{
 		<?php
 		echo \GCore\Helpers\Html::formStart('action_config event_switcher_action_config', 'event_switcher_action_config_{N}');
 		echo \GCore\Helpers\Html::formSecStart();
+		echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][action_label]', array('type' => 'text', 'label' => l_('CF_ACTION_LABEL'), 'class' => 'XL', 'sublabel' => l_('CF_ACTION_LABEL_DESC')));
 		echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][events]', array('type' => 'text', 'label' => l_('CF_EVENTS'), 'id' => 'event_switcher_events_{N}', 'class' => 'XXL', 'sublabel' => l_('CF_EVENTS_EVENT_SWITCHER_DESC')));
-		echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][load_events]', array('type' => 'button', 'value' => l_('CF_LOAD_EVENTS_EVENT_SWITCHER'), 'onclick' => 'event_switcher_load_events(this, {N})', 'sublabel' => l_('CF_LOAD_EVENTS_EVENT_SWITCHER_DESC')));
+		echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][load_events]', array('type' => 'button', 'value' => l_('CF_LOAD_EVENTS_EVENT_SWITCHER'), 'onclick' => 'event_switcher_load_events(this, \'{N}\')', 'sublabel' => l_('CF_LOAD_EVENTS_EVENT_SWITCHER_DESC')));
 		echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][content]', array('type' => 'textarea', 'label' => l_('CF_CODE'), 'rows' => 20, 'cols' => 70, 'sublabel' => l_('CF_CONTENT_EVENT_SWITCHER_DESC')));
 		echo \GCore\Helpers\Html::formSecEnd();
 		echo \GCore\Helpers\Html::formEnd();

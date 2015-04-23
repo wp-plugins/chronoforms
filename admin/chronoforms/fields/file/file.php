@@ -34,7 +34,7 @@ class File {
 		'class' => array('value' => '', 'label' => 'Class', 'type' => 'text', 'class' => 'L'),
 		'title' => array('value' => '', 'label' => 'Title', 'type' => 'text', 'class' => 'L'),
 		'style' => array('value' => '', 'label' => 'Style', 'type' => 'text', 'class' => 'L'),
-		'multiple' => array('type' => 'dropdown', 'options' => array(0 => 'No', 1 => 'Yes'), 'label' => 'Multiple', 'sublabel' => 'Support selecting multiple files ? your field name should end with "[]"'),
+		':multiple' => array('type' => 'dropdown', 'options' => array(0 => 'No', 1 => 'Yes'), 'label' => 'Multiple', 'sublabel' => 'Support selecting multiple files ? your field name should end with "[]"'),
 		'params' => array('value' => '', 'label' => 'Extra params', 'type' => 'textarea', 'alt' => 'multiline', 'rows' => 5, 'cols' => 60, 'sublabel' => 'In Multiline format:param_name=param_value'),
 		':data-load-state' => array('label' => 'Load state', 'type' => 'dropdown', 'options' => array('' => 'Visible & Enabled', 'hidden' => 'Hidden', 'hidden_parent' => 'Parent hidden', 'disabled' => 'Disabled')),
 		':data-tooltip' => array('value' => '', 'label' => 'Tooltip', 'type' => 'textarea', 'rows' => 2, 'cols' => 60),

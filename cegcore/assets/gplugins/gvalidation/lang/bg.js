@@ -1,4 +1,4 @@
-GValidation.errors = {
+jQuery.gvalidation.errors = jQuery.extend(jQuery.gvalidation.errors, {
 	required: "Задължително за попълване поле.",
 	alpha: "Това поле е само за букви.",
 	alphanum: "Това поле е само за букви и числа.",
@@ -21,4 +21,4 @@ GValidation.errors = {
 	group: 'Please make at least %1 selection(s).',
 	custom: "Моля изберете един от вариантите",
 	select: "Моля изберете един или повече от вариантите"
-}
+});

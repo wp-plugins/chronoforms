@@ -154,7 +154,7 @@ class Document {
 			break;
 			case 'bootstrap':
 				$bs_style = !empty($params['style']) ? '-'.$params['style'] : '';
-				$this->addJsFile(\GCore\C::get('GCORE_FRONT_URL').'assets/bootstrap/js/bootstrap.js');
+				//$this->addJsFile(\GCore\C::get('GCORE_FRONT_URL').'assets/bootstrap/js/bootstrap.js');
 				$this->addCssFile(\GCore\C::get('GCORE_FRONT_URL').'assets/bootstrap/css/bootstrap'.$bs_style.'.css');
 				$this->addCssFile(\GCore\C::get('GCORE_FRONT_URL').'assets/bootstrap/css/bootstrap-theme.css');
 				$this->addCssFile(\GCore\C::get('GCORE_FRONT_URL').'assets/bootstrap/css/bootstrap-gcore.css');
@@ -205,6 +205,39 @@ class Document {
 				$this->addJsFile(\GCore\C::get('GCORE_FRONT_URL').'assets/gplugins/gtooltip/gtooltip.js');
 				$this->addCssFile(\GCore\C::get('GCORE_FRONT_URL').'assets/gplugins/gtooltip/gtooltip.css');
 			break;
+			case 'gmodal':
+				$this->addJsFile(\GCore\C::get('GCORE_FRONT_URL').'assets/gplugins/gmodal/gmodal.js');
+				$this->addCssFile(\GCore\C::get('GCORE_FRONT_URL').'assets/gplugins/gmodal/gmodal.css');
+			break;
+			case 'gdropdown':
+				$this->addJsFile(\GCore\C::get('GCORE_FRONT_URL').'assets/gplugins/gdropdown/gdropdown.js');
+				$this->addCssFile(\GCore\C::get('GCORE_FRONT_URL').'assets/gplugins/gdropdown/gdropdown.css');
+			break;
+			case 'gcompleter':
+				$this->_('gdropdown');
+				$this->addJsFile(\GCore\C::get('GCORE_FRONT_URL').'assets/gplugins/gcompleter/gcompleter.js');
+				$this->addCssFile(\GCore\C::get('GCORE_FRONT_URL').'assets/gplugins/gcompleter/gcompleter.css');
+			break;
+			case 'gtabs':
+				$this->addJsFile(\GCore\C::get('GCORE_FRONT_URL').'assets/gplugins/gtabs/gtabs.js');
+				$this->addCssFile(\GCore\C::get('GCORE_FRONT_URL').'assets/gplugins/gtabs/gtabs.css');
+			break;
+			case 'gsliders':
+				$this->addJsFile(\GCore\C::get('GCORE_FRONT_URL').'assets/gplugins/gsliders/gsliders.js');
+				$this->addCssFile(\GCore\C::get('GCORE_FRONT_URL').'assets/gplugins/gsliders/gsliders.css');
+			break;
+			case 'gloader':
+				$this->addJsFile(\GCore\C::get('GCORE_FRONT_URL').'assets/gplugins/gloader/gloader.js');
+				$this->addCssFile(\GCore\C::get('GCORE_FRONT_URL').'assets/gplugins/gloader/gloader.css');
+			break;
+			case 'guploader':
+				$this->addJsFile(\GCore\C::get('GCORE_FRONT_URL').'assets/gplugins/guploader/guploader.js');
+				$this->addCssFile(\GCore\C::get('GCORE_FRONT_URL').'assets/gplugins/guploader/guploader.css');
+			break;
+			case 'geditor':
+				$this->addJsFile(\GCore\C::get('GCORE_FRONT_URL').'assets/gplugins/geditor/geditor.js');
+				$this->addCssFile(\GCore\C::get('GCORE_FRONT_URL').'assets/gplugins/geditor/geditor.css');
+			break;
 			case 'select2':
 				$this->addJsFile(\GCore\C::get('GCORE_FRONT_URL').'assets/select2/select2.min.js');
 				$this->addCssFile(\GCore\C::get('GCORE_FRONT_URL').'assets/select2/select2.css');
@@ -233,13 +266,12 @@ class Document {
 				$this->addJsFile(\GCore\C::get('GCORE_FRONT_URL').'assets/gplugins/geditor/geditor.js');
 				$this->addCssFile(\GCore\C::get('GCORE_FRONT_URL').'assets/gplugins/geditor/geditor.css');
 			break;
+			case 'highlight':
+				$this->addJsFile(\GCore\C::get('GCORE_FRONT_URL').'assets/highlight/highlight.pack.js');
+				$this->addCssFile(\GCore\C::get('GCORE_FRONT_URL').'assets/highlight/styles/'.(!empty($params['style']) ? $params['style'] : 'default').'.css');
+				$this->addJsCode('hljs.initHighlightingOnLoad();');
+			break;
 			default:
-				/*$this->addJsFile(\GCore\C::get('GCORE_FRONT_URL').'assets/jquery/uitems/jquery.ui.core.min.js');
-				$this->addJsFile(\GCore\C::get('GCORE_FRONT_URL').'assets/jquery/uitems/jquery.ui.widget.min.js');
-				$this->addJsFile(\GCore\C::get('GCORE_FRONT_URL').'assets/jquery/uitems/jquery.ui.position.min.js');
-				$this->addJsFile(\GCore\C::get('GCORE_FRONT_URL').'assets/jquery/uitems/jquery.ui.menu.min.js');
-				$this->addJsFile(\GCore\C::get('GCORE_FRONT_URL').'assets/jquery/uitems/jquery.ui.'.$name.'.min.js');
-				$this->addCssFile(\GCore\C::get('GCORE_FRONT_URL').'assets/jquery/'.Base::getConfig('jquery_theme', 'base').'/jquery-ui.min.css');*/
 				break;
 		}
 	}

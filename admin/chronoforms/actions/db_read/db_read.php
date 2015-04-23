@@ -18,7 +18,7 @@ Class DbRead extends \GCore\Admin\Extensions\Chronoforms\Action{
 	var $defaults = array(
 		'tablename' => '',
 		'enabled' => 1,
-		'model_id' => 'Data',
+		'model_id' => 'Data{N}',
 		'load_under_modelid' => 1,
 		'multi_read' => 0,
 		'ndb_enable' => 0,
@@ -40,6 +40,7 @@ Class DbRead extends \GCore\Admin\Extensions\Chronoforms\Action{
 		if(!$config->get('enabled', 1)){
 			return;
 		}
+		
 		if($config->get('tablename', '') OR $config->get('ndb_enable', 0)){
 			if($config->get('ndb_enable', 0)){
 				\GCore\Libs\Model::generateModel($model_id, array(
@@ -57,6 +58,20 @@ Class DbRead extends \GCore\Admin\Extensions\Chronoforms\Action{
 				\GCore\Libs\Model::generateModel($model_id, array('tablename' => $config->get('tablename', '')));
 			}
 			$model_class = '\GCore\Models\\'.$model_id;
+			$model_class = $model_class::getInstance();
+			
+			if($config->get('enable_relations', 0)){
+				$relations = $config->get('relations', array());
+				foreach($relations as $relation){
+					\GCore\Libs\Model::generateModel($relation['model'], array('tablename' => $relation['tablename']));
+					$model_class->bindModels($relation['type'], array(
+						$relation['model'] => array(
+							'className' => '\GCore\Models\\'.$relation['model'],
+							'foreignKey' => $relation['fkey'],
+						),
+					));
+				}
+			}
 			//$data = $form->data;
 			$find_type = 'first';
 			if((bool)$config->get('multi_read', 0) === true){
@@ -65,7 +80,7 @@ Class DbRead extends \GCore\Admin\Extensions\Chronoforms\Action{
 
 			$find_params = array();
 			$conditions = eval('?>'.$config->get('conditions', ''));
-			$model_class::getInstance()->conditions = is_array($conditions) ? $conditions : array();
+			$model_class->conditions = is_array($conditions) ? $conditions : array();
 
 			if($config->get('fields', '')){
 				$find_params['fields'] = array_map('trim', explode(',', $config->get('fields', '')));
@@ -77,28 +92,33 @@ Class DbRead extends \GCore\Admin\Extensions\Chronoforms\Action{
 				$find_params['group'] = array_map('trim', explode(',', $config->get('group', '')));
 			}
 			
-			$initial_queries = $model_class::getInstance()->dbo->log;
+			$initial_queries = $model_class->dbo->log;
 			//run query
-			$rows = $model_class::getInstance()->find($find_type, $find_params);
+			$rows = $model_class->find($find_type, $find_params);
 			if(!empty($rows)){
 				$this->events['found'] = 1;
 			}else{
 				$this->events['not_found'] = 1;
 			}
-			$form->debug[$action_id][self::$title]['Queries'] = array_values(array_diff($model_class::getInstance()->dbo->log, $initial_queries));
-			$data = array();
-			if((bool)$config->get('multi_read', 0) === true){
-				foreach($rows as $k => $row){
-					$data[$k] = $row[$model_id];
-				}
-			}else{
-				$data = !empty($rows[$model_id]) ? $rows[$model_id] : array();
-			}
+			$form->debug[$action_id][self::$title]['Queries'] = array_values(array_diff($model_class->dbo->log, $initial_queries));
 			
-			if((bool)$config->get('load_under_modelid', 0) === true){
-				$form->data[$model_id] = $data;
+			if($config->get('enable_relations', 0)){
+				$form->data = array_merge($form->data, $rows);
 			}else{
-				$form->data = array_merge($form->data, $data);
+				$data = array();
+				if((bool)$config->get('multi_read', 0) === true){
+					foreach($rows as $k => $row){
+						$data[$k] = $row[$model_id];
+					}
+				}else{
+					$data = !empty($rows[$model_id]) ? $rows[$model_id] : array();
+				}
+				
+				if((bool)$config->get('load_under_modelid', 0) === true){
+					$form->data[$model_id] = $data;
+				}else{
+					$form->data = array_merge($form->data, $data);
+				}
 			}
 		}
 		//pr($form->data);
@@ -133,7 +153,7 @@ Class DbRead extends \GCore\Admin\Extensions\Chronoforms\Action{
 		
 		$ndb_tables = array();
 		if(!empty($data['ndb_table_name'])){
-			$ndb_tables = \GCore\Libs\Database::getInstance(array(
+			/*$ndb_tables = \GCore\Libs\Database::getInstance(array(
 				'type' => $data['ndb_driver'], 
 				'host' => $data['ndb_host'], 
 				'name' => $data['ndb_database'], 
@@ -141,7 +161,8 @@ Class DbRead extends \GCore\Admin\Extensions\Chronoforms\Action{
 				'pass' => $data['ndb_password'], 
 				'prefix' => $data['ndb_prefix']
 			))->getTablesList();
-			$ndb_tables = array_combine($ndb_tables, $ndb_tables);
+			$ndb_tables = array_combine($ndb_tables, $ndb_tables);*/
+			$ndb_tables = array($data['ndb_table_name'] => $data['ndb_table_name']);
 		}
 
 		echo \GCore\Helpers\Html::formStart('action_config db_read_action_config', 'db_read_action_config_{N}');
@@ -165,11 +186,29 @@ Class DbRead extends \GCore\Admin\Extensions\Chronoforms\Action{
 							jQuery('#db_read_ndb_table_name_'+SID).append('<option value="">Failed to connect!!</option>');
 						}
 					},
+					"error" : function(){
+						jQuery('#db_read_ndb_table_name_'+SID).empty();
+						jQuery('#db_read_ndb_table_name_'+SID).append('<option value="">Failed to connect!!</option>');
+					},
 				});
+			}
+			
+			function addRelation(elem, SID){
+				var last = jQuery(elem).closest('.form-group').prev();
+				var count = parseInt(last.clone().wrap('<p>').parent().html().match(/\[relations\]\[[0-9]+\]/).pop().replace('[relations][', '').replace(']', '')) + 1;
+				jQuery(elem).closest('.form-group').before(last.clone().wrap('<p>').parent().html().replace(/\[relations\]\[[0-9]+\]/g, '[relations]['+count+']'));
+			}
+			function removeRelation(elem, button_id){
+				var last = jQuery(elem).closest('.form-group').prev();
+				var count = last.clone().wrap('<p>').parent().html().match(/\[relations\]\[[0-9]+\]/).pop().replace('[relations][', '').replace(']', '');
+				if(count != '0'){
+					last.remove();
+				}
 			}
 		</script>
 		<ul class="nav nav-tabs">
 			<li class="active"><a href="#basic-{N}" data-g-toggle="tab"><?php echo l_('CF_BASIC'); ?></a></li>
+			<li><a href="#relations-{N}" data-g-toggle="tab"><?php echo l_('CF_RELATIONS'); ?></a></li>
 			<li><a href="#external-{N}" data-g-toggle="tab"><?php echo l_('CF_EXTERNAL_DB'); ?></a></li>
 		</ul>
 		<div class="tab-content">
@@ -189,6 +228,32 @@ Class DbRead extends \GCore\Admin\Extensions\Chronoforms\Action{
 			echo \GCore\Helpers\Html::formSecEnd();
 			?>
 			</div>
+			<div id="relations-{N}" class="tab-pane">
+			<?php
+			echo \GCore\Helpers\Html::formSecStart();
+			echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][enable_relations]', array('type' => 'dropdown', 'label' => l_('CF_DB_READ_ENABLE_RELATIONS'), 'options' => array(0 => l_('NO'), 1 => l_('YES')), 'sublabel' => l_('CF_DB_READ_ENABLE_RELATIONS_DESC')));
+			
+			if(empty($data['relations'])){
+				$data['relations'] = array(array());
+			}
+			foreach($data['relations'] as $i => $relation){
+				echo '<div class="panel panel-default"><div class="panel-body">';
+				echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][relations]['.$i.'][model]', array('type' => 'text', 'label' => l_('CF_DB_READ_RELATIONS_MODEL'), 'class' => 'M', 'sublabel' => l_('CF_DB_READ_RELATIONS_MODEL_DESC')));
+				echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][relations]['.$i.'][tablename]', array('type' => 'dropdown', 'label' => l_('CF_DB_READ_RELATIONS_TABLENAME'), 'options' => $tables, 'sublabel' => l_('CF_DB_READ_RELATIONS_TABLENAME_DESC')));
+				echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][relations]['.$i.'][type]', array('type' => 'dropdown', 'label' => l_('CF_DB_READ_RELATIONS_TYPE'), 'options' => array('hasOne' => l_('hasOne'), 'hasMany' => l_('hasMany'), 'belongsTo' => l_('belongsTo')), 'sublabel' => l_('CF_DB_READ_RELATIONS_TYPE_DESC')));
+				echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][relations]['.$i.'][fkey]', array('type' => 'text', 'label' => l_('CF_DB_READ_RELATIONS_FKEY'), 'class' => 'M', 'sublabel' => l_('CF_DB_READ_RELATIONS_FKEY_DESC')));
+				echo '</div></div>';
+			}
+			echo \GCore\Helpers\Html::formLine('process_relations', array('type' => 'multi', 'layout' => 'wide',
+				'inputs' => array(
+					array('type' => 'button', 'name' => 'add_relation', 'class' => 'btn btn-success', 'value' => l_('CF_DB_READ_ADD_RELATION'), 'id' => 'add_relation_{N}', 'onclick' => 'addRelation(this, \'{N}\');'),
+					array('type' => 'button', 'name' => 'remove_relation', 'class' => 'btn btn-danger', 'value' => l_('CF_DB_READ_REMOVE_RELATION'), 'id' => 'remove_relation_{N}', 'onclick' => 'removeRelation(this, \'{N}\');'),
+				)
+			));
+			
+			echo \GCore\Helpers\Html::formSecEnd();
+			?>
+			</div>
 			<div id="external-{N}" class="tab-pane">
 			<?php
 			echo \GCore\Helpers\Html::formSecStart();
@@ -199,7 +264,7 @@ Class DbRead extends \GCore\Admin\Extensions\Chronoforms\Action{
 			echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][ndb_user]', array('type' => 'text', 'label' => l_('CF_DB_SAVE_EXTERNAL_DB_USER'), 'sublabel' => l_('CF_DB_SAVE_EXTERNAL_DB_USER_DESC')));
 			echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][ndb_password]', array('type' => 'text', 'label' => l_('CF_DB_SAVE_EXTERNAL_DB_PASSWORD'), 'sublabel' => l_('CF_DB_SAVE_EXTERNAL_DB_PASSWORD_DESC')));
 			echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][ndb_prefix]', array('type' => 'text', 'label' => l_('CF_DB_SAVE_EXTERNAL_DB_PREFIX'), 'sublabel' => l_('CF_DB_SAVE_EXTERNAL_DB_PREFIX_DESC')));
-			echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][ndb_load_tables]', array('type' => 'button', 'value' => l_('CF_DB_SAVE_EXTERNAL_DB_LOAD_TABLES'), 'onclick' => 'db_read_ndb_load_tables(this, {N})', 'sublabel' => ''));
+			echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][ndb_load_tables]', array('type' => 'button', 'value' => l_('CF_DB_SAVE_EXTERNAL_DB_LOAD_TABLES'), 'onclick' => 'db_read_ndb_load_tables(this, \'{N}\')', 'sublabel' => ''));
 			echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][ndb_table_name]', array('type' => 'dropdown', 'label' => l_('CF_DB_SAVE_EXTERNAL_DB_TABLE'), 'id' => 'db_read_ndb_table_name_{N}', 'options' => $ndb_tables, 'sublabel' => l_('CF_DB_SAVE_EXTERNAL_DB_TABLE_DESC')));
 			echo \GCore\Helpers\Html::formSecEnd();
 			?>

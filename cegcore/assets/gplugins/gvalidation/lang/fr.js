@@ -1,4 +1,4 @@
-GValidation.errors = {
+jQuery.gvalidation.errors = jQuery.extend(jQuery.gvalidation.errors, {
 	required: "Ce champ est requis.",
 	alpha: "Ce champ n'accepte que des caract&egrave;res alphab&eacute;tiques sans accents.",
 	alphanum: "Ce champ n'accepte que des caract&egrave;res alphanum&eacute;riques.",
@@ -26,4 +26,4 @@ GValidation.errors = {
 	custom: "Merci de choisir une valeur.",
 	select: "Merci de choisir une valeur dans la liste.",
 	select_multiple: "Merci de choisir au moins une valeur dans la liste."
-}
+});

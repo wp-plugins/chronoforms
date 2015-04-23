@@ -17,12 +17,13 @@ Class ThanksMessage extends \GCore\Admin\Extensions\Chronoforms\Action{
 		$config =  $form->actions_config[$action_id];
 		$config = new \GCore\Libs\Parameter($config);
 		$message = $config->get('message', '');
-		echo \GCore\Libs\Str::replacer($message, $form->data);
+		echo \GCore\Libs\Str::replacer($message, $form->data, array('repeater' => 'repeater'));
 	}
 
 	public static function config(){
 		echo \GCore\Helpers\Html::formStart('action_config thanks_message_action_config', 'thanks_message_action_config_{N}');
 		echo \GCore\Helpers\Html::formSecStart();
+		echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][action_label]', array('type' => 'text', 'label' => l_('CF_ACTION_LABEL'), 'class' => 'XL', 'sublabel' => l_('CF_ACTION_LABEL_DESC')));
 		echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][load_editor]', array('type' => 'button', 'class' => 'btn btn-primary', 'value' => l_('CF_LOAD_EDITOR'), 'onclick' => 'toggleEditor(this, \'thanks_message_content_{N}\');'));
 		echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][message]', array('type' => 'textarea', 'label' => l_('CF_MESSAGE'), 'id' => 'thanks_message_content_{N}', 'rows' => 20, 'cols' => 70, 'sublabel' => l_('CF_THANKS_MESSAGE_DESC')));
 		echo \GCore\Helpers\Html::formSecEnd();

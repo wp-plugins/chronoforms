@@ -11,6 +11,7 @@ namespace GCore\Libs;
 defined("GCORE_SITE") or die;
 class Helper {
 	var $view = null;
+	var $data = array();
 
 	function initialize(){
 		

@@ -1,4 +1,4 @@
-GValidation.errors = {
+jQuery.gvalidation.errors = jQuery.extend(jQuery.gvalidation.errors, {
 	required: "Feltet er obligatorisk.",
 	alpha: "Feltet aksepterer kun bokstaver",
 	alphanum: "Feltet aksepterer kun bokstaver og tall",
@@ -26,4 +26,4 @@ GValidation.errors = {
 	custom: "Vennligst marker ditt valg",
 	select: "Vennligst velg et av valgene",
 	select_multiple : "Vennligst velg minst ett av valgene"
-}
+});

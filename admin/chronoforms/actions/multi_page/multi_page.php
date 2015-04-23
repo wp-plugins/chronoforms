@@ -33,13 +33,13 @@ Class MultiPage extends \GCore\Admin\Extensions\Chronoforms\Action{
 		$stored_files = $session->get('_chronoforms_paging_files_'.$session_key, array());
 		$session->set('_chronoforms_paging_data_'.$session_key, $this->merge($stored_data, $form->data));
 		$session->set('_chronoforms_paging_files_'.$session_key, array_merge($stored_files, $form->files));
-		$form->data = $this->merge($form->data, $stored_data);
-		$form->files = array_merge($form->files, $session->get('_chronoforms_paging_files_'.$session_key, array()));
+		$form->data = $this->merge($stored_data, $form->data);
+		$form->files = array_merge($session->get('_chronoforms_paging_files_'.$session_key, array()), $form->files);
 	}
 	
 	function merge(array &$array1, array &$array2){
 		$merged = $array1;
-		foreach ($array2 as $key => &$value){
+		foreach($array2 as $key => &$value){
 			if(is_array($value) && isset($merged[$key]) && is_array($merged[$key])){
 				$merged[$key] = $this->merge($merged[$key], $value);
 			}else{

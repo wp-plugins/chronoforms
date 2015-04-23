@@ -172,7 +172,7 @@ namespace GCore{
 					}
 					if($k == (count($dirs) - 1)){
 						//last dir (file name)
-						$strings[] = strtolower(preg_replace('/([a-z])([A-Z])/', '$1_$2', $dir)).".php";
+						$strings[] = strtolower(preg_replace('/([a-z]|[0-9])([A-Z])/', '$1_$2', $dir)).".php";
 						continue;
 					}
 					if(empty($dirs[$k])){
@@ -180,7 +180,7 @@ namespace GCore{
 						continue;
 					}
 					//otherwise, uncamilize the namespace name to get the directory name
-					$strings[] = strtolower(preg_replace('/([a-z])([A-Z])/', '$1_$2', $dir));
+					$strings[] = strtolower(preg_replace('/([a-z]|[0-9])([A-Z])/', '$1_$2', $dir));
 				}
 				//load the file if exists
 				$file = implode(DIRECTORY_SEPARATOR, $strings);

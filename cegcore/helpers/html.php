@@ -277,7 +277,7 @@ class Html extends \GCore\Libs\Helper{
 					$set_empty = true;
 				}
 				$tags[] = self::_concat($params, $attributes, '<select ', '>');
-				if(is_string($params['options']) AND !empty($params['options']) AND strpos($params['options'], '=')){
+				if(!empty($params['options']) AND is_string($params['options']) AND strpos($params['options'], '=')){
 					$params['options'] = \GCore\Libs\Str::list_to_array($params['options'], '=');
 				}
 				if(!empty($params['options']) AND is_array($params['options'])){
@@ -316,7 +316,7 @@ class Html extends \GCore\Libs\Helper{
 			case 'radio':
 				$attributes = array('type', 'name', 'id', 'class', 'title', 'value', 'style', 'checked', 'onclick', 'onchange', 'alt');
 				if(!empty($params['ghost']) AND (bool)$params['ghost'] === true){
-					$tags[] = self::input($params['name'], array('type' => 'hidden', 'id' => $params['id'].'_ghost', 'value' => isset($params['ghost_value']) ? $params['ghost_value'] : ''));
+					$tags[] = self::input($params['name'], array('type' => 'hidden', 'id' => $params['id'].'_ghost', ':data-ghost' => 1, 'value' => isset($params['ghost_value']) ? $params['ghost_value'] : ''));
 				}
 				if(!empty($params['options']) AND is_array($params['options'])){
 					$id = $params['id'].'__#';
@@ -330,6 +330,9 @@ class Html extends \GCore\Libs\Helper{
 						$params['id'] = self::_field_uid($id);
 						$item = array();
 						$item[] = self::_concat($params, $attributes, '<input ', ' />');
+						if(!empty($params['label_input'])){
+							$label = array_pop($item).$label;
+						}
 						$item[] = self::label(array('text' => $label, 'class' => 'gcore-label', 'for' => $params['id']), $params);
 						$tags[] = self::container('div', implode("\n", $item), array('class' => 'gcore-radio-item', 'id' => 'fitem__#'));
 					}
@@ -339,7 +342,7 @@ class Html extends \GCore\Libs\Helper{
 			case 'checkbox_group':
 				$attributes = array('type', 'name', 'id', 'class', 'title', 'value', 'style', 'checked', 'onclick', 'onchange', 'alt');
 				if(!empty($params['ghost']) AND (bool)$params['ghost'] === true){
-					$tags[] = self::input(str_replace('[]', '', $params['name']), array('type' => 'hidden', 'id' => $params['id'].'_ghost', 'value' => isset($params['ghost_value']) ? $params['ghost_value'] : ''));
+					$tags[] = self::input(str_replace('[]', '', $params['name']), array('type' => 'hidden', 'id' => $params['id'].'_ghost', ':data-ghost' => 1, 'value' => isset($params['ghost_value']) ? $params['ghost_value'] : ''));
 				}
 				$params['type'] = 'checkbox';
 				if(!array_key_exists('brackets', $params) OR $params['brackets'] === true){
@@ -356,6 +359,9 @@ class Html extends \GCore\Libs\Helper{
 						$params['id'] = self::_field_uid($id);
 						$item = array();
 						$item[] = self::_concat($params, $attributes, '<input ', ' />');
+						if(!empty($params['label_input'])){
+							$label = array_pop($item).$label;
+						}
 						$item[] = self::label(array('text' => $label, 'class' => 'gcore-label', 'for' => $params['id']), $params);
 						$tags[] = self::container('div', implode("\n", $item), array('class' => 'gcore-checkbox-item', 'id' => 'fitem__#'));
 					}
@@ -365,7 +371,7 @@ class Html extends \GCore\Libs\Helper{
 			case 'checkbox':
 				$attributes = array('type', 'name', 'id', 'class', 'title', 'value', 'style', 'checked', 'onclick', 'onchange', 'alt');
 				if(!empty($params['ghost']) AND (bool)$params['ghost'] === true){
-					$tags[] = self::input($params['name'], array('type' => 'hidden', 'id' => $params['id'].'_ghost', 'value' => isset($params['ghost_value']) ? $params['ghost_value'] : ''));
+					$tags[] = self::input($params['name'], array('type' => 'hidden', 'id' => $params['id'].'_ghost', ':data-ghost' => 1, 'value' => isset($params['ghost_value']) ? $params['ghost_value'] : ''));
 				}
 				if(array_key_exists('checked', $params) AND empty($params['checked'])){
 					unset($params['checked']);
@@ -385,7 +391,7 @@ class Html extends \GCore\Libs\Helper{
 			case 'file':
 				$attributes = array('type', 'name', 'id', 'class', 'title', 'style', 'onclick', 'onchange', 'alt', 'multiple');
 				if(!empty($params['ghost']) AND (bool)$params['ghost'] === true){
-					$tags[] = self::input($params['name'], array('type' => 'hidden', 'id' => $params['id'].'_ghost', 'value' => isset($params['ghost_value']) ? $params['ghost_value'] : ''));
+					$tags[] = self::input($params['name'], array('type' => 'hidden', 'id' => $params['id'].'_ghost', ':data-ghost' => 1, 'value' => isset($params['ghost_value']) ? $params['ghost_value'] : ''));
 				}
 				if(!empty($params['multiple']) AND (bool)$params['multiple'] === true){
 					$params['multiple'] = 'multiple';
@@ -418,6 +424,13 @@ class Html extends \GCore\Libs\Helper{
 			default:
 				$attributes = array('type', 'name', 'id', 'value', 'class', 'size', 'maxlength', 'title', 'style', 'onclick', 'onchange', 'alt', 'placeholder', 'readonly');
 				$params['id'] = self::_field_uid($params['id']);
+				//clear empty parameters if exists
+				if(isset($params['size']) AND empty($params['size'])){
+					unset($params['size']);
+				}
+				if(isset($params['maxlength']) AND empty($params['maxlength'])){
+					unset($params['maxlength']);
+				}
 				$tags[] = self::_concat($params, $attributes, '<input ', ' />');
 				break;
 		}

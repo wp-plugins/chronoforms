@@ -21,7 +21,7 @@ Class FileDownload extends \GCore\Admin\Extensions\Chronoforms\Action{
 		$config = new \GCore\Libs\Parameter($config);
 		
 		$file_path = $config->get('path');
-		if(file_exists($file_path)){
+		if(\GCore\Libs\File::exists($file_path)){
 			\GCore\Libs\Download::send($file_path);
 		}
 	}

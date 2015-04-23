@@ -108,6 +108,7 @@ class Text {
 			echo \GCore\Helpers\Html::formLine('Form[extras][fields]['.$k.'][validation][alphanum]', array('type' => 'dropdown', 'label' => l_('CF_ALPHA_NUMERIC'), 'options' => array('' => l_('NO'), 1 => l_('YES'))));
 			echo \GCore\Helpers\Html::formLine('Form[extras][fields]['.$k.'][validation][digit]', array('type' => 'dropdown', 'label' => l_('CF_DIGIT'), 'options' => array('' => l_('NO'), 1 => l_('YES'))));
 			echo \GCore\Helpers\Html::formLine('Form[extras][fields]['.$k.'][validation][nodigit]', array('type' => 'dropdown', 'label' => l_('CF_NO_DIGIT'), 'options' => array('' => l_('NO'), 1 => l_('YES'))));
+			echo \GCore\Helpers\Html::formLine('Form[extras][fields]['.$k.'][validation][nospace]', array('type' => 'dropdown', 'label' => l_('CF_NO_SPACE'), 'options' => array('' => l_('NO'), 1 => l_('YES'))));
 			echo \GCore\Helpers\Html::formLine('Form[extras][fields]['.$k.'][validation][number]', array('type' => 'dropdown', 'label' => l_('CF_NUMBER'), 'options' => array('' => l_('NO'), 1 => l_('YES'))));
 			echo \GCore\Helpers\Html::formLine('Form[extras][fields]['.$k.'][validation][email]', array('type' => 'dropdown', 'label' => l_('CF_EMAIL'), 'options' => array('' => l_('NO'), 1 => l_('YES'))));
 			echo \GCore\Helpers\Html::formLine('Form[extras][fields]['.$k.'][validation][phone]', array('type' => 'dropdown', 'label' => l_('CF_PHONE'), 'options' => array('' => l_('NO'), 1 => l_('YES'))));

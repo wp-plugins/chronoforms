@@ -1,4 +1,4 @@
-GValidation.errors = {
+jQuery.gvalidation.errors = jQuery.extend(jQuery.gvalidation.errors, {
 	required: "Dieses Feld ist obligatorisch.",
 	alpha: "In diesem Feld sind nur Buchstaben zul&auml;ssig.",
 	alphanum: "In diesem Feld sind nur Zahlen zul&auml;ssig.",
@@ -21,4 +21,4 @@ GValidation.errors = {
 	group : 'Bitte kreuzen Sie mindestens %1 Feld(er) an',
 	custom: "Bitte einen Wert ausw&auml;hlen.",
 	select: "Bitte einen Wert ausw&auml;hlen."
-}
+});

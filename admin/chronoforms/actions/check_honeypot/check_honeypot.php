@@ -38,7 +38,7 @@ Class CheckHoneypot extends \GCore\Admin\Extensions\Chronoforms\Action{
 		//check field exists
 		if(!empty($field_name) AND !empty($form->data[$field_name])){
 			//check time
-			if($config->get('time', 5) + $time > time()){
+			if((int)$config->get('time', 5) + $time > time()){
 				$this->events['fail'] = 1;
 				$form->errors['chrono_honeypot'] = $config->get('error', "Honeypot check failed.");
 				$form->debug[$action_id][self::$title][] = "Time too short";

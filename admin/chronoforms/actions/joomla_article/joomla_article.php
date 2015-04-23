@@ -23,6 +23,7 @@ Class JoomlaArticle extends \GCore\Admin\Extensions\Chronoforms\Action{
 		'created_by_alias' => '',
 		'state' => 0,
 		'catid' => 0,
+		'access' => 1,
 		'sectionid' => 0
 	);
 
@@ -34,6 +35,7 @@ Class JoomlaArticle extends \GCore\Admin\Extensions\Chronoforms\Action{
 		//set data		
 		$user = \GCore\Libs\Base::getUser();
 		$article_data['created_by'] = $user['id'];
+		$article_data['access'] = $config->get('access', 1);
 		$article_data['created'] = date("Y-m-d H:i:s");
 		$article_data['catid'] = $config->get('catid', '');
 		$article_data['sectionid'] = $config->get('sectionid', 0);
@@ -63,6 +65,7 @@ Class JoomlaArticle extends \GCore\Admin\Extensions\Chronoforms\Action{
 		//echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][created_by_alias]', array('type' => 'text', 'label' => l_('CF_JOOMLA_ARTICLE_CREATEDBY_ALIAS'), 'class' => 'M', 'sublabel' => l_('CF_JOOMLA_ARTICLE_CREATEDBY_ALIAS_DESC')));
 		echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][state]', array('type' => 'dropdown', 'label' => l_('CF_JOOMLA_ARTICLE_STATE'), 'values' => 0, 'options' => array(0 => l_('NO'), 1 => l_('YES')), 'sublabel' => l_('CF_JOOMLA_ARTICLE_STATE_DESC')));
 		echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][catid]', array('type' => 'text', 'label' => l_('CF_JOOMLA_ARTICLE_CATID'), 'value' => 0, 'sublabel' => l_('CF_JOOMLA_ARTICLE_CATID_DESC')));
+		echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][access]', array('type' => 'text', 'label' => l_('CF_JOOMLA_ARTICLE_ACCESS'), 'value' => 1, 'sublabel' => l_('CF_JOOMLA_ARTICLE_ACCESS_DESC')));
 		//echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][sectionid]', array('type' => 'text', 'label' => l_('CF_JOOMLA_ARTICLE_SECTIONID'), 'value' => 0, 'sublabel' => l_('CF_JOOMLA_ARTICLE_SECTIONID_DESC')));
 		echo \GCore\Helpers\Html::formSecEnd();
 		echo \GCore\Helpers\Html::formEnd();

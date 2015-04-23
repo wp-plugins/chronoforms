@@ -86,16 +86,18 @@ Class FileUpload extends \GCore\Admin\Extensions\Chronoforms\Action{
 				//get the posted file details
 				$field_name = $file_data[0];
 				if(empty($_FILES[$field_name])){
+				//if(!\GCore\Libs\Arr::getVal($_FILES, explode('.', $field_name))){
 					continue;
 				}
 				$file_post = $_FILES[$field_name];
-				if(in_array($field_name, $array_fields) AND !empty($file_post['name']) AND ($file_post['name'] === array_values($file_post['name']))){
+				if(in_array($field_name, $array_fields) AND !empty($file_post['name'])){// AND ($file_post['name'] === array_values($file_post['name']))){
 					foreach($file_post['name'] as $k => $v){
 						$uploaded_file_data = $this->processUpload($form, array('name' => $file_post['name'][$k], 'tmp_name' => $file_post['tmp_name'][$k], 'type' => $file_post['type'][$k], 'error' => $file_post['error'][$k], 'size' => $file_post['size'][$k]), $file_data[0], $file_extensions);
 						if(is_array($uploaded_file_data)){
-							$form->files[$field_name][] = $uploaded_file_data;
-							$form->data[$field_name][] = $uploaded_file_data['name'];
+							$form->files[$field_name][$k] = $uploaded_file_data;
+							$form->data[$field_name][$k] = $uploaded_file_data['name'];
 						}elseif($uploaded_file_data === false){
+							$this->events['success'] = 0;
 							return false;
 						}
 					}
@@ -105,6 +107,7 @@ Class FileUpload extends \GCore\Admin\Extensions\Chronoforms\Action{
 						$form->files[$field_name] = $uploaded_file_data;
 						$form->data[$field_name] = $uploaded_file_data['name'];
 					}elseif($uploaded_file_data === false){
+						$this->events['success'] = 0;
 						return false;
 					}
 				}
@@ -115,11 +118,11 @@ Class FileUpload extends \GCore\Admin\Extensions\Chronoforms\Action{
 	function processUpload(&$form, $file_post = array(), $field_name, $file_extensions){
 		//check valid file
 		if(!\GCore\Libs\Upload::valid($file_post)){
-			return false;
+			return null;
 		}
 		//check not empty file upload
 		if(!\GCore\Libs\Upload::not_empty($file_post)){
-			return false;
+			return null;
 		}
 		//check errors
 		if(!isset($file_post['tmp_name']) OR !is_uploaded_file($file_post['tmp_name'])){

@@ -1,4 +1,4 @@
-GValidation.errors = {
+jQuery.gvalidation.errors = jQuery.extend(jQuery.gvalidation.errors, {
 	required: "Toto pole je povinné.",
 	alpha: "Toto pole může obsahovat pouze písmena.",
 	alphanum: "Do tohoto pole můžete zadávat pouze alfanumerické znaky.",
@@ -25,4 +25,4 @@ GValidation.errors = {
 	custom: "Prosím vyberte jednu z možností",
 	select: "Prosím vyberte jednu z možností",
 	select_multiple : "Prosím vyberte jednu nebo více možností"
-}  
+});

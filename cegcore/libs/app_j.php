@@ -270,8 +270,45 @@ class AppJ {
 		$this->buffer .= ob_get_clean();
 		//load the theme files now
 		$theme = \GCore\Helpers\Theme::getInstance();
+		
+		$doc->_('gtabs');
+		$doc->_('gsliders');
+		$doc->_('gmodal');
+		$doc->_('gdropdown');
+		
+		ob_start();
+		?>
+		jQuery(document).ready(function($){
+			$('[data-g-toggle="tab"]').closest('.nav').gtabs({
+				'pane_selector':'.tab-pane',
+				'tab_selector':'[data-g-toggle="tab"]',
+			});
+			$('[data-g-toggle="collapse"]').closest('.panel-group').gsliders({
+				'pane_selector':'.panel-collapse',
+				'tab_selector':'[data-g-toggle="collapse"]',
+				'active_pane_class':'in',
+			});
+			
+			$('[data-g-toggle="modal"]').on('click', function(e){
+				e.preventDefault();
+				$modal = $($(this).data('g-target'));
+				$modal.gmodal({
+					'close_selector' : '[data-g-dismiss="modal"]',
+				});
+				$modal.gmodal('open');
+			});
+			
+			$('.gdropdown').gdropdown();
+			$('[data-g-toggle="dropdown"]').on('click', function(e){
+				e.preventDefault();
+				$(this).parent().find('.gdropdown').gdropdown('toggle');
+			});
+		});
+		<?php
+		$js = ob_get_clean();
+		$doc->addJsCode($js);
 
-		if($this->tvout != 'ajax' AND $doc->theme == 'bootstrap3'){
+		if($this->tvout != 'ajax' AND strpos($doc->theme, 'bootstrap3') !== false){
 			$this->buffer = '<div class="gbs3">'.$this->buffer.'</div>';
 		}
 		//Event::trigger('on_after_dispatch');
@@ -304,7 +341,7 @@ class AppJ {
 		}
 		$chunks = array();
 
-		$chunks[] = '
+		/*$chunks[] = '
 		<script type="text/javascript">
 		if("undefined"==typeof window.jQuery){}else{
 			var gcore_jQuery_bak = window.jQuery;
@@ -315,19 +352,24 @@ class AppJ {
 			window.$ = gcore_$;
 		}
 		</script>
-		';
+		';*/
 		$JDocument = \JFactory::getDocument();
+		if(!method_exists($JDocument, 'addCustomTag')){
+			return;
+		}
 		//add css files list
 		foreach($doc->cssfiles as $k => $cssfile){
-			//if(empty($used['cssfiles'][$k])){
+			if(empty($used['cssfiles'][$k])){
 				$used['cssfiles'][$k] = true;
-				//$chunks[] = \GCore\Helpers\Html::_concat($cssfile, array_keys($cssfile), '<link ', ' />');
-				$JDocument->addStyleSheet(\GCore\C::fix_urls($cssfile['href']));
-			//}
+				$cssfile['href'] = \GCore\C::fix_urls($cssfile['href']);
+				$chunks[] = \GCore\Helpers\Html::_concat($cssfile, array_keys($cssfile), '<link ', ' />');
+				//$JDocument->addStyleSheet(\GCore\C::fix_urls($cssfile['href']));
+			}
 		}
 		//add css code list
 		foreach($doc->csscodes as $media => $codes){
 			$chunks[] = \GCore\Helpers\Html::container('style', implode("\n", $codes), array('type' => 'text/css', 'media' => $media));
+			//$JDocument->addStyleDeclaration(implode("\n", $codes));
 			foreach($doc->csscodes[$media] as $k => $code){
 				unset($doc->csscodes[$media][$k]);
 			}
@@ -339,15 +381,17 @@ class AppJ {
 				$document->addScript($jsfile['src']);
 				continue;
 			}*/
-			//if(empty($used['jsfiles'][$k])){
+			if(empty($used['jsfiles'][$k])){
 				$used['jsfiles'][$k] = true;
+				$jsfile['src'] = \GCore\C::fix_urls($jsfile['src']);
 				$chunks[] = \GCore\Helpers\Html::_concat($jsfile, array_keys($jsfile), '<script ', '></script>');
-			//}
+			}
 		}
 		//add js code list
 		foreach($doc->jscodes as $type => $codes){
-			$chunks[] = \GCore\Helpers\Html::container('script', implode("\n", $codes), array('type' => $type));
+			//$chunks[] = \GCore\Helpers\Html::container('script', implode("\n", $codes), array('type' => $type));
 			foreach($doc->jscodes[$type] as $k => $code){
+				$chunks[] = \GCore\Helpers\Html::container('script', $code, array('type' => $type));
 				unset($doc->jscodes[$type][$k]);
 			}
 		}
@@ -357,7 +401,7 @@ class AppJ {
 			unset($doc->headertags[$k]);
 		}
 
-		$chunks[] = '
+		/*$chunks[] = '
 		<script type="text/javascript">
 		if("undefined"==typeof gcore_jQuery){
 			var gcore_jQuery = window.jQuery;
@@ -368,9 +412,15 @@ class AppJ {
 			window.$ = gcore_$_bak;
 		}
 		</script>
-		';
-
-		return implode("\n", array_filter($chunks));
+		';*/
+		//$header = implode("\n", array_filter($chunks));
+		foreach($chunks as $chunk){
+			if(in_array($chunk, $JDocument->_custom)){
+				continue;
+			}
+			$JDocument->addCustomTag(\GCore\C::fix_urls($chunk));
+		}
+		//return implode("\n", array_filter($chunks));
 	}
 
 	function output(){

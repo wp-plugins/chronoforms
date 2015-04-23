@@ -1,4 +1,4 @@
-GValidation.errors = {
+jQuery.gvalidation.errors = jQuery.extend(jQuery.gvalidation.errors, {
 	required: "Šis lauks ir obligāts.",
 	alpha: "Šajā laukā drīkst būt tikai burti.",
 	alphanum: "Šajā laukā drīkst būt tikai burti vai skaitļi.",
@@ -26,4 +26,4 @@ GValidation.errors = {
 	custom: "Lūdzu, izvēlieties vienu variantu!",
 	select: "Lūdzu, izvēlieties vērtību!",
 	select_multiple : "Lūdzu, izvēlieties vismaz vienu vērtību!"
-}
+});

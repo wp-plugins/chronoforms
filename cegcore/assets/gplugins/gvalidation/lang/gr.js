@@ -1,4 +1,4 @@
-GValidation.errors = {
+jQuery.gvalidation.errors = jQuery.extend(jQuery.gvalidation.errors, {
 	required: 'Το πεδίο είναι υποχρεωτικό.',
 	alpha: 'Το πεδίο δέχεται μόνο αλφαβητικούς χαρακτήρες.',
 	alphanum: 'Το πεδίο δέχεται μόνο αλφαρηθμιτικούς χαρακτήρες.',
@@ -20,4 +20,4 @@ GValidation.errors = {
 	group: 'Please make at least %1 selection(s).',
 	custom: 'Παρακαλώ επιλέξτε ένα από τα κουμπιά',
 	select: 'Παρακαλώ επιλέξτε μία τιμή'
-}
+});

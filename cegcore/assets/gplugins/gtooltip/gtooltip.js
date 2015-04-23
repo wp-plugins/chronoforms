@@ -1,179 +1,392 @@
-(function($){
-	var GTooltip = {
-		'tipclass' : 'gtooltip',
-		'awaytime': 800,
-		'ajax_cache': {},
-		'append': 'after',
-		'ajaxloading': 'Loading....',
-		'position':'top',
-		'ontime': 0,
-		'closable':0,
-	};
-	
-	$.fn.gtooltip_tipref = function(tipclass){
-		var $this = $(this);
-		if(typeof tipclass == 'undefined'){
-			var tipclass = $this.data('gtooltip_params').tipclass;
-		}
-		return tipclass.replace(/ /, '');
-	};
-	
-	$.fn.gtooltip_return = function(tipclass){
-		var $this = $(this);
-		if(typeof tipclass == 'undefined'){
-			var tipclass = $this.data('gtooltip_params').tipclass;
-		}
-		if(typeof $this.data('gtooltip-tips') != 'undefined' && typeof $this.data('gtooltip-tips')[$this.gtooltip_tipref(tipclass)] != 'undefined'){
-			return $this.data('gtooltip-tips')[$this.gtooltip_tipref(tipclass)];
-		}else{
-			return $();	
-		}
-		//return $this.next('.gtooltip');
-	};
+jQuery.gtooltip = {
+	'tipclass' : 'gtooltip',
+	'awaytime': 800,
+	'ontime': 0,
+	'ajax': 0,
+	'ajax_cache': {},
+	'ajaxloading': 'Loading....',
+	'append': 'after',
+	'position':'top',
+	'closable':0,
+	'on_close':'hide',
+	'tid':'',
+	'content':'',
+	'trigger':'hover',
+	'resetOnShow':false,
+	'createOnShow':false,
+	'spacing':3,
+	'arrow_size':7,
+	'css':{
+		'background-color':'#000',
+		'border-color':'#000',
+		'border-radius':'4px',
+		'border-width':'1px',
+		'padding':'8px',
+		'color':'#fff',
+		'font-size':'12px',
+		'max-width':'200px',
+		'text-align':'center',
+	},
+};
 
-	$.fn.gtooltip = function(option, tipclass){
-		if(!$(this).length){
-			return false;	
-		}
-		$.each($(this), function(i, elem){
-			var $this = $(elem);
-			if(!$this.data('gtooltip_params')){
-				$this.data('gtooltip_params', $.extend({}, GTooltip));
+(function($){
+	$.fn.gtooltip = function(options, params){
+		if(this.length > 0){
+			if($.type(params) === 'undefined' && $.type(options) === 'object'){
+				params = options;
 			}
-			if($.type(option) == 'string'){
-				if(option == 'show'){// && ($this.gtooltip_return().length < 1 || !($this.gtooltip_tipref() in $this.data('gtooltip-tips')))){//$this.next('.gtooltip').attr('class') != $this.data('gtooltip_params').tipclass)){
-					if($this.data('gtooltip-tips')){
-						if(!($this.gtooltip_tipref() in $this.data('gtooltip-tips'))){
-							//remove an existing tip which has a different class
-							$this.gtooltip('destroy');
-						}
-						if(($this.gtooltip_tipref() in $this.data('gtooltip-tips'))){
-							//similar tip exists, so return
-							return;
-						}
+			
+			if($.type(options) === 'undefined' || $.type(options) === 'object'){
+				params = $.extend(true, {}, $.gtooltip, params);
+				
+				var prefix = '';
+				if(params.tid){
+					prefix = '-'+params.tid;
+				}
+				
+				return this.each(function(){
+					if(!$(this).data('gtooltip'+prefix)){
+						$(this).data('gtooltip'+prefix, new GTooltip(this, params));
 					}
-					//check ajax data
-					if($this.data('ajax')){
-						if(GTooltip[$this.data('ajax')]){
-							$this.data('content', GTooltip[$this.data('ajax')]);
-						}else{
-							$this.data('content', $this.data('gtooltip_params').ajaxloading);
+				});
+			}
+			
+			if($.type(options) === 'string'){
+				params = $.extend(true, {}, $.gtooltip, params);
+				
+				var prefix = '';
+				if(params.tid){
+					prefix = '-'+params.tid;
+				}
+				
+				var tip = $(this).data('gtooltip'+prefix);
+				if(typeof tip == 'undefined'){
+					return null;
+				}
+				
+				switch (options){
+					case 'show':
+						return tip.show();
+					case 'hide':
+						return tip.hide();
+					case 'destroy':
+						return tip.destroy();
+					case 'reset':
+						return tip.reset();
+					case 'get':
+						return tip.get();
+				}
+			}
+		}
+	}
+	
+	var GTooltip = function(elem, params){
+		this.element = elem;
+		this.settings = params;
+		
+		this.shown = false;
+		this.hidden = false;
+		
+		this.content = null;
+		this.location = null;
+		
+		this.init();
+	};
+	
+	GTooltip.prototype = {
+		init: function(){
+			var ttObj = this;
+			ttObj.create();
+			
+			if(ttObj.settings.trigger == 'hover'){
+				ttObj.initHover();
+			}else if(ttObj.settings.trigger == 'click'){
+				ttObj.initClick();
+			}
+			
+			//show events
+			$(ttObj.element).on('show.gtooltip', function(){
+				if(ttObj.settings.resetOnShow || ttObj.settings.createOnShow){
+					ttObj.reset();
+				}
+				//check ajax data
+				if(ttObj.settings.ajax){
+					if($.type($(ttObj.element).data('ajax')) !== 'undefined'){
+						if($.type(ttObj.ajax_result) === 'undefined'){
+							ttObj.setContent(ttObj.settings.ajaxloading);
+							ttObj.reset();
 							$.ajax({
 								"type" : "GET",
-								"url" : $this.data('ajax'),
+								"url" : $(ttObj.element).data('ajax'),
 								"cache" : true,
+								"beforeSend" : function(res){
+									//ttObj.setContent(ttObj.settings.ajaxloading);
+								},
 								"success" : function(res){
-									$this.data('content', res);
-									$this.gtooltip('destroy');
-									$this.gtooltip('render');
-									GTooltip[$this.data('ajax')] = res;
+									ttObj.setContent(res);
+									ttObj.ajax_result = res;
 								},
 							});
 						}
 					}
-					$this.gtooltip('render');
 				}
-				if(option == 'render'){
-					var tip_content = $this.prop('title');
-					if($this.data('content')){
-						tip_content = $this.data('content');
-					}else{
-						$this.data('content', $this.prop('title'));
-						$this.prop('title', '');
-					}
-					if($this.data('gtooltip_params').closable){
-						var $close_button = '<div class="gtooltip-close">&times;</div>';
-					}else{
-						var $close_button = '';	
-					}
-					var $tip = $('<div class="'+$this.data('gtooltip_params').tipclass+'">'+$close_button+'<div class="gtooltip-content">'+tip_content+'</div><div class="gtooltip-arrow-border gtooltip-arrow-border-'+$this.data('gtooltip_params').position+'"></div><div class="gtooltip-arrow gtooltip-arrow-'+$this.data('gtooltip_params').position+'"></div></div>');
-					var $offset = $this.offset();
-					var $position = $this.position();
-					if($this.data('gtooltip-target')){
-						var $offset = $this.data('gtooltip-target').offset();
-						var $position = $this.data('gtooltip-target').position();
-					}
-					var $location;
-					if($this.data('gtooltip_params').append == 'after'){
-						$this.after($tip);
-						$location = $position;
-					}else if($this.data('gtooltip_params').append == 'body'){
-						$('body').append($tip);
-						$location = $offset;
-					}
-					if($this.data('gtooltip_params').position == 'top'){
-						var $top = $location.top - $tip.outerHeight() - 10;//$tip.find('.gtooltip-arrow-border').outerHeight()/2;
-						var $left = $location.left + $this.outerWidth()/2 - 30 - 10;
-					}else if($this.data('gtooltip_params').position == 'bottom'){
-						var $top = $location.top + $this.outerHeight() + 10;//$tip.find('.gtooltip-arrow-border').outerHeight()/2;
-						var $left = $location.left + $this.outerWidth()/2 - 30 - 10;
-					}else if($this.data('gtooltip_params').position == 'right'){
-						var $top = $location.top + $this.outerHeight()/2 - $tip.outerHeight()/2;
-						var $left = $location.left + $this.outerWidth() + 10;//$tip.find('.gtooltip-arrow-border').outerWidth()/2;
-						$tip.find('.gtooltip-arrow-border').css('top', $tip.outerHeight()/2 - 10);
-						$tip.find('.gtooltip-arrow').css('top', $tip.outerHeight()/2 - 10);
-					}else if($this.data('gtooltip_params').position == 'left'){
-						var $top = $location.top + $this.outerHeight()/2 - $tip.outerHeight()/2;
-						var $left = $location.left - $tip.outerWidth() - 10;//$tip.find('.gtooltip-arrow-border').outerWidth()/2;
-						$tip.find('.gtooltip-arrow-border').css('top', $tip.outerHeight()/2 - 10);
-						$tip.find('.gtooltip-arrow').css('top', $tip.outerHeight()/2 - 10);
-					}
-					$tip.css('top', $top);
-					//$tip.css('left', $this.outerWidth()/2 - 30 - 10); //element width - tooltip arrow left shift - arrow's border width
-					$tip.css('left', $left);
-					
-					$tip.find('.gtooltip-close').on('click', function(){
-						$this.gtooltip('destroy');
-					});
-					
-					var tip_ref = $this.gtooltip_tipref();
-					if(!$this.data('gtooltip-tips')){
-						$this.data('gtooltip-tips', {});
-					}
-					$this.data('gtooltip-tips')[tip_ref] = $tip;
-				}
-				if(option == 'destroy'){
-					$this.gtooltip_return(tipclass).remove();
-					if(typeof $this.data('gtooltip-tips') != 'undefined' && typeof $this.data('gtooltip-tips')[$this.gtooltip_tipref(tipclass)] != 'undefined'){
-						delete $this.data('gtooltip-tips')[$this.gtooltip_tipref(tipclass)];
-					}
-				}
-				if(option == 'return'){
-					return $this.gtooltip_return();
-				}
-				if(option == 'hover'){
-					$this.on('mouseover', function(){
-						clearTimeout($this.data('gtooltip-awaytime'));
-						//$this.gtooltip('show');
-						var ontime_timeout = setTimeout(function(){
-							$this.gtooltip('show');
-							$this.gtooltip_return().on('mouseover', function(){
-								clearTimeout($this.data('gtooltip-awaytime'));
-							});
-							$this.gtooltip_return().on('mouseleave', function(){
-								var awaytime_timeout = setTimeout(function(){
-									$this.gtooltip('destroy');
-								}, $this.data('gtooltip_params').awaytime);
-								$this.data('gtooltip-awaytime', awaytime_timeout);
-							});
-						}, $this.data('gtooltip_params').ontime);
-						$this.data('gtooltip-ontime', ontime_timeout);
-					});
-					$this.on('mouseleave', function(){
-						clearTimeout($this.data('gtooltip-ontime'));
-						var awaytime_timeout = setTimeout(function(){
-							$this.gtooltip('destroy');
-						}, $this.data('gtooltip_params').awaytime);
-						$this.data('gtooltip-awaytime', awaytime_timeout);
-						//$this.gtooltip('destroy');
-					});
-				}
-			}else if($.type(option) == 'object'){
-				/*$.each(option, function(k, v){
-					$this.gtooltip_params[k] = v;
-				});*/
-				$this.data('gtooltip_params', $.extend({}, GTooltip, option));
+			});
+		},
+		
+		get: function(){
+			var ttObj = this;
+			return ttObj;
+		},
+		
+		destroy: function(){
+			var ttObj = this;
+			ttObj.tip.remove();
+			
+			var prefix = '';
+			if(ttObj.settings.tid){
+				prefix = '-'+ttObj.settings.tid;
 			}
-		});
-	}
+			$(ttObj.element).removeData('gtooltip'+prefix);
+			return true;
+		},
+		
+		initClick: function(){
+			var ttObj = this;
+			$(ttObj.element).on('click', function(){
+				if(ttObj.shown){
+					ttObj.hide();
+				}else{
+					ttObj.show();
+				}
+			});
+		},
+		
+		initHover: function(){
+			var ttObj = this;
+			$(ttObj.element).on('mouseover', function(){
+				clearTimeout(ttObj.awaytime);
+				//$this.gtooltip('show');
+				var ontime_timeout = setTimeout(function(){
+					ttObj.show();
+					ttObj.tip.on('mouseover', function(){
+						clearTimeout(ttObj.awaytime);
+					});
+					ttObj.tip.on('mouseleave', function(){
+						var awaytime_timeout = setTimeout(function(){
+							ttObj.hide();
+						}, ttObj.settings.awaytime);
+						ttObj.awaytime = awaytime_timeout;
+					});
+				}, ttObj.settings.ontime);
+				ttObj.ontime = ontime_timeout;
+			});
+			$(ttObj.element).on('mouseleave', function(){
+				clearTimeout(ttObj.ontime);
+				var awaytime_timeout = setTimeout(function(){
+					ttObj.hide();
+				}, ttObj.settings.awaytime);
+				ttObj.awaytime = awaytime_timeout;
+			});
+		},
+		
+		initClose: function(){
+			var ttObj = this;
+			
+			ttObj.tip.find('.gtooltip-close').on('click', function(){
+				/*if($.isFunction(ttObj.settings.onClose)){
+					ttObj.settings.onClose.call(this);
+				}*/
+				$(ttObj.element).trigger('close.gtooltip');
+				
+				if(ttObj.settings.on_close == 'hide'){
+					ttObj.hide();
+				}else if(ttObj.settings.on_close == 'destroy'){
+					ttObj.destroy();
+				}
+			});
+		},
+		
+		initContent: function(){
+			var ttObj = this;
+			
+			if($(ttObj.element).prop('title')){
+				ttObj.content = $(ttObj.element).prop('title');
+				$(ttObj.element).prop('title', '');
+			}
+			
+			if(ttObj.settings.content){
+				ttObj.content = ttObj.settings.content;
+			}else{
+				if($(ttObj.element).data('content')){
+					ttObj.content = $(ttObj.element).data('content');
+				}else{
+					//$(ttObj.element).data('content', $(ttObj.element).prop('title'));
+				}
+			}
+		},
+		
+		
+		setContent: function(content){
+			var ttObj = this;
+			
+			ttObj.content = content;
+			ttObj.tip.find('.gtooltip-content').html(content);
+		},
+		
+		show: function(){
+			var ttObj = this;
+			
+			$(ttObj.element).triggerHandler('show.gtooltip');
+			
+			ttObj.tip.show();
+			ttObj.shown = true;
+			ttObj.hidden = false;
+			return true;
+		},
+		
+		hide: function(){
+			var ttObj = this;
+			
+			$(ttObj.element).triggerHandler('hide.gtooltip');
+			
+			ttObj.tip.hide();
+			ttObj.hidden = true;
+			ttObj.shown = false;
+			return true;
+		},
+		
+		reset: function(){
+			var ttObj = this;
+			//ttObj.destroy();
+			if($.type(ttObj.tip) !== 'undefined' && $.contains(document, ttObj.tip[0])){
+				ttObj.tip.remove();
+			}
+			ttObj.create();
+			return true;
+		},
+		
+		create: function(){
+			var ttObj = this;
+			
+			if($.type(ttObj.tip) !== 'undefined' && $.contains(document, ttObj.tip[0])){
+				//tip already exists and we don't need to create a new one
+				return;
+			}
+			
+			ttObj.createTip();
+			ttObj.positionTip();
+			ttObj.styleTip();
+			ttObj.initClose();
+		},
+		
+		createTip: function(){
+			var ttObj = this;
+			
+			if(ttObj.settings.closable){
+				var $close_button = '<div class="gtooltip-close">&times;</div>';
+			}else{
+				var $close_button = '';	
+			}
+			
+			ttObj.tip = $('<div class="'+ttObj.settings.tipclass+'" tid="'+ttObj.settings.tid+'">'+$close_button+'<div class="gtooltip-content">'+'</div><div class="gtooltip-arrow-border gtooltip-arrow-border-'+ttObj.settings.position+'"></div><div class="gtooltip-arrow gtooltip-arrow-'+ttObj.settings.position+'"></div></div>');
+			ttObj.initContent();
+			ttObj.setContent(ttObj.content);
+		},
+		
+		positionTip: function(){
+			var ttObj = this;
+			
+			//calculate position
+			var $offset = $(ttObj.element).offset();
+			var $position = $(ttObj.element).position();
+			if($(ttObj.element).data('target')){
+				var $offset = $(ttObj.element).data('target').offset();
+				var $position = $(ttObj.element).data('target').position();
+			}
+			
+			if(ttObj.settings.append == 'after'){
+				$(ttObj.element).after(ttObj.tip);
+				ttObj.location = $position;
+			}else if(ttObj.settings.append == 'body'){
+				$('body').append(ttObj.tip);
+				ttObj.location = $offset;
+			}
+		},
+		
+		styleTip: function(){
+			var ttObj = this;
+			
+			//apply css
+			ttObj.tip.css(ttObj.settings.css);
+			var arrow_css = {};
+			arrow_css['border-'+ttObj.settings.position+'-color'] = ttObj.settings.css['background-color'];
+			ttObj.tip.find('.gtooltip-arrow').css(arrow_css);
+			var arrow_border_css = {};
+			arrow_border_css['border-'+ttObj.settings.position+'-color'] = ttObj.settings.css['border-color'];
+			ttObj.tip.find('.gtooltip-arrow-border').css(arrow_border_css);
+			
+			ttObj.tip.find('.gtooltip-arrow, .gtooltip-arrow-border').css('border-width', ttObj.settings.arrow_size + 'px');
+			
+			var border_width = parseInt(ttObj.settings.css['border-width']);
+			
+			if(ttObj.settings.position == 'top'){
+				var $top = ttObj.location.top - ttObj.tip.outerHeight() - ttObj.tip.find('.gtooltip-arrow').outerHeight() - ttObj.settings.spacing;
+				var $left = ttObj.location.left + $(ttObj.element).outerWidth()/2 - ttObj.tip.outerWidth()/2;
+				//var $bottom = $(window).height() - ttObj.location.top + ttObj.tip.find('.gtooltip-arrow').outerHeight() + tip.settings.spacing;
+				var $bottom = $(window).height() - $top - ttObj.tip.outerHeight(true);
+				
+				ttObj.tip.find('.gtooltip-arrow-border').css('left', ttObj.tip.outerWidth()/2 - ttObj.tip.find('.gtooltip-arrow-border').outerWidth()/2);
+				ttObj.tip.find('.gtooltip-arrow').css('left', ttObj.tip.outerWidth()/2 - ttObj.tip.find('.gtooltip-arrow').outerWidth()/2);
+				
+				ttObj.tip.find('.gtooltip-arrow, .gtooltip-arrow-border').css('border-bottom-width', '0px');
+				ttObj.tip.find('.gtooltip-arrow').css('bottom', -1 * (ttObj.settings.arrow_size) + 'px');
+				ttObj.tip.find('.gtooltip-arrow-border').css('bottom', -1 * (ttObj.settings.arrow_size + border_width + 1) + 'px');
+				ttObj.tip.find('.gtooltip-arrow-border').css('border-top-width', (ttObj.settings.arrow_size + 1) + 'px');
+			}else if(ttObj.settings.position == 'bottom'){
+				var $top = ttObj.location.top + $(ttObj.element).outerHeight() + ttObj.tip.find('.gtooltip-arrow').outerHeight() + ttObj.settings.spacing;
+				var $left = ttObj.location.left + $(ttObj.element).outerWidth()/2 - ttObj.tip.outerWidth()/2;
+				
+				ttObj.tip.find('.gtooltip-arrow-border').css('left', ttObj.tip.outerWidth()/2 - ttObj.tip.find('.gtooltip-arrow-border').outerWidth()/2);
+				ttObj.tip.find('.gtooltip-arrow').css('left', ttObj.tip.outerWidth()/2 - ttObj.tip.find('.gtooltip-arrow').outerWidth()/2);
+				
+				ttObj.tip.find('.gtooltip-arrow, .gtooltip-arrow-border').css('border-top-width', '0px');
+				ttObj.tip.find('.gtooltip-arrow').css('top', -1 * (ttObj.settings.arrow_size) + 'px');
+				ttObj.tip.find('.gtooltip-arrow-border').css('top', -1 * (ttObj.settings.arrow_size + border_width + 1) + 'px');
+				ttObj.tip.find('.gtooltip-arrow-border').css('border-bottom-width', (ttObj.settings.arrow_size + 1) + 'px');
+			}else if(ttObj.settings.position == 'right'){
+				var $top = ttObj.location.top + $(ttObj.element).outerHeight()/2 - ttObj.tip.outerHeight()/2;
+				var $left = ttObj.location.left + $(ttObj.element).outerWidth() + ttObj.tip.find('.gtooltip-arrow').outerWidth() + ttObj.settings.spacing;
+				
+				ttObj.tip.find('.gtooltip-arrow-border').css('top', ttObj.tip.outerHeight()/2 - ttObj.tip.find('.gtooltip-arrow-border').outerHeight()/2);
+				ttObj.tip.find('.gtooltip-arrow').css('top', ttObj.tip.outerHeight()/2 - ttObj.tip.find('.gtooltip-arrow').outerHeight()/2);
+				
+				ttObj.tip.find('.gtooltip-arrow, .gtooltip-arrow-border').css('border-left-width', '0px');
+				ttObj.tip.find('.gtooltip-arrow').css('left', -1 * (ttObj.settings.arrow_size) + 'px');
+				ttObj.tip.find('.gtooltip-arrow-border').css('left', -1 * (ttObj.settings.arrow_size + border_width + 1) + 'px');
+				ttObj.tip.find('.gtooltip-arrow-border').css('border-right-width', (ttObj.settings.arrow_size + 1) + 'px');
+			}else if(ttObj.settings.position == 'left'){
+				var $top = ttObj.location.top + $(ttObj.element).outerHeight()/2 - ttObj.tip.outerHeight()/2;
+				var $left = ttObj.location.left - ttObj.tip.outerWidth() - ttObj.tip.find('.gtooltip-arrow').outerWidth() - ttObj.settings.spacing;
+				
+				ttObj.tip.find('.gtooltip-arrow-border').css('top', ttObj.tip.outerHeight()/2 - ttObj.tip.find('.gtooltip-arrow-border').outerHeight()/2);
+				ttObj.tip.find('.gtooltip-arrow').css('top', ttObj.tip.outerHeight()/2 - ttObj.tip.find('.gtooltip-arrow').outerHeight()/2);
+				
+				ttObj.tip.find('.gtooltip-arrow, .gtooltip-arrow-border').css('border-right-width', '0px');
+				ttObj.tip.find('.gtooltip-arrow').css('right', -1 * (ttObj.settings.arrow_size) + 'px');
+				ttObj.tip.find('.gtooltip-arrow-border').css('right', -1 * (ttObj.settings.arrow_size + border_width + 1) + 'px');
+				ttObj.tip.find('.gtooltip-arrow-border').css('border-left-width', (ttObj.settings.arrow_size + 1) + 'px');
+			}
+			ttObj.tip.css('top', $top);
+			//set bottom css and unset top to account for any dynamic content changes
+			if(ttObj.settings.position == 'top' && ttObj.settings.append == 'body'){
+				ttObj.tip.css('bottom', $bottom);
+				ttObj.tip.css('top', '');
+			}
+			//ttObj.tip.css('left', $(ttObj.element).outerWidth()/2 - 30 - 10); //element width - ttObj arrow left shift - arrow's border width
+			ttObj.tip.css('left', $left);
+			ttObj.tip.hide();
+			
+			return true;
+		},
+	};
 }(jQuery));

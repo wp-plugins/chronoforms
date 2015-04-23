@@ -20,11 +20,16 @@ class DatabaseObject {
 	var $connected = false;
 	var $descriptions = array();
 	var $adapter = null;
+	var $processor = null;
 	
 	public static function getInstance($options = array()){
 		if(!empty($options)){
 			$db_adapter_class = '\GCore\Libs\DatabaseAdapters\\'.Str::camilize(Base::getConfig('db_adapter', 'pdo'));
 			$new_object = new $db_adapter_class($options);
+			$new_object->_initialize($options);
+			
+			//$db_processor_class = '\GCore\Libs\DatabaseProcessors\\'.Str::camilize($new_object->db_type);
+			//$new_object->processor = new $db_processor_class();
 			return $new_object;
 		}else{
 			return false;
@@ -96,7 +101,7 @@ class DatabaseObject {
 		}
 		return $columns;
 	}
-		
+	
 	function getTablePrimary($tablename){
 		if(isset($this->descriptions[$tablename])){
 			$result = $this->descriptions[$tablename];
@@ -109,6 +114,24 @@ class DatabaseObject {
 			}
 		}
 		return null;
+	}
+	
+	function dropTableField($tablename, $field){
+		return $this->exec('ALTER TABLE '.$this->quoteName($this->_prefixTable($tablename)).' DROP '.$this->quoteName($field).';');
+	}
+	
+	function addTableField($tablename, $field, $params){
+		$length = !empty($params['length']) ? '( '.$params['length'].' )' : '';
+		$null = !empty($params['null']) ? 'NULL' : 'NOT NULL';
+		$default = (isset($params['default']) AND strlen($params['default']) AND $null !== 'NULL') ? "DEFAULT '".$params['default']."'" : '';
+		return $this->exec("ALTER TABLE ".$this->quoteName($this->_prefixTable($tablename)).' ADD '.$this->quoteName($field).' '.$params['type'].$length." ".$null." ".$default.";");
+	}
+	
+	function changeTableField($tablename, $field, $newName, $params){
+		$length = !empty($params['length']) ? '( '.$params['length'].' )' : '';
+		$null = !empty($params['null']) ? 'NULL' : 'NOT NULL';
+		$default = (isset($params['default']) AND strlen($params['default']) AND $null !== 'NULL') ? "DEFAULT '".$params['default']."'" : '';
+		return $this->exec("ALTER TABLE ".$this->quoteName($this->_prefixTable($tablename)).' CHANGE '.$this->quoteName($field).' '.$this->quoteName($newName).' '.$params['type'].$length." ".$null." ".$default.";");
 	}
 	
 	//end dependent stuff

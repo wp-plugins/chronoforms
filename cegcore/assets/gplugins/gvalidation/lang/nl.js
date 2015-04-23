@@ -1,4 +1,4 @@
-GValidation.errors = {
+jQuery.gvalidation.errors = jQuery.extend(jQuery.gvalidation.errors, {
 	required: "Dit veld is verplicht.",
 	alpha: "Dit veld accepteert alleen alphabetische karakters.",
 	alphanum: "Dit veld accepteert alleen alphanumerieke karakters.",
@@ -21,4 +21,4 @@ GValidation.errors = {
 	group : 'Gelieve minstens %1 hokjes aan te vinken',
 	custom: "Maak een keuze",
 	select: "Kies een waarde"
-}
+});

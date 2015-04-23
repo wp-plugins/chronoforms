@@ -33,6 +33,9 @@ Class ServerValidation extends \GCore\Admin\Extensions\Chronoforms\Action{
 				foreach($fields as $field){
 					$fch = explode(':', $field);
 					if(count($fch)){
+						if(!in_array($rule, array('not_empty', 'is_empty')) AND strlen((string)$form->data($fch[0])) == 0){
+							continue;
+						}
 						$valid = \GCore\Libs\Validate::$rule($form->data($fch[0]));
 						if(!$valid){
 							$failed = true;

@@ -21,7 +21,7 @@ class Submit {
 		'id' => 'button_',
 		'value' => 'Submit',
 		'class' => '',
-		'style' => ''
+		'style' => 'btn btn-default'
 	);
 
 	static $configs = array(
@@ -30,7 +30,7 @@ class Submit {
 		'id' => array('value' => 'button{N}', 'label' => 'ID', 'type' => 'text', 'class' => 'L'),
 		'type' => array('values' => 'submit', 'label' => 'Type', 'type' => 'dropdown', 'options' => array('submit' => 'submit', 'reset' => 'reset', 'button' => 'button')),
 		'value' => array('value' => 'Submit', 'label' => 'Value/Label', 'type' => 'text', 'class' => 'L'),
-		'class' => array('value' => '', 'label' => 'Class', 'type' => 'text', 'class' => 'L'),
+		'class' => array('value' => 'btn btn-default', 'label' => 'Class', 'type' => 'text', 'class' => 'L'),
 		'style' => array('value' => '', 'label' => 'Style', 'type' => 'text', 'class' => 'L'),
 		'params' => array('value' => '', 'label' => 'Extra params', 'type' => 'textarea', 'alt' => 'multiline', 'rows' => 5, 'cols' => 60, 'sublabel' => 'In Multiline format:param_name=param_value'),
 		':data-load-state' => array('label' => 'Load state', 'type' => 'dropdown', 'options' => array('' => 'Visible & Enabled', 'hidden' => 'Hidden', 'hidden_parent' => 'Parent hidden', 'disabled' => 'Disabled')),

@@ -19,10 +19,10 @@ class View {
 		if(!empty($controller->_vars)){
 			$this->vars = $controller->_vars;
 		}
-		$this->controller = $controller->name;
+		$this->controller = &$controller;
 		$this->view = $controller->view;
 		$this->views_dir = isset($controller->views_dir) ? $controller->views_dir : 'views';
-		$this->data = $controller->data;
+		$this->data = &$controller->data;
 		//set helpers properties
 		if(!empty($controller->helpers)){
 			$controller->helpers = (array)$controller->helpers;
@@ -43,6 +43,7 @@ class View {
 				if(property_exists($this->$alias, 'view')){
 					$this->$alias->view = &$this;
 				}
+				$this->$alias->data = &$controller->data;
 				if(in_array('initialize', get_class_methods($helper))){
 					$this->$alias->initialize();
 				}
@@ -57,11 +58,11 @@ class View {
 		if(strpos($this->views_dir, DS) !== false){
 			$viewpath = $this->views_dir;
 		}else{
-			$viewpath = self::getViewsPath($this->controller, $this->views_dir);
+			$viewpath = self::getViewsPath($this->controller->name, $this->views_dir);
 			$viewpath = \GCore\C::fix_path($viewpath);
 		}
-		$action_file = '';
-		if(is_string($this->view)){
+		$action_file = (strpos($action, DS) !== false) ? $action : '';
+		if(empty($action_file) AND is_string($this->view)){
 			if(strpos($this->view, DS) !== false){
 				$action_file = $this->view;
 			}else{
@@ -112,7 +113,7 @@ class View {
 		foreach($this->vars as $k => $val){
 			$$k = $val;
 		}
-		$viewpath = self::getViewsPath($this->controller);
+		$viewpath = self::getViewsPath($this->controller->name);
 		if(is_string($this->view)){
 			$type = $this->view;
 		}

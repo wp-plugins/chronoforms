@@ -1,4 +1,4 @@
-GValidation.errors = {
+jQuery.gvalidation.errors = jQuery.extend(jQuery.gvalidation.errors, {
 	required: "Bu alanın doldurulması gereklidir.",
 	alpha: "Bu alanda sadece alfabetik karakterler kullanılabilir.",
 	alphanum: "Bu alanda sadece alfanumerik karakterler kullanılabilir.",
@@ -26,4 +26,4 @@ GValidation.errors = {
 	custom: "Lütfen seçeneklerden birini işaretleyin",
 	select: "Lütfen bir değer seçin",
 	select_multiple : "Lütfen en az bir değer seçin"
-}
+});

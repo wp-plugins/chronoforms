@@ -208,13 +208,13 @@
 .btn-default:hover,
 .btn-default:focus,
 .btn-default:active,
-.btn-default.active, {
+.btn-default.active {
   color: #333;
   background-color: #ebebeb;
   border-color: #adadad;
 }
 .btn-default:active,
-.btn-default.active, {
+.btn-default.active {
   background-image: none;
 }
 .btn-primary {
@@ -225,7 +225,7 @@
 .btn-primary:hover,
 .btn-primary:focus,
 .btn-primary:active,
-.btn-primary.active, {
+.btn-primary.active {
   color: #fff;
   background-color: #3276b1;
   border-color: #285e8e;

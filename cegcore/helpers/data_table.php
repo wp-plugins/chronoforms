@@ -40,7 +40,7 @@ class DataTable extends \GCore\Helpers\DataPresenter{
 		}
 		
 		$table = \GCore\Helpers\Html::container('table', $thead.$tbody, array('class' => !empty($params['class']) ? $params['class'] : 'gcore_table_list', 'id' => !empty($params['id']) ? $params['id'] : 'gcore_table_list__#'));
-		$table = \GCore\Helpers\DataLoader::load($table, \GCore\Helpers\DataPresenter::$data);
+		$table = \GCore\Helpers\DataLoader::load($table, \GCore\Helpers\DataPresenter::$items);
 		\GCore\Helpers\DataPresenter::_flush();
 		return $table;
 	}

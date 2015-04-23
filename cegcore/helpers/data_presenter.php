@@ -13,7 +13,7 @@ class DataPresenter extends \GCore\Libs\Helper{
 	static $columns = array();
 	static $columns_info = array();
 	static $headers = array();
-	static $data = array();
+	static $items = array();
 	static $cells_data = array();
 	static $cells_rows = array();
 	static $config = array();
@@ -27,7 +27,7 @@ class DataPresenter extends \GCore\Libs\Helper{
 		self::$columns = array();
 		self::$columns_info = array();
 		self::$headers = array();
-		self::$data = array();
+		self::$items = array();
 		self::$cells_data = array();
 		self::$cells_rows = array();
 	}
@@ -58,7 +58,7 @@ class DataPresenter extends \GCore\Libs\Helper{
 	
 	public static function cells($cells = array(), $config = array()){
 		if(!empty($cells) && array_values((array)$cells) === (array)$cells){
-			self::$data = $cells;
+			self::$items = $cells;
 		}
 		if(!empty($config)){
 			self::_config_cells($config);
@@ -124,7 +124,7 @@ class DataPresenter extends \GCore\Libs\Helper{
 	}
 	
 	public static function set_cells_data($data_rows = array()){
-		$data_rows = empty($data_rows) ? self::$data : $data_rows;
+		$data_rows = empty($data_rows) ? self::$items : $data_rows;
 		self::$cells_rows = $data_rows;
 		foreach($data_rows as $k => $row){
 			$row = (array)$row;
@@ -192,7 +192,7 @@ class DataPresenter extends \GCore\Libs\Helper{
 					}
 					$data = \GCore\Helpers\DataLoader::load($data, $row);
 				}
-				if(empty($data)){
+				if(!strlen($data)){
 					$data = '';//'&nbsp;';
 				}
 				self::$cells_data[$k][$column] = $data;

@@ -1,4 +1,4 @@
-GValidation.errors = {
+jQuery.gvalidation.errors = jQuery.extend(jQuery.gvalidation.errors, {
 	required: "Ezt a mezőt kötelező kitölteni.",
 	alpha: "Ebben a mezőben csak betűk engedélyezettek.",
 	alphanum: "Ebben a mezőben csak számok engedélyezettek.",
@@ -25,4 +25,4 @@ GValidation.errors = {
 	group: 'Please make at least %1 selection(s).',
 	custom: "Kérjük, válasszon ki egy értéket.",
 	select: "Kérjük, válasszon ki egy értéket."
-}
+});

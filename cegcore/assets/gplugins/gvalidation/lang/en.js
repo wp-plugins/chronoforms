@@ -1,4 +1,4 @@
-GValidation.errors = {
+jQuery.gvalidation.errors = jQuery.extend(jQuery.gvalidation.errors, {
 	required : 'This field is required.',
 	alpha : 'This field accepts alphabetic characters only.',
 	alphanum : 'This field accepts alphanumeric characters only.',
@@ -24,4 +24,4 @@ GValidation.errors = {
 	words_min : "This field must concain at least %1 words, currently: %2 words",
 	words_range : "This field must contain %1-%2 words, currently: %3 words",
 	words_max : "This field must contain at max %1 words, currently: %2 words"
-};
+});

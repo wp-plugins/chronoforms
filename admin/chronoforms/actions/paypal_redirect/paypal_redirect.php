@@ -65,6 +65,7 @@ Class PaypalRedirect extends \GCore\Admin\Extensions\Chronoforms\Action{
 			'currency_code' => trim($config->get('currency_code')),
 			//variables
 			'item_name' => $form->data($config->get('item_name')),
+			'quantity' => $form->data($config->get('quantity')),
 			'amount' => $form->data($config->get('amount'), 0),
 			'first_name' => $form->data($config->get('first_name')),
 			'last_name' => $form->data($config->get('last_name')),
@@ -90,15 +91,34 @@ Class PaypalRedirect extends \GCore\Admin\Extensions\Chronoforms\Action{
 				}
 			}
 		}
+		
+		if(is_array($checkout_values['item_name'])){
+			$checkout_values['item_name'] = array_values($checkout_values['item_name']);
+			$checkout_values['amount'] = array_values($checkout_values['amount']);
+			$checkout_values['quantity'] = array_values($checkout_values['quantity']);
+			foreach($checkout_values['item_name'] as $k => $item_name){
+				$checkout_values['item_name_'.($k + 1)] = $checkout_values['item_name'][$k];
+				$checkout_values['quantity_'.($k + 1)] = $checkout_values['quantity'][$k];
+				$checkout_values['amount_'.($k + 1)] = $checkout_values['amount'][$k];
+			}
+			unset($checkout_values['item_name']);
+			unset($checkout_values['quantity']);
+			unset($checkout_values['amount']);
+		}
 
 		if((bool)$settings->get('validated_paypal', 0) === true){
 			//$checkout_values['amount'] = $checkout_values['amount'];
 		}else{
-			$checkout_values['amount'] = rand(2,5) * $checkout_values['amount'];
+			if(isset($checkout_values['amount'])){
+				$checkout_values['amount'] = rand(2,5) * $checkout_values['amount'];
+			}else if(isset($checkout_values['amount_1'])){
+				$checkout_values['amount_1'] = rand(2,5) * $checkout_values['amount_1'];
+			}
 		}
 
 		$fields = "";
 		foreach($checkout_values as $key => $value){
+			if(!is_null($value))
 			$fields .= "$key=".urlencode($value)."&";
 		}
 
@@ -117,30 +137,48 @@ Class PaypalRedirect extends \GCore\Admin\Extensions\Chronoforms\Action{
 
 	public static function config(){
 		echo \GCore\Helpers\Html::formStart('action_config paypal_redirect_action_config', 'paypal_redirect_action_config_{N}');
-		echo \GCore\Helpers\Html::formSecStart();
-		//echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][enabled]', array('type' => 'dropdown', 'label' => l_('CF_ENABLED'), 'options' => array(0 => l_('NO'), 1 => l_('YES'))));
-		echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][cmd]', array('type' => 'text', 'label' => l_('CF_PAYPAL_CMD'), 'class' => 'M', 'sublabel' => l_('CF_PAYPAL_CMD_DESC')));
-		echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][business]', array('type' => 'text', 'label' => l_('CF_PAYPAL_BUSINESS'), 'class' => 'L', 'sublabel' => l_('CF_PAYPAL_BUSINESS_DESC')));
-		echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][item_name]', array('type' => 'text', 'label' => l_('CF_PAYPAL_ITEM_NAME'), 'class' => 'M', 'sublabel' => l_('CF_PAYPAL_ITEM_NAME_DESC')));
-		echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][amount]', array('type' => 'text', 'label' => l_('CF_PAYPAL_AMOUNT'), 'class' => 'M', 'sublabel' => l_('CF_PAYPAL_AMOUNT_DESC')));
-		echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][currency_code]', array('type' => 'text', 'label' => l_('CF_PAYPAL_CURRENCY_CODE'), 'class' => 'SS', 'sublabel' => l_('CF_PAYPAL_CURRENCY_CODE_DESC')));
-		echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][return]', array('type' => 'text', 'label' => l_('CF_PAYPAL_RETURN'), 'class' => 'XL', 'sublabel' => l_('CF_PAYPAL_RETURN_DESC')));
-		echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][first_name]', array('type' => 'text', 'label' => l_('CF_PAYPAL_FNAME'), 'class' => 'M', 'sublabel' => l_('CF_PAYPAL_FNAME_DESC')));
-		echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][last_name]', array('type' => 'text', 'label' => l_('CF_PAYPAL_LNAME'), 'class' => 'M', 'sublabel' => l_('CF_PAYPAL_LNAME_DESC')));
-		echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][address1]', array('type' => 'text', 'label' => l_('CF_PAYPAL_ADD1'), 'class' => 'M', 'sublabel' => l_('CF_PAYPAL_ADD1_DESC')));
-		echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][address2]', array('type' => 'text', 'label' => l_('CF_PAYPAL_ADD2'), 'class' => 'M', 'sublabel' => l_('CF_PAYPAL_ADD2_DESC')));
-		echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][city]', array('type' => 'text', 'label' => l_('CF_PAYPAL_CITY'), 'class' => 'M', 'sublabel' => l_('CF_PAYPAL_CITY_DESC')));
-		echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][state]', array('type' => 'text', 'label' => l_('CF_PAYPAL_STATE'), 'class' => 'M', 'sublabel' => l_('CF_PAYPAL_STATE_DESC')));
-		echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][zip]', array('type' => 'text', 'label' => l_('CF_PAYPAL_ZIP'), 'class' => 'M', 'sublabel' => l_('CF_PAYPAL_ZIP_DESC')));
-		echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][country]', array('type' => 'text', 'label' => l_('CF_PAYPAL_COUNTRY'), 'class' => 'M', 'sublabel' => l_('CF_PAYPAL_COUNTRY_DESC')));
-		echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][night_phone_a]', array('type' => 'text', 'label' => l_('CF_PAYPAL_PHONE'), 'class' => 'M', 'sublabel' => l_('CF_PAYPAL_PHONE_DESC')));
-		echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][custom]', array('type' => 'text', 'label' => l_('CF_PAYPAL_CUSTOM'), 'class' => 'M', 'sublabel' => l_('CF_PAYPAL_CUSTOM_DESC')));
-		echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][extra_params]', array('type' => 'textarea', 'label' => l_('CF_PAYPAL_EXTRA_PARAMS'), 'rows' => 5, 'cols' => 40, 'sublabel' => l_('CF_PAYPAL_EXTRA_PARAMS_DESC').l_('CF_EXTRA_PARAMS_LIST_DESC')));
-		echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][no_shipping]', array('type' => 'dropdown', 'label' => l_('CF_PAYPAL_NO_SHIPPING'), 'options' => array(0 => l_('NO'), 1 => l_('YES')), 'sublabel' => l_('CF_PAYPAL_NO_SHIPPING_DESC')));
-		echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][no_note]', array('type' => 'dropdown', 'label' => l_('CF_PAYPAL_NO_NOTE'), 'options' => array(0 => l_('NO'), 1 => l_('YES')), 'sublabel' => l_('CF_PAYPAL_NO_NOTE_DESC')));
-		echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][debug_only]', array('type' => 'dropdown', 'label' => l_('CF_PAYPAL_DEBUG'), 'options' => array(0 => l_('NO'), 1 => l_('YES')), 'sublabel' => l_('CF_PAYPAL_DEBUG_DESC')));
-		echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][sandbox]', array('type' => 'dropdown', 'label' => l_('CF_PAYPAL_SANDBOX'), 'options' => array(0 => l_('NO'), 1 => l_('YES')), 'sublabel' => l_('CF_PAYPAL_SANDBOX_DESC')));
-		echo \GCore\Helpers\Html::formSecEnd();
+		?>
+		<ul class="nav nav-tabs">
+			<li class="active"><a href="#basic-{N}" data-g-toggle="tab"><?php echo l_('CF_BASIC'); ?></a></li>
+			<li><a href="#advanced-{N}" data-g-toggle="tab"><?php echo l_('CF_ADVANCED'); ?></a></li>
+		</ul>
+		<div class="tab-content">
+			<div id="basic-{N}" class="tab-pane active">
+			<?php
+			echo \GCore\Helpers\Html::formSecStart();
+			//echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][enabled]', array('type' => 'dropdown', 'label' => l_('CF_ENABLED'), 'options' => array(0 => l_('NO'), 1 => l_('YES'))));
+			echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][cmd]', array('type' => 'text', 'label' => l_('CF_PAYPAL_CMD'), 'class' => 'M', 'sublabel' => l_('CF_PAYPAL_CMD_DESC')));
+			echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][business]', array('type' => 'text', 'label' => l_('CF_PAYPAL_BUSINESS'), 'class' => 'L', 'sublabel' => l_('CF_PAYPAL_BUSINESS_DESC')));
+			echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][item_name]', array('type' => 'text', 'label' => l_('CF_PAYPAL_ITEM_NAME'), 'class' => 'M', 'sublabel' => l_('CF_PAYPAL_ITEM_NAME_DESC')));
+			echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][amount]', array('type' => 'text', 'label' => l_('CF_PAYPAL_AMOUNT'), 'class' => 'M', 'sublabel' => l_('CF_PAYPAL_AMOUNT_DESC')));
+			echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][quantity]', array('type' => 'text', 'label' => l_('CF_PAYPAL_QUANTITY'), 'class' => 'M', 'sublabel' => l_('CF_PAYPAL_QUANTITY_DESC')));
+			echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][currency_code]', array('type' => 'text', 'label' => l_('CF_PAYPAL_CURRENCY_CODE'), 'class' => 'SS', 'sublabel' => l_('CF_PAYPAL_CURRENCY_CODE_DESC')));
+			echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][return]', array('type' => 'text', 'label' => l_('CF_PAYPAL_RETURN'), 'class' => 'XL', 'sublabel' => l_('CF_PAYPAL_RETURN_DESC')));
+			echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][no_shipping]', array('type' => 'dropdown', 'label' => l_('CF_PAYPAL_NO_SHIPPING'), 'options' => array(0 => l_('NO'), 1 => l_('YES')), 'sublabel' => l_('CF_PAYPAL_NO_SHIPPING_DESC')));
+			echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][no_note]', array('type' => 'dropdown', 'label' => l_('CF_PAYPAL_NO_NOTE'), 'options' => array(0 => l_('NO'), 1 => l_('YES')), 'sublabel' => l_('CF_PAYPAL_NO_NOTE_DESC')));
+			echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][debug_only]', array('type' => 'dropdown', 'label' => l_('CF_PAYPAL_DEBUG'), 'options' => array(0 => l_('NO'), 1 => l_('YES')), 'sublabel' => l_('CF_PAYPAL_DEBUG_DESC')));
+			echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][sandbox]', array('type' => 'dropdown', 'label' => l_('CF_PAYPAL_SANDBOX'), 'options' => array(0 => l_('NO'), 1 => l_('YES')), 'sublabel' => l_('CF_PAYPAL_SANDBOX_DESC')));
+			echo \GCore\Helpers\Html::formSecEnd();
+			?>
+			</div>
+			<div id="advanced-{N}" class="tab-pane">
+			<?php
+			echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][first_name]', array('type' => 'text', 'label' => l_('CF_PAYPAL_FNAME'), 'class' => 'M', 'sublabel' => l_('CF_PAYPAL_FNAME_DESC')));
+			echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][last_name]', array('type' => 'text', 'label' => l_('CF_PAYPAL_LNAME'), 'class' => 'M', 'sublabel' => l_('CF_PAYPAL_LNAME_DESC')));
+			echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][address1]', array('type' => 'text', 'label' => l_('CF_PAYPAL_ADD1'), 'class' => 'M', 'sublabel' => l_('CF_PAYPAL_ADD1_DESC')));
+			echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][address2]', array('type' => 'text', 'label' => l_('CF_PAYPAL_ADD2'), 'class' => 'M', 'sublabel' => l_('CF_PAYPAL_ADD2_DESC')));
+			echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][city]', array('type' => 'text', 'label' => l_('CF_PAYPAL_CITY'), 'class' => 'M', 'sublabel' => l_('CF_PAYPAL_CITY_DESC')));
+			echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][state]', array('type' => 'text', 'label' => l_('CF_PAYPAL_STATE'), 'class' => 'M', 'sublabel' => l_('CF_PAYPAL_STATE_DESC')));
+			echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][zip]', array('type' => 'text', 'label' => l_('CF_PAYPAL_ZIP'), 'class' => 'M', 'sublabel' => l_('CF_PAYPAL_ZIP_DESC')));
+			echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][country]', array('type' => 'text', 'label' => l_('CF_PAYPAL_COUNTRY'), 'class' => 'M', 'sublabel' => l_('CF_PAYPAL_COUNTRY_DESC')));
+			echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][night_phone_a]', array('type' => 'text', 'label' => l_('CF_PAYPAL_PHONE'), 'class' => 'M', 'sublabel' => l_('CF_PAYPAL_PHONE_DESC')));
+			echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][custom]', array('type' => 'text', 'label' => l_('CF_PAYPAL_CUSTOM'), 'class' => 'M', 'sublabel' => l_('CF_PAYPAL_CUSTOM_DESC')));
+			echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][extra_params]', array('type' => 'textarea', 'label' => l_('CF_PAYPAL_EXTRA_PARAMS'), 'rows' => 5, 'cols' => 40, 'sublabel' => l_('CF_PAYPAL_EXTRA_PARAMS_DESC').l_('CF_EXTRA_PARAMS_LIST_DESC')));
+			
+			?>
+			</div>
+		</div>
+		<?php
 		echo \GCore\Helpers\Html::formEnd();
 	}
 }

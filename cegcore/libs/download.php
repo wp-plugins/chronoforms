@@ -13,7 +13,8 @@ class Download {
 	
 	public static function send($path, $view = 'D', $filename = ''){
 		@error_reporting(0);
-		if(!file_exists($path)){
+		
+		if(!File::exists($path)){
 			header('HTTP/1.1 404 Not Found');
 			exit;
 		}
@@ -50,8 +51,8 @@ class Download {
 		}
 
 		// Get the data range requested (if any)
-		$filesize = filesize($path);
-		if($range){
+		$filesize = @filesize($path);
+		if($range AND $filesize !== false){
 			$partial = true;
 			list($param,$range) = explode('=', $range);
 			if(strtolower(trim($param)) != 'bytes'){
@@ -103,7 +104,9 @@ class Download {
 			header('Pragma: no-cache');
 			header('Content-Type: '.$contenttype);
 		}
-		header('Content-Length: '.$filesize);
+		if($filesize !== false){
+			header('Content-Length: '.$filesize);
+		}
 		
 		
 		if($partial){

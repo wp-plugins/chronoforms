@@ -67,6 +67,7 @@ class Datepicker {
 		?>
 		<ul class="nav nav-tabs">
 			<li><a href="#general-<?php echo $k; ?>" data-g-toggle="tab"><?php echo l_('CF_GENERAL'); ?></a></li>
+			<li><a href="#advanced-<?php echo $k; ?>" data-g-toggle="tab"><?php echo l_('CF_ADVANCED'); ?></a></li>
 			<li><a href="#validation-<?php echo $k; ?>" data-g-toggle="tab"><?php echo l_('CF_VALIDATION'); ?></a></li>
 		</ul>
 		<div class="tab-content">
@@ -81,8 +82,22 @@ class Datepicker {
 				echo \GCore\Helpers\Html::formLine('Form[extras][fields]['.$k.']['.$field_name.']', $params);
 			}
 			echo \GCore\Helpers\Html::input('Form[extras][fields]['.$k.'][type]', array('type' => 'hidden', 'value' => self::$settings['type']));
-			echo \GCore\Helpers\Html::input('Form[extras][fields]['.$k.'][:data-gdatetimepicker]', array('type' => 'hidden', 'value' => '1'));
+			//echo \GCore\Helpers\Html::input('Form[extras][fields]['.$k.'][:data-gdatetimepicker]', array('type' => 'hidden', 'value' => '1'));
+			echo \GCore\Helpers\Html::input('Form[extras][fields]['.$k.'][:data-fieldtype]', array('type' => 'hidden', 'value' => 'gdatetimepicker'));
 			echo \GCore\Helpers\Html::input('Form[extras][fields]['.$k.'][container_id]', array('type' => 'hidden', 'id' => 'container_id'.$k, 'value' => '0'));
+			echo \GCore\Helpers\Html::formSecEnd();
+			?>
+			</div>
+			<div id="advanced-<?php echo $k; ?>" class="tab-pane">
+			<?php
+			echo \GCore\Helpers\Html::formSecStart();
+			echo \GCore\Helpers\Html::formLine('Form[extras][fields]['.$k.'][data][start_date]', array('type' => 'text', 'class' => 'XL', 'label' => l_('CF_DATEPICKER_START_DATE'), 'sublabel' => l_('CF_DATEPICKER_START_DATE_DESC')));
+			echo \GCore\Helpers\Html::formLine('Form[extras][fields]['.$k.'][data][end_date]', array('type' => 'text', 'class' => 'XL', 'label' => l_('CF_DATEPICKER_END_DATE'), 'sublabel' => l_('CF_DATEPICKER_END_DATE_DESC')));
+			echo \GCore\Helpers\Html::formLine('Form[extras][fields]['.$k.'][data][open_days]', array('type' => 'text', 'class' => 'XL', 'label' => l_('CF_DATEPICKER_OPEN_DAYS'), 'sublabel' => l_('CF_DATEPICKER_OPEN_DAYS_DESC')));
+			echo \GCore\Helpers\Html::formLine('Form[extras][fields]['.$k.'][data][on_date_selected]', array('type' => 'text', 'class' => 'XL', 'label' => l_('CF_DATEPICKER_ON_DATE_SELECTED'), 'sublabel' => l_('CF_DATEPICKER_ON_DATE_SELECTED_DESC')));
+			echo \GCore\Helpers\Html::formLine('Form[extras][fields]['.$k.'][data][shortdays]', array('type' => 'text', 'class' => 'XL', 'label' => l_('CF_DATEPICKER_SHORT_DAYS'), 'sublabel' => l_('CF_DATEPICKER_SHORT_DAYS_DESC')));
+			echo \GCore\Helpers\Html::formLine('Form[extras][fields]['.$k.'][data][shortmonths]', array('type' => 'text', 'class' => 'XL', 'label' => l_('CF_DATEPICKER_SHORT_MONTHS'), 'sublabel' => l_('CF_DATEPICKER_SHORT_MONTHS_DESC')));
+			echo \GCore\Helpers\Html::formLine('Form[extras][fields]['.$k.'][data][start_view]', array('type' => 'dropdown', 'label' => l_('CF_DATEPICKER_START_VIEW'), 'options' => array('d' => l_('CF_DATEPICKER_DAYS'), 'm' => l_('CF_DATEPICKER_MONTHS'), 'y' => l_('CF_DATEPICKER_YEARS'), ), 'sublabel' => l_('CF_DATEPICKER_START_VIEW_DESC')));
 			echo \GCore\Helpers\Html::formSecEnd();
 			?>
 			</div>

@@ -57,7 +57,7 @@ Class Email extends \GCore\Admin\Extensions\Chronoforms\Action{
 			echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][template_generation]', array('type' => 'dropdown', 'label' => l_('CF_EMAIL_TEMPLATE_GENERATION'), 'values' => 0, 'options' => array(0 => l_('CF_CUSTOM'), 1 => l_('CF_AUTO')), 'sublabel' => l_('CF_EMAIL_TEMPLATE_GENERATION_DESC')));
 			echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][load_editor]', array('type' => 'button', 'class' => 'btn btn-primary', 'value' => l_('CF_LOAD_EDITOR'), 'onclick' => 'toggleEditor(this, \'email_template_{N}\');'));
 			echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][template]', array('type' => 'textarea', 'label' => l_('CF_EMAIL_TEMPLATE'), 'id' => 'email_template_{N}', 'style' => 'width:auto;', 'rows' => 20, 'cols' => 70, 'sublabel' => l_('CF_EMAIL_TEMPLATE_DESC')));
-			echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][attach]', array('type' => 'text', 'label' => l_('CF_ATTACHMENT_FILES'), 'class' => 'XL', 'sublabel' => l_('CF_ATTACHMENT_FILES_DESC')));
+			echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][attach]', array('type' => 'textarea', 'label' => l_('CF_ATTACHMENT_FILES'), 'rows' => 3, 'cols' => 70, 'sublabel' => l_('CF_ATTACHMENT_FILES_DESC')));
 			echo \GCore\Helpers\Html::formSecEnd();
 			?>
 			</div>
@@ -106,10 +106,10 @@ Class Email extends \GCore\Admin\Extensions\Chronoforms\Action{
 	public static function config_check($data = array()){
 		$diags = array();
 		$diags[l_('CF_DIAG_ENABLED')] = !empty($data['enabled']);
-		$diags[l_('CF_DIAG_TO_ADDRESS_SET')] = !empty($data['to']) OR !empty($data['dto']);
-		$diags[l_('CF_DIAG_SUBJECT_SET')] = !empty($data['subject']);
-		$diags[l_('CF_DIAG_FROMNAME_SET')] = !empty($data['from_name']) OR !empty($data['dfrom_name']);
-		$diags[l_('CF_DIAG_FROMEMAIL_SET')] = !empty($data['from_email']) OR !empty($data['dfrom_email']);
+		$diags[l_('CF_DIAG_TO_ADDRESS_SET')] = (!empty($data['to']) OR !empty($data['dto'])) ? true : false;
+		$diags[l_('CF_DIAG_SUBJECT_SET')] = (!empty($data['subject']) OR !empty($data['dsubject'])) ? true : false;
+		$diags[l_('CF_DIAG_FROMNAME_SET')] = (!empty($data['from_name']) OR !empty($data['dfrom_name'])) ? true : false;
+		$diags[l_('CF_DIAG_FROMEMAIL_SET')] = (!empty($data['from_email']) OR !empty($data['dfrom_email'])) ? true : false;
 		$diags[l_('CF_DIAG_TEMPLATE_SET')] = !empty($data['template']);
 		return $diags;
 	}
@@ -130,7 +130,7 @@ Class Email extends \GCore\Admin\Extensions\Chronoforms\Action{
 		//get recipient
 		$tos = array();
 		if(strlen(trim($config->get('to', '')))){
-			$tos = explode(',', trim($config->get('to', '')));
+			$tos = explode(',',  \GCore\Libs\Str::replacer(trim($config->get('to', '')), $form->data));
 		}
 		if(strlen(trim($config->get('dto', '')))){
 			$dtos = explode(',', trim($config->get('dto', '')));
@@ -142,7 +142,7 @@ Class Email extends \GCore\Admin\Extensions\Chronoforms\Action{
 		
 		$ccs = array();
 		if(strlen(trim($config->get('cc', '')))){
-			$ccs = explode(',', trim($config->get('cc', '')));
+			$ccs = explode(',', \GCore\Libs\Str::replacer(trim($config->get('cc', '')), $form->data));
 		}
 		if(strlen(trim($config->get('dcc', '')))){
 			$dccs = explode(',', trim($config->get('dcc', '')));
@@ -155,7 +155,7 @@ Class Email extends \GCore\Admin\Extensions\Chronoforms\Action{
 		
 		$bccs = array();
 		if(strlen(trim($config->get('bcc', '')))){
-			$bccs = explode(',', trim($config->get('bcc', '')));
+			$bccs = explode(',', \GCore\Libs\Str::replacer(trim($config->get('bcc', '')), $form->data));
 		}
 		if(strlen(trim($config->get('dbcc', '')))){
 			$dbccs = explode(',', trim($config->get('dbcc', '')));
@@ -166,13 +166,13 @@ Class Email extends \GCore\Admin\Extensions\Chronoforms\Action{
 		}
 		$others['bcc'] = $bccs;
 		//subject
-		$subject = trim($config->get('subject', '')) ? $config->get('subject', '') : $form->data($config->get('dsubject', ''));
+		$subject = trim($config->get('subject', '')) ?  \GCore\Libs\Str::replacer($config->get('subject', ''), $form->data) : $form->data($config->get('dsubject', ''));
 		//from
-		$others['from_name'] = trim($config->get('from_name', '')) ? $config->get('from_name', '') : $form->data($config->get('dfrom_name'), null);
-		$others['from_email'] = trim($config->get('from_email', '')) ? $config->get('from_email', '') : $form->data($config->get('dfrom_email'), null);
+		$others['from_name'] = trim($config->get('from_name', '')) ? \GCore\Libs\Str::replacer($config->get('from_name', ''), $form->data) : $form->data($config->get('dfrom_name'), null);
+		$others['from_email'] = trim($config->get('from_email', '')) ? \GCore\Libs\Str::replacer($config->get('from_email', ''), $form->data) : $form->data($config->get('dfrom_email'), null);
 		//reply to
-		$others['reply_name'] = trim($config->get('reply_name', '')) ? $config->get('reply_name', '') : $form->data($config->get('dreply_name'), null);
-		$others['reply_email'] = trim($config->get('reply_email', '')) ? $config->get('reply_email', '') : $form->data($config->get('dreply_email'), null);
+		$others['reply_name'] = trim($config->get('reply_name', '')) ? \GCore\Libs\Str::replacer($config->get('reply_name', ''), $form->data) : $form->data($config->get('dreply_name'), null);
+		$others['reply_email'] = trim($config->get('reply_email', '')) ? \GCore\Libs\Str::replacer($config->get('reply_email', ''), $form->data) : $form->data($config->get('dreply_email'), null);
 		$others['type'] = $config->get('email_type', 'html');
 		
 		$form->data['ip_address'] = $_SERVER['REMOTE_ADDR'];
@@ -181,27 +181,55 @@ Class Email extends \GCore\Admin\Extensions\Chronoforms\Action{
 			if($config->get('append_ip_address', 1)){
 				$body = $body."<br /><br />"."IP: {ip_address}";
 			}
-			$body = \GCore\Libs\Str::replacer($body, $form->data, array('replace_null' => true, 'nl2br' => true));
+			$body = \GCore\Libs\Str::replacer($body, $form->data, array('replace_null' => true, 'nl2br' => true, 'repeater' => 'repeater'));
 		}else{
 			if($config->get('append_ip_address', 1)){
 				$body = $body."\n\n"."IP: {ip_address}";
 			}
-			$body = \GCore\Libs\Str::replacer($body, $form->data, array('replace_null' => true));
+			$body = \GCore\Libs\Str::replacer($body, $form->data, array('replace_null' => true, 'repeater' => 'repeater'));
 		}
 
 		//attach
 		$attachments = array();
 		if(strlen(trim($config->get('attach', '')))){
-			$attachs = explode(',', trim($config->get('attach', '')));
-			foreach($form->files as $name => $file){
-				if(in_array($name, $attachs)){
-					$attachments[] = $file['path'];
+			ob_start();
+			$attach_fields = eval('?>'.trim($config->get('attach', '')));
+			ob_end_clean();
+			if(is_array($attach_fields)){
+				$attachs = array_keys($attach_fields);
+				foreach($form->files as $name => $file){
+					if(in_array($name, $attachs)){
+						if(\GCore\Libs\Arr::is_assoc($file)){
+							$attachments[] = array_merge($attach_fields[$name], array('path' => $file['path']));
+						}else{
+							foreach($file as $fi => $fv){
+								//$attachments[] = $fv['path'];
+								$attachments[] = array_merge($attach_fields[$name], array('path' => $fv['path']));
+							}
+						}
+					}
+				}
+			}else{
+				$attachs = explode(',', trim($config->get('attach', '')));
+				foreach($form->files as $name => $file){
+					if(in_array($name, $attachs)){
+						if(\GCore\Libs\Arr::is_assoc($file)){
+							$attachments[] = $file['path'];
+						}else{
+							foreach($file as $fi => $fv){
+								$attachments[] = $fv['path'];
+							}
+						}
+					}
 				}
 			}
 		}
 		//load global settings
 		$settings = $form::_settings();
 		if(!empty($settings['mail'])){
+			if(!empty($settings['mail']['smtp']) AND empty($settings['mail']['mail_method'])){
+				$settings['mail']['mail_method'] = 'smtp';
+			}
 			foreach($settings['mail'] as $k => $v){
 				\GCore\Libs\Base::setConfig($k, $v);
 			}
@@ -229,7 +257,8 @@ Class Email extends \GCore\Admin\Extensions\Chronoforms\Action{
 		$form->debug[$action_id][self::$title][] = "BCC:".implode(", ", $bccs);
 		$form->debug[$action_id][self::$title][] = "Reply name:".$others['reply_name'];
 		$form->debug[$action_id][self::$title][] = "Reply email:".$others['reply_email'];
-		$form->debug[$action_id][self::$title][] = "Attachments:".implode("\n", $attachments);
+		$form->debug[$action_id][self::$title][] = "Attachments:";
+		$form->debug[$action_id][self::$title][] = $attachments;
 		$form->debug[$action_id][self::$title][] = "Body:\n".$body;
 	}
 
@@ -237,7 +266,7 @@ Class Email extends \GCore\Admin\Extensions\Chronoforms\Action{
 		$htmlcode = $data['content'];
 		
 		$email_template_header = trim($data['extras']['actions_config'][$action_id]['template_header']) ? $data['extras']['actions_config'][$action_id]['template_header'] : '<table>';
-		$email_template_body = trim($data['extras']['actions_config'][$action_id]['template_body']) ? $data['extras']['actions_config'][$action_id]['template_body'] : '<tr><td>{label}</td><td>{name}</td></tr>'."\n";
+		$email_template_body = trim($data['extras']['actions_config'][$action_id]['template_body']) ? $data['extras']['actions_config'][$action_id]['template_body'] : '<tr><td>{label}</td><td>{{name}}</td></tr>'."\n";
 		$email_template_footer = trim($data['extras']['actions_config'][$action_id]['template_footer']) ? $data['extras']['actions_config'][$action_id]['template_footer'] : '</table>';
 		
 		if(!empty($data['form_type'])){
@@ -245,8 +274,8 @@ Class Email extends \GCore\Admin\Extensions\Chronoforms\Action{
 			$html_string .= "\n";
 			foreach($data['extras']['fields'] as $k => $field){
 				if(!in_array($field['type'], array('button', 'submit', 'reset', 'captcha', 'multi', 'container'))){
-					$field['label'] = (!empty($field['label']['text']) ? $field['label']['text'] : $field['label']);
-					$field['name'] = '{'.implode('.', explode('[', str_replace(']', '', str_replace('[]', '', $field['name'])))).'}';
+					$field['label'] = (isset($field['label']['text']) ? $field['label']['text'] : $field['label']);
+					$field['name'] = implode('.', explode('[', str_replace(']', '', str_replace('[]', '', $field['name']))));
 					/*$html_string .= '<tr>';
 					$html_string .= '<td>'.(!empty($field['label']['text']) ? $field['label']['text'] : $field['label']).'</td>';
 					$html_string .= '<td>{'.str_replace('[]', '', $field['name']).'}</td>';
@@ -257,8 +286,8 @@ Class Email extends \GCore\Admin\Extensions\Chronoforms\Action{
 				if(!empty($field['inputs'])){
 					foreach($field['inputs'] as $fn => $field_input){
 						if(!in_array($field_input['type'], array('button', 'submit', 'reset', 'captcha', 'multi'))){
-							$field_input['label'] = (!empty($field_input['label']['text']) ? $field_input['label']['text'] : $field_input['label']);
-							$field_input['name'] = '{'.implode('.', explode('[', str_replace(']', '', str_replace('[]', '', $field_input['name'])))).'}';
+							$field_input['label'] = (isset($field_input['label']['text']) ? $field_input['label']['text'] : $field_input['label']);
+							$field_input['name'] = implode('.', explode('[', str_replace(']', '', str_replace('[]', '', $field_input['name']))));
 							/*$html_string .= '<tr>';
 							$html_string .= '<td>'.(!empty($field_input['label']['text']) ? $field_input['label']['text'] : $field_input['label']).'</td>';
 							$html_string .= '<td>{'.str_replace('[]', '', $field_input['name']).'}</td>';

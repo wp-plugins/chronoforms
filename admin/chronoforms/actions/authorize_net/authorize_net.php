@@ -103,7 +103,7 @@ Class AuthorizeNet extends \GCore\Admin\Extensions\Chronoforms\Action{
 		if(strlen(trim($config->get('extra_params', '')))){
 			$extras = \GCore\Libs\Str::list_to_array($config->get('extra_params', ''));
 			foreach($extras as $k => $v){
-				$authnet_values[$k] = $k.": ".urlencode($form->data($v, ''));
+				$authnet_values[$k] = urlencode($form->data($v, ''));
 			}
 		}
 		
@@ -229,8 +229,8 @@ Class AuthorizeNet extends \GCore\Admin\Extensions\Chronoforms\Action{
 							$debugger .= "<td class=\"v\">";
 							$form->data['_PLUGINS_']['authorize_net']['response_reason_text'] = $pstr_trimmed;
 							//add Error
-							if($config->get('auto_add_error', 1) == 1 && ($this->events['declined'] == 1 || $this->events['error'] == 1)){
-								$form->validation_errors[] = $form->data['_PLUGINS_']['authorize_net']['response_reason_text'];
+							if($config->get('auto_add_error', 1) AND ($this->events['declined'] == 1 OR $this->events['error'] == 1)){
+								$form->errors[] = $form->data['_PLUGINS_']['authorize_net']['response_reason_text'];
 							}
 							$debugger .= $pstr_trimmed;
 							$debugger .= "<br>";

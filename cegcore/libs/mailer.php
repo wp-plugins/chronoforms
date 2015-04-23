@@ -10,10 +10,11 @@ namespace GCore\Libs;
 /*** FILE_DIRECT_ACCESS_HEADER ***/
 defined("GCORE_SITE") or die;
 class Mailer {
+	static $debug;
 
 	public static function send($to = array(), $subject = '', $body = '', $attachments = array(), $other = array()){
 		if(!class_exists('PHPMailer')){
-			require_once(\GCore\C::get('GCORE_FRONT_PATH').'vendors'.DS.'phpmailer'.DS.'class.phpmailer.php');
+			require_once(\GCore\C::get('GCORE_FRONT_PATH').'vendors'.DS.'phpmailer'.DS.'PHPMailerAutoload.php');
 		}
 
 		$mail = new \PHPMailer();
@@ -54,7 +55,7 @@ class Mailer {
 			}
 		}
 
-		if((bool)Base::getConfig('smtp', 0) === true){
+		if((bool)Base::getConfig('smtp', 0) === true OR Base::getConfig('mail_method', 'phpmail') == 'smtp'){
 			$mail->IsSMTP();
 			if(Base::getConfig('smtp_username') AND Base::getConfig('smtp_password')){
 				$mail->SMTPAuth = true;
@@ -66,14 +67,12 @@ class Mailer {
 			$mail->Port       = Base::getConfig('smtp_port');
 			$mail->Username   = Base::getConfig('smtp_username');
 			$mail->Password   = Base::getConfig('smtp_password');
-		}
-		/*
-		if(Base::getConfig('mail_method', 'phpmail') == 'sendmail'){
+		}else if(Base::getConfig('mail_method', 'phpmail') == 'sendmail'){
 			$mail->IsSendmail();
 		}
-		*/
+		
 		if(!isset($other['type']) OR $other['type'] == 'html'){
-			$mail->AltBody = 'To view the message, please use an HTML compatible email viewer!'; // optional - MsgHTML will create an alternate automatically
+			$mail->AltBody = strip_tags($body);//'To view the message, please use an HTML compatible email viewer!'; // optional - MsgHTML will create an alternate automatically
 			//$body = nl2br($body);
 			//$mail->MsgHTML($body);
 			$mail->Body = $body;
@@ -82,12 +81,18 @@ class Mailer {
 			$mail->Body = $body;
 			$mail->IsHTML(false);
 		}
-
+		
+		$mail->SMTPDebug = (int) Base::getConfig('smtp_debug', 0);
 		//attachments
 		foreach((array)$attachments as $attachment){
-			$mail->AddAttachment($attachment);
+			if(is_array($attachment) AND !empty($attachment['path'])){
+				$attachment = array_merge(array('name' => basename($attachment['path']), 'type' => 'application/octet-stream', 'encoding' => 'base64'), $attachment);
+				$mail->AddAttachment($attachment['path'], $attachment['name'], $attachment['encoding'], $attachment['type']);
+			}else{
+				$mail->AddAttachment($attachment);
+			}
 		}
-
+		
 		if(!$mail->Send()){
 			$session = Base::getSession();
 			$session->setFlash('warning', 'Mailer Error: '.$mail->ErrorInfo);
@@ -95,5 +100,9 @@ class Mailer {
 		}
 
 		return true;
+	}
+	
+	public static function getDebug(){
+		return self::$debug;
 	}
 }

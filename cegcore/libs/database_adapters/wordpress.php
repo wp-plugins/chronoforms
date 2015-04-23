@@ -19,7 +19,7 @@ class Wordpress extends \GCore\Libs\DatabaseObject {
 	function getTablesList(){
 		$tables = array();
 		$sql = 'SHOW TABLES';
-		$this->_log($sql);
+		//$this->_log($sql);
 		$result = $this->loadAssocList($sql);
 		foreach($result as $r){
 			$clean = array_values($r);
@@ -30,7 +30,7 @@ class Wordpress extends \GCore\Libs\DatabaseObject {
 	
 	function _getTableInfo($tablename){
 		$sql = 'DESCRIBE '.$this->quoteName($tablename);
-		$this->_log($sql);
+		//$this->_log($sql);
 		$result = $this->loadAssocList($sql);
 		return $result;
 	}

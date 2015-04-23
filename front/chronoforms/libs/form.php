@@ -54,7 +54,7 @@ class Form {
 			if(!empty($this->form)){
 				$this->data = &\GCore\Libs\Request::raw();
 				$this->dna = $this->form['Form']['extras']['DNA'];
-				$this->actions_config = $this->form['Form']['extras']['actions_config'];
+				$this->actions_config = !empty($this->form['Form']['extras']['actions_config']) ? $this->form['Form']['extras']['actions_config'] : array();
 				$this->params = new \GCore\Libs\Parameter($this->form['Form']['params']);
 				//$this->get_events_actions();
 			}else{

@@ -34,10 +34,32 @@ class Str {
 		$other = (array)$other;
 		$exploder = isset($other['exploder']) ? $other['exploder'] : '.';
 		$replace_null = isset($other['replace_null']) ? $other['replace_null'] : false;
+		$repeater = isset($other['repeater']) ? $other['repeater'] : false;
 		$brackets = isset($other['brackets']) ? $other['brackets'] : array("{", "}");
-
+		
 		$op = $brackets[0];
 		$cl = $brackets[1];
+		
+		if(!empty($repeater)){
+			preg_match_all('/'.preg_quote($op).$repeater.'([^'.preg_quote($cl).']*)'.preg_quote($cl).'(.*?)'.preg_quote($op).'\/'.$repeater.preg_quote($cl).'/is', $content, $repeater_matches);
+			if(!empty($repeater_matches[0])){
+				foreach($repeater_matches[0] as $k => $match){
+					$path = '';
+					if(!empty($repeater_matches[1][$k])){
+						$path = str_replace(':', '', $repeater_matches[1][$k]);
+					}
+					$sub_data = Arr::getVal($data, explode('.', $path), array());
+					if(!Arr::is_assoc($sub_data)){
+						$sub_content = '';
+						foreach($sub_data as $i => $sub_data_array){
+							$sub_content .= self::replacer($repeater_matches[2][$k], $sub_data_array);
+						}
+						$content = str_replace($repeater_matches[0][$k], $sub_content, $content);
+					}
+				}
+			}
+		}
+		
 		preg_match_all('/'.preg_quote($op).'([^('.$cl.'|'.$op.'| )]*?)'.preg_quote($cl).'/i', $content, $curly_matches);
 		if(isset($curly_matches[1]) && !empty($curly_matches[1])){
 			foreach($curly_matches[1] as $match){

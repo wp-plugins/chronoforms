@@ -47,7 +47,7 @@ class Authorize {
 		$cache = (bool)Base::getConfig('cache_permissions');
 		if($cache === true){
 			$session = Base::getSession();
-			$cached_permissions = $session->get('acos_permissions', array());
+			$cached_permissions = $session->get('acos_permissions.'.$user['id'], array());
 			if(in_array('owner', $groups)){
 				$cache_key = md5(serialize($tests).$action.$owner_id);
 			}else{
@@ -103,17 +103,17 @@ class Authorize {
 		//store into cache
 		if($cache === true){
 			$session = Base::getSession();
-			$cached_permissions = $session->get('acos_permissions', array());
+			$cached_permissions = $session->get('acos_permissions.'.$user['id'], array());
 			if(in_array('owner', $groups)){
 				$cache_key = md5(serialize($tests).$action.$owner_id);
 			}else{
 				$cache_key = md5(serialize($tests).$action);
 			}
 			$cached_permissions[$cache_key] = $return;
-			$session->set('acos_permissions', $cached_permissions);
+			$session->set('acos_permissions.'.$user['id'], $cached_permissions);
 		}else{
 			$session = Base::getSession();
-			$session->set('acos_permissions', array());
+			$session->set('acos_permissions.'.$user['id'], array());
 		}
 		return $return;
 	}

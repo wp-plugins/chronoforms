@@ -5,5 +5,5 @@ div.subhead-collapse{display:none;}
 .gcore-toolbar-box{padding-top:5px;}
 .gbs3 *, .gbs3 *:before, .gbs3 *:after{
 	text-align:left;
-	font-size:12px;
+	/*font-size:12px;*/
 }

@@ -1,4 +1,4 @@
-GValidation.errors = {
+jQuery.gvalidation.errors = jQuery.extend(jQuery.gvalidation.errors, {
 	required: "Acest c&#226;mp este obligatoriu.",
 	alpha: "Acest c&#226;mp accept&#259; doar caractere alfabetice.",
 	alphanum: "Acest c&#226;mp accept&#259; doar caractere alfanumerice.",
@@ -26,4 +26,4 @@ GValidation.errors = {
 	custom: "V&#259; rug&#259;m selecta&#355;i o op&#355;iune",
 	select: "V&#259; rug&#259;m alege&#355;i o valoare",
 	select_multiple : "V&#259; rug&#259;m alege&#355;i cel pu&#355;in o valoare"
-};
+});

@@ -74,6 +74,7 @@ Class DbSave extends \GCore\Admin\Extensions\Chronoforms\Action{
 			}
 			$model_class = '\GCore\Models\\'.$model_id;
 			if(!class_exists($model_class)){
+				$form->debug[$action_id][self::$title]['Queries'] = "Error creating the model class, please try a different model id.";
 				return;
 			}
 			$data = $form->data;
@@ -130,7 +131,7 @@ Class DbSave extends \GCore\Admin\Extensions\Chronoforms\Action{
 		
 		$ndb_tables = array();
 		if(!empty($data['ndb_table_name'])){
-			$ndb_tables = \GCore\Libs\Database::getInstance(array(
+			/*$ndb_tables = \GCore\Libs\Database::getInstance(array(
 				'type' => $data['ndb_driver'], 
 				'host' => $data['ndb_host'], 
 				'name' => $data['ndb_database'], 
@@ -138,7 +139,8 @@ Class DbSave extends \GCore\Admin\Extensions\Chronoforms\Action{
 				'pass' => $data['ndb_password'], 
 				'prefix' => $data['ndb_prefix']
 			))->getTablesList();
-			$ndb_tables = array_combine($ndb_tables, $ndb_tables);
+			$ndb_tables = array_combine($ndb_tables, $ndb_tables);*/
+			$ndb_tables = array($data['ndb_table_name'] => $data['ndb_table_name']);
 		}
 
 		echo \GCore\Helpers\Html::formStart('action_config db_save_action_config', 'db_save_action_config_{N}');
@@ -161,6 +163,10 @@ Class DbSave extends \GCore\Admin\Extensions\Chronoforms\Action{
 							jQuery('#db_save_ndb_table_name_'+SID).empty();
 							jQuery('#db_save_ndb_table_name_'+SID).append('<option value="">Failed to connect!!</option>');
 						}
+					},
+					"error" : function(){
+						jQuery('#db_save_ndb_table_name_'+SID).empty();
+						jQuery('#db_save_ndb_table_name_'+SID).append('<option value="">Failed to connect!!</option>');
 					},
 				});
 			}
@@ -194,7 +200,7 @@ Class DbSave extends \GCore\Admin\Extensions\Chronoforms\Action{
 			echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][ndb_user]', array('type' => 'text', 'label' => l_('CF_DB_SAVE_EXTERNAL_DB_USER'), 'sublabel' => l_('CF_DB_SAVE_EXTERNAL_DB_USER_DESC')));
 			echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][ndb_password]', array('type' => 'text', 'label' => l_('CF_DB_SAVE_EXTERNAL_DB_PASSWORD'), 'sublabel' => l_('CF_DB_SAVE_EXTERNAL_DB_PASSWORD_DESC')));
 			echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][ndb_prefix]', array('type' => 'text', 'label' => l_('CF_DB_SAVE_EXTERNAL_DB_PREFIX'), 'sublabel' => l_('CF_DB_SAVE_EXTERNAL_DB_PREFIX_DESC')));
-			echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][ndb_load_tables]', array('type' => 'button', 'value' => l_('CF_DB_SAVE_EXTERNAL_DB_LOAD_TABLES'), 'onclick' => 'db_save_ndb_load_tables(this, {N})', 'sublabel' => ''));
+			echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][ndb_load_tables]', array('type' => 'button', 'value' => l_('CF_DB_SAVE_EXTERNAL_DB_LOAD_TABLES'), 'onclick' => 'db_save_ndb_load_tables(this, \'{N}\')', 'sublabel' => ''));
 			echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][ndb_table_name]', array('type' => 'dropdown', 'label' => l_('CF_DB_SAVE_EXTERNAL_DB_TABLE'), 'id' => 'db_save_ndb_table_name_{N}', 'options' => $ndb_tables, 'sublabel' => l_('CF_DB_SAVE_EXTERNAL_DB_TABLE_DESC')));
 			echo \GCore\Helpers\Html::formSecEnd();
 			?>

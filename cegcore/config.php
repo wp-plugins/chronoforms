@@ -1,16 +1,18 @@
 <?php
 namespace GCore;
+/*** FILE_DIRECT_ACCESS_HEADER ***/
+defined("GCORE_SITE") or die;
 class Config {
-	public static $site_title = "My GCore";
+	public static $site_title = "";
 	public static $prepend_site_title = 1;
 	public static $list_limit = 30;
 	public static $max_list_limit = 1000;
 	public static $secret_token = "";
 	public static $jquery_theme = "base";
-	public static $meta_keywords = "my keywords, here, there";
-	public static $meta_description = "test my meta description content";
+	public static $meta_keywords = "";
+	public static $meta_description = "";
 	public static $meta_robots = "";
-	public static $debug = 1;
+	public static $debug = 0;
 	public static $error_reporting = 1;
 	public static $session_handler = "php";
 	public static $session_lifetime = 35.5;
@@ -27,22 +29,24 @@ class Config {
 	public static $query_cache_expiry = 3600;
 	public static $site_language = "en-gb";
 	public static $detect_language = 0;
-	public static $mail_from_name = "Localhost admin";
-	public static $mail_from_email = "from@localhost.com";
-	public static $mail_reply_name = "Reply Name";
-	public static $mail_reply_email = "reply@localhost.com";
+	public static $mail_method = "phpmail";
+	public static $mail_from_name = "";
+	public static $mail_from_email = "";
+	public static $mail_reply_name = "";
+	public static $mail_reply_email = "";
 	public static $smtp = 0;
 	public static $smtp_secure = "";
 	public static $smtp_host = "";
 	public static $smtp_port = "";
 	public static $smtp_username = "";
 	public static $smtp_password = "";
-	public static $db_host = "localhost";
-	public static $db_type = "mysql";
-	public static $db_name = "gcore";
-	public static $db_user = "root";
-	public static $db_pass = "root";
-	public static $db_prefix = "gc_";
+	public static $smtp_debug = 0;
+	public static $db_host = "";
+	public static $db_type = "";
+	public static $db_name = "";
+	public static $db_user = "";
+	public static $db_pass = "";
+	public static $db_prefix = "";
 	public static $db_adapter = "pdo";
 	public static $cache_permissions = 1;
 	public static $page_url_param_name = 'page';

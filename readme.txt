@@ -2,8 +2,8 @@
 Contributors: maxpayne-1, rm2773
 Tags: email, form, contact form, web form, contact us, feedback, AJAX, uploads, Auto Responder, Captcha, ReCaptcha, contact, PayPal, Google spreadsheets, Authorize.net, 2Checkout, Bootstrap
 Requires at least: 3.0
-Tested up to: 4.0
-Stable tag: 5.0.3.1
+Tested up to: 4.9.9
+Stable tag: 5.0.9
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl.html
 
@@ -20,6 +20,9 @@ Use short code [Chronoforms5 chronoform="YOUR_FORM_NAME"]
 All support/docs/FAQs on our website www.ChronoEngine.com
 
 == Changelog ==
+
+= 5.0.9 =
+* More enhancements and features including: signature pad widget, Google NoCaptcha, Google sheets support, PayPal Redirect, PDT & Pro, and more...
 
 = 5.0.3 =
 * added diagnostics support to the forms manager.

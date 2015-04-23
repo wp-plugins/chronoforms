@@ -27,9 +27,7 @@ Class Autocompleter extends \GCore\Admin\Extensions\Chronoforms\Action{
 
 		$ajax_url = $config->get('results_event', '') ? r_(\GCore\C::get('GCORE_ROOT_URL').'index.php?ext=chronoforms&chronoform='.$form->form['Form']['title'].'&event='.$config->get('results_event', '').'&tvout=ajax') : $config->get('results_url', '');
 
-		if((bool)$form->params->get('jquery', 1) === true){
-			$doc->_('jquery');
-		}
+		$doc->_('jquery');
 		//$doc->_('autocompleter');
 		//$doc->__('autocompleter', $config->get('field_selector', '.auto_complete'), array('path' => $ajax_url, 'length' => $config->get('length', 2), 'multiple' => $config->get('multiple', 0)));
 	

@@ -14,6 +14,8 @@ defined("GCORE_SITE") or die;
 	$doc->_('keepalive');
 	$doc->_('gtooltip');
 	$doc->_('gvalidation');
+	$doc->_('gsliders');
+	
 	$doc->addCssFile(\GCore\C::get('GCORE_ADMIN_URL').'extensions/chronoforms/assets/css/wizard.css');
 	$doc->addCssFile(\GCore\C::get('GCORE_ADMIN_URL').'extensions/chronoforms/assets/css/wizard-bs3.css');
 	//tour
@@ -26,6 +28,7 @@ defined("GCORE_SITE") or die;
 	$doc->addJsFile(\GCore\C::get('GCORE_FRONT_URL').'extensions/editors/assets/tinymce/tinymce.min.js');
 
 	$save_ext = '';
+	$save_ext .= 'jQuery("#admin_form :input[name*=\'{N}\']").remove();'; //remove the default fields/actions fields to save some post data space
 	if($chronoforms_settings->get('wizard.safe_save', 1)){
 		if(!(int)$chronoforms_settings->get('wizard.safe_save_chunk_size', 0)){
 			$save_ext .= '
@@ -52,6 +55,15 @@ defined("GCORE_SITE") or die;
 		jQuery(".serialized_form_data_chunks").prop("disabled", false);
 		';
 	}
+	$simple_wizard_fix = '';
+	if(!empty($this->data['setup']) OR !empty($this->data['Form']['params']['setup'])){
+		//simple form, disable the editor in email actions.
+		$simple_wizard_fix = '
+			HideEditor(jQuery("#email_0"));
+			HideEditor(jQuery("#email_1"));
+			HideEditor(jQuery("#thanks_message_4"));
+		';
+	}
 	$doc->addJsCode('
 		function test_form(){
 			'.(!empty($this->data['Form']['title']) ? 'window.open("'.r_(\GCore\C::get('GCORE_ROOT_URL').'index.php?ext=chronoforms&chronoform='.$this->data['Form']['title']).'");' : 'alert("'.l_('CF_SAVE_FORM_FIRST').'");').'
@@ -60,6 +72,7 @@ defined("GCORE_SITE") or die;
 			if(!jQuery("#cform_name").val().trim() || jQuery("#cform_name").val().match(/ /)){
 				alert("'.l_('CF_FORM_TITLE_REQUIRED').'");
 			}else{
+				'.$simple_wizard_fix.'
 				'.$save_ext.'
 				jQuery(".toolbar-button").prop("disabled", true);
 				jQuery("#admin_form").submit();
@@ -72,7 +85,7 @@ defined("GCORE_SITE") or die;
 		$this->Toolbar->setTitle($this->data['Form']['title']);
 	}*/
 
-	$this->Toolbar->addButton('test_form', r_('index.php?ext=chronoforms'), l_('CF_TEST_FORM'), \GCore\C::get('GCORE_ADMIN_URL').'extensions/chronoforms/assets/images/preview.png', 'test_form');
+	$this->Toolbar->addButton('test_form', r_('index.php?ext=chronoforms'), l_('CF_TEST_FORM'), \GCore\C::ext_url('chronoforms', 'admin').'assets/images/preview.png', 'test_form');
 	$this->Toolbar->addButton('apply', r_('index.php?ext=chronoforms&act=save&save_act=apply'), l_('CF_SAVE'), $this->Assets->image('apply', 'toolbar/'), 'validate_form');
 	$this->Toolbar->addButton('save', r_('index.php?ext=chronoforms&act=save'), l_('CF_SAVE_AND_CLOSE'), $this->Assets->image('save', 'toolbar/'), 'validate_form');
 	$this->Toolbar->addButton('cancel', r_('index.php?ext=chronoforms'), l_('CF_CLOSE'), $this->Assets->image('cancel', 'toolbar/'), 'link');
@@ -144,8 +157,11 @@ defined("GCORE_SITE") or die;
 </script>
 <script>
 	jQuery(document).ready(function($){
-		$('.gcore .nav > li:first-child').addClass('active');
-		$('.gcore .tab-content > div.tab-pane:first').addClass('active');
+		$('#fields-accordion, #actions-accordion, #jevents-accordion').gsliders({
+			'pane_selector':'.panel-collapse',
+			'tab_selector':'[data-g-toggle="collapse"]',
+			'active_pane_class':'in',
+		});
 	});
 	jQuery(document).ready(function($){
 		//$('#admin_form').gvalidate();
@@ -153,8 +169,31 @@ defined("GCORE_SITE") or die;
 		$(".PopOverReady").on("hidden.bs.tooltip", function(){
 			$(this).show();
 		});*/
-		$(".PopOverReady").gtooltip({"append":"body", "awaytime":0, "position":"right"});
-		$(".PopOverReady").gtooltip("hover");
+		$(".PopOverReady").gtooltip({"append":"body", "awaytime":0, "position":"right", "resetOnShow":true});
+		//$(".PopOverReady").gtooltip("hover");
+		//stop enter key from firing buttons
+		/*$(document).on('keypress', function(e){
+			if(e.which == 13){
+				e.preventDefault();
+			}
+		});*/
+	});
+</script>
+<script>
+	function toggleEventValue(el){
+		if(el.val() == "change_to" || el.val() == "change_not"){
+			el.closest(".jsevent_config").find(".events_value").closest(".gcore-subinput-container").show();
+		}else{
+			el.closest(".jsevent_config").find(".events_value").closest(".gcore-subinput-container").hide();
+		}
+	}
+	jQuery(document).ready(function($){
+		$(document).on("change", ".events_event_selection", function(){
+			toggleEventValue($(this));
+		});
+		$(".events_event_selection").each(function(i, el){
+			toggleEventValue($(el));
+		});
 	});
 </script>
 <script>
@@ -200,27 +239,39 @@ jQuery(window).scroll(function(){
 	}else{
 		jQuery('#fields_list').stop().animate({'marginTop': (0) + 'px'}, 'fast');
 	}
+	if(jQuery(window).scrollTop() > jQuery('.jsevents_panel').first().offset().top){
+		jQuery('#jsevents_list').stop().animate({'marginTop': (jQuery(window).scrollTop() - jQuery('.jsevents_panel').first().offset().top + 30) + 'px'}, 'fast');
+	}else{
+		jQuery('#jsevents_list').stop().animate({'marginTop': (0) + 'px'}, 'fast');
+	}
 });
 </script>
 <script>
 	jQuery(document).ready(function($){
 		//$('#locales_tabs_heads a:last').tab('show'); //activate last tab when page loads
-		$('#add_new_locale').on('show.bs.modal', function () {
+		/*$('#add_new_locale').on('show.bs.modal', function () {
 			$('#locale_name').val('');
-		})
+		})*/
 		$('#add_new_locale_button').on('click', function(){
 			var locale_name = $('#locale_name').val();
 			if(locale_name == '')return false;
 			$('#locales_tabs_heads').append('<li><a href="#locale-'+locale_name+'" data-g-toggle="tab">'+locale_name+'</a></li>');
 			var tab_content = $('#locale_generic_config').html().replace(/{N}/ig, $('#locale_name').val());
 			$('#locales_tabs_contents').append('<div class="tab-pane" id="locale-'+locale_name+'">'+tab_content+'</div>');
-			$('#locales_tabs_heads a:last').tab('show');
+			//$('#locales_tabs_heads a:last').tab('show');
+			$('#locales_tabs_heads').gtabs({
+				'pane_selector':'.tab-pane',
+				'tab_selector':'[data-g-toggle="tab"]',
+			});
+			$('#locales_tabs_heads').gtabs('get').show($('#locales_tabs_heads a:last'));
+			$('#locale_name').val('');
 		});
 	});
 	function remove_locale(id){
 		jQuery('#locale-'+id).remove();
 		jQuery('a[href="#locale-'+id+'"]').parent('li').remove();
-		jQuery('#locales_tabs_heads a:last').tab('show'); //activate last tab when page loads
+		//jQuery('#locales_tabs_heads a:last').tab('show'); //activate last tab when page loads
+		$('#locales_tabs_heads').gtabs('get').show($('#locales_tabs_heads a:last'));
 		jQuery('html, body').animate({
 			scrollTop: jQuery('#page_top').offset().top
 		}, 300);
@@ -298,14 +349,35 @@ jQuery(window).scroll(function(){
 					Element_Config.css('display', 'block');
 					$('#modal_generic_config').find('.modal-body').append(Element_Config);
 					$('#modal_generic_config').css('top', jQuery(window).scrollTop());
-					$('#modal_generic_config').modal();
-					$('#modal_generic_config').off('hide.bs.modal');
-					$('#modal_generic_config').on('hide.bs.modal', function(){
+					
+					if(Element_Config.find('.nav').length){
+						Element_Config.find('.nav').gtabs({
+							'pane_selector':'.tab-pane',
+							'tab_selector':'[data-g-toggle="tab"]',
+						});
+						//Element_Config.find('.nav').gtabs('get').show(Element_Config.find('.nav').find('a:first'));
+					}
+					$('#modal_generic_config').gmodal({
+						'close_selector' : '[data-g-dismiss="modal"]',
+					});
+					
+					$('#modal_generic_config').gmodal('open');
+					
+					//$('#modal_generic_config').off('close.gmodal');
+					$('#modal_generic_config').on('close.gmodal', function(){
+					//$('#modal_generic_config').modal();
+					//$('#modal_generic_config').off('hide.bs.modal');
+					//$('#modal_generic_config').on('hide.bs.modal', function(){
 						//HideEditor(Element_Config);
 						addMultiField(Element_Container);
 						Element_Config.css('display', 'none');
 						$('#wizard_page').append(Element_Config);
 					});
+					
+					$('#modal_generic_config').on('closed.gmodal', function(){
+						$('#modal_generic_config').off('close.gmodal');
+					});
+					
 				}else if(ui.draggable.attr('id') == 'container'){
 					addContainer($(this));
 				}else{
@@ -384,16 +456,34 @@ jQuery(window).scroll(function(){
 				$('#modal_generic_config').find('.modal-title').html('<?php echo l_('CF_EDIT_CONTAINER_SETTINGS'); ?>');
 				var Element_Config = Element.find('.config_box').first();
 				Element_Config.css('display', 'block');
+				/*
 				Element_Config.find('.nav > li').removeClass('active');
 				Element_Config.find('.nav > li:first-child').addClass('active');
 				Element_Config.find('.tab-content > div.tab-pane').removeClass('active');
 				Element_Config.find('.tab-content > div.tab-pane:first-child').addClass('active');
-				
+				*/
 				$('#modal_generic_config').find('.modal-body').append(Element_Config);
 				$('#modal_generic_config').css('top', jQuery(window).scrollTop());
-				$('#modal_generic_config').modal();
-				$('#modal_generic_config').off('hide.bs.modal');
-				$('#modal_generic_config').on('hide.bs.modal', function(){
+				
+				if(Element_Config.find('.nav').length){
+					Element_Config.find('.nav').gtabs({
+						'pane_selector':'.tab-pane',
+						'tab_selector':'[data-g-toggle="tab"]',
+					});
+					Element_Config.find('.nav').gtabs('get').show(Element_Config.find('.nav').find('a:first'));
+				}
+				
+				$('#modal_generic_config').gmodal({
+					'close_selector' : '[data-g-dismiss="modal"]',
+				});
+				
+				$('#modal_generic_config').gmodal('open');
+				
+				//$('#modal_generic_config').off('close.gmodal');
+				$('#modal_generic_config').on('close.gmodal', function(){
+				//$('#modal_generic_config').modal();
+				//$('#modal_generic_config').off('hide.bs.modal');
+				//$('#modal_generic_config').on('hide.bs.modal', function(){
 					HideEditor(Element_Config);
 					Element_Config.css('display', 'none');
 					Element.find('.fields_container').first().before(Element_Config);
@@ -401,7 +491,7 @@ jQuery(window).scroll(function(){
 					container_type.text($('#container_type_config_'+container_num).val());
 					if($('#container_type_config_'+container_num).val() == 'column'){
 						container.resizable({
-							stop: function(e, ui){console.log(ui.size.width/ui.element.parent().width());
+							stop: function(e, ui){
 								$('#' + ui.element.attr('id') + '_width').val(Math.floor((ui.size.width/ui.element.parent().width()) * 100));
 							},
 						});
@@ -410,11 +500,15 @@ jQuery(window).scroll(function(){
 						container.resizable('destroy');
 					}
 				});
+				
+				$('#modal_generic_config').on('closed.gmodal', function(){
+					$('#modal_generic_config').off('close.gmodal');
+				});
 			});
 
 			if(container.find('#container_type_config_'+ container.attr('container_num')).val() == 'column'){
 				container.resizable({
-					stop: function(e, ui){console.log(ui.size.width/ui.element.parent().width());
+					stop: function(e, ui){
 						$('#' + ui.element.attr('id') + '_width').val(Math.floor((ui.size.width/ui.element.parent().width()) * 100));
 					},
 				});
@@ -684,15 +778,28 @@ jQuery(window).scroll(function(){
 					$('#modal_generic_config').find('.modal-body').append(Element_Config);
 					$('#modal_generic_config').css('top', jQuery(window).scrollTop());
 
-					Element_Config.find('.nav > li').removeClass('active');
+					/*Element_Config.find('.nav > li').removeClass('active');
 					Element_Config.find('.nav > li:first-child').addClass('active');
 					Element_Config.find('.tab-content > div.tab-pane').removeClass('active');
-					Element_Config.find('.tab-content > div.tab-pane:first-child').addClass('active');
+					Element_Config.find('.tab-content > div.tab-pane:first-child').addClass('active');*/
 					$('#help_link').attr('href', 'http://www.chronoengine.com/chronoforms-wizard-help.html?term=' + Element.attr('item_id'));
-
-					$('#modal_generic_config').modal();
-					$('#modal_generic_config').off('hide.bs.modal');
-					$('#modal_generic_config').on('hide.bs.modal', function(){
+					
+					if(Element_Config.find('.nav').length){
+						Element_Config.find('.nav').gtabs({
+							'pane_selector':'.tab-pane',
+							'tab_selector':'[data-g-toggle="tab"]',
+						});
+						Element_Config.find('.nav').gtabs('get').show(Element_Config.find('.nav').find('a:first'));
+					}
+					
+					$('#modal_generic_config').gmodal({
+						'close_selector' : '[data-g-dismiss="modal"]',
+					});
+					
+					$('#modal_generic_config').gmodal('open');
+					
+					//$('#modal_generic_config').off('close.gmodal');
+					$('#modal_generic_config').on('close.gmodal', function(){
 						HideEditor(Element_Config);
 						Element_Config.css('display', 'none');
 						Element.append(Element_Config);
@@ -739,7 +846,10 @@ jQuery(window).scroll(function(){
 							//addLinks(Element);
 						});
 					});
-
+					
+					$('#modal_generic_config').on('closed.gmodal', function(){
+						$('#modal_generic_config').off('close.gmodal');
+					});
 				});
 
 				var deleteLink = $('<span/>', {
@@ -800,6 +910,95 @@ jQuery(window).scroll(function(){
 	//var ChronoformWizard = {};
 	//jQuery(document).ready(function($){
 	(function($){
+		//jsevents setup
+		
+		jQuery(document).ready(function($){
+			var jsevents_count = <?php echo (!empty($this->data['Form']['extras']['jsevents']) ? max(array_keys($this->data['Form']['extras']['jsevents'])) + 1 : 1); ?>;
+			$('.jsevent_source_item').draggable({
+				appendTo: 'body',
+				helper: 'clone',
+				start: function(event, ui){
+					pos_fixed = 0;            // we're about to start, set to not fixed yet
+				},
+				drag: function(event, ui){
+					if(pos_fixed == 0){       // check if the fix hasn't been fired for this instance yet
+						var help_pos = $(ui.helper).offset().top, // get helpers offset
+						targ_pos = $(event.target).offset().top,  // get targets(the dragged elements) offset
+						marg = targ_pos-help_pos; // calculate the margin the helper has to have to put it on the same y-position as our target
+						$(ui.helper).css('margin-top', marg); // put our helper on the same y-position as the target
+						pos_fixed = 1;            // we've fixed it, we don't want it to fire again
+					}
+				}
+			});
+			var $jsevent_drop_settings = {
+				activeClass: 'form-event-active',
+				hoverClass: 'form-event-hover',
+				accept: '.jsevent_source_item',
+				greedy: true,
+				tolerance: 'pointer',
+				drop: function(event, ui){
+					//addField($(this), ui.draggable.attr('id'));
+					var container = $(this);
+					var field_type = ui.draggable.attr('id');
+
+					//var $new_element = $('#'+field_type+'_origin').clone().removeAttr('id');
+					//$new_element.html($new_element.html().replace(/{N}/ig, fields_count));
+
+					var $new_element_config = ui.draggable.find('.jsevent_config').clone().addClass('panel-body');
+					$new_element_config.html($new_element_config.html().replace(/{N}/ig, jsevents_count));
+
+					//$new_element_config.find('[id^=container_id]').first().val(container_number);
+
+					//$new_element_config.css({'display':'none'});
+
+					//$new_element.addClass('panel-body');
+					var $new_element_box = $('<div/>', {'class':'jsevent_box panel panel-default', 'item_id':field_type});
+
+					var new_field_label = ($new_element_config.find('.element_field_name').length > 0) ? $new_element_config.find('.element_field_name').val() : field_type;
+
+					$new_element_box.append('<div class="panel-heading"><div class="pull-left"><span class="form_jsevent_label label label-primary">'+new_field_label+'</span><span class="label label-info jsevent_icon_number" style="">'+jsevents_count+'</span></div></div>');
+					var jsevent_icons = $('<div/>', {
+						'id':'jsevent_icons_'+jsevents_count,
+						'class':'jsevent_icons pull-right',
+					});
+					var deleteLink = $('<span/>', {
+						'class':'delete_icon jsevent_icon label label-danger',
+						'title':'<?php echo l_('CF_DELETE'); ?>',
+						'text':'<?php echo l_('CF_DELETE'); ?>',
+					});
+					deleteLink.on('click', function(){
+						deleteLink.closest('.jsevent_box').remove();
+					});
+					jsevent_icons.append(deleteLink);
+					$new_element_box.find('.panel-heading').append(jsevent_icons);
+					$new_element_box.find('.panel-heading').append('<div class="clearfix"></div>');
+					//$new_element_box.append($new_element);
+					$new_element_box.append($new_element_config);
+					//addLinks($new_element_box);
+					//$new_element_box.find('.panel-heading').append('<div class="clearfix"></div>');
+
+					container.append($new_element_box);
+					jsevents_count++;
+				}
+			}
+
+			function initialize_jsevents_droppables(){
+				$('.jsevents_container').droppable($jsevent_drop_settings).sortable({
+					items: 'div.jsevent_box',
+					containment:'parent',
+					axis:'y',
+					scroll:false,
+					//handle:'.drag_icon',
+				});
+				
+				$('.jsevents_container').find('.delete_icon').on('click', function(){
+					$(this).closest('.jsevent_box').remove();
+				});
+			}
+			initialize_jsevents_droppables();
+		});
+		//actions setup
+		
 		var action_count = <?php echo (!empty($this->data['Form']['extras']['actions_config']) ? max(array_keys($this->data['Form']['extras']['actions_config'])) + 1 : 0); ?>;
 
 		jQuery(document).ready(function($){
@@ -839,7 +1038,7 @@ jQuery(window).scroll(function(){
 			$('.action_icons .edit_icon').off('click');
 			$('.action_icons .edit_icon').on('click', function(){
 				var Element = $(this).closest('.form_action');
-				//$(this).closest('.form_action').find('.action_config').last().modal();
+				
 				$('#modal_generic_config').find('.modal-body').empty();
 				$('#modal_generic_config').find('.modal-title').html('<?php echo l_('CF_EDIT_ACTION_SETTINGS'); ?>:'+'&nbsp;'+$(this).closest('.panel-heading').find('.action-title-labels').html());
 				var Element_Config = Element.children('.panel-body').children('.action_config').last();
@@ -847,12 +1046,33 @@ jQuery(window).scroll(function(){
 				$('#modal_generic_config').find('.modal-body').append(Element_Config);
 				$('#modal_generic_config').css('top', jQuery(window).scrollTop());
 				$('#help_link').attr('href', 'http://www.chronoengine.com/chronoforms-wizard-help.html?term=' + Element.attr('item_id'));
-				$('#modal_generic_config').modal();
-				$('#modal_generic_config').off('hide.bs.modal');
-				$('#modal_generic_config').on('hide.bs.modal', function(){
+				
+				if(Element_Config.find('.nav').length){
+					Element_Config.find('.nav').gtabs({
+						'pane_selector':'.tab-pane',
+						'tab_selector':'[data-g-toggle="tab"]',
+					});
+					Element_Config.find('.nav').gtabs('get').show(Element_Config.find('.nav').find('a:first'));
+				}
+				
+				$('#modal_generic_config').gmodal({
+					'close_selector' : '[data-g-dismiss="modal"]',
+				});
+				
+				$('#modal_generic_config').gmodal('open');
+				
+				//$('#modal_generic_config').off('close.gmodal');
+				$('#modal_generic_config').on('close.gmodal', function(){
+				//$('#modal_generic_config').modal();
+				//$('#modal_generic_config').off('hide.bs.modal');
+				//$('#modal_generic_config').on('hide.bs.modal', function(){
 					HideEditor(Element_Config);
 					Element_Config.css('display', 'none');
 					Element.children('.panel-body').append(Element_Config);
+				});
+				
+				$('#modal_generic_config').on('closed.gmodal', function(){
+					$('#modal_generic_config').off('close.gmodal');
 				});
 			});
 
@@ -929,10 +1149,11 @@ jQuery(window).scroll(function(){
 			}
 		}
 	//})(jQuery);
+		//new event setup
 		jQuery(document).ready(function($){
 			ChronoformWizard.initialize_actions_droppables(ChronoformWizard.actions_drop_settings);
 			//handle new main events
-			$('#add_new_event').on('show.bs.modal', function () {
+			$('#add_new_event').on('open.gmodal', function () {
 				$('#new_event_name').val('');
 			})
 			$('#add_new_event_button').on('click', function(){
@@ -988,7 +1209,7 @@ jQuery(window).scroll(function(){
 </div>
 <div class="row">
 <form action="<?php echo r_('index.php?ext=chronoforms&act=save'); ?>" method="post" enctype="multipart/form-data" name="admin_form" id="admin_form">
-	<?php echo $this->Html->input('Form[id]', array('type' => 'hidden')); ?>
+	<?php echo $this->Html->input('Form[id]', array('type' => 'hidden', 'value' => 0)); ?>
 	<?php echo $this->Html->input('serialized_form_data', array('type' => 'textarea', 'id' => 'serialized_form_data', 'style' => 'display:none;')); ?>
 	<div id="serialized_form_chunks_area" style="display:none;">
 	</div>
@@ -1012,7 +1233,7 @@ jQuery(window).scroll(function(){
 						<?php echo $this->Html->formStart(); ?>
 						<?php echo $this->Html->formSecStart(); ?>
 						<?php echo $this->Html->formLine('Form[title]', array('type' => 'text', 'id' => 'cform_name', 'label' => l_('CF_FORM_NAME'), 'class' => 'L validate["required"]', 'sublabel' => l_('CF_FORM_NAME_DESC'))); ?>
-						<?php echo $this->Html->formLine('Form[params][description]', array('type' => 'text', 'label' => l_('CF_FORM_DESC'), 'class' => 'XL', 'sublabel' => l_('CF_FORM_DESC_DESC'))); ?>
+						<?php echo $this->Html->formLine('Form[params][description]', array('type' => 'textarea', 'label' => l_('CF_FORM_DESC'), 'rows' => 4, 'cols' => 70, 'sublabel' => l_('CF_FORM_DESC_DESC'))); ?>
 						<?php echo $this->Html->formLine('Form[published]', array('type' => 'dropdown', 'label' => l_('CF_PUBLISHED'), 'options' => array(0 => l_('NO'), 1 => l_('YES')), 'values' => 1)); ?>
 						<?php echo $this->Html->formLine('Form[params][setup]', array('type' => 'dropdown', 'id' => 'cform_setup', 'label' => l_('CF_SETUP_MODE'), 'values' => (!empty($this->data['setup']) ? 1 : 0), 'options' => array(0 => l_('CF_ADVANCED'), 1 => l_('CF_SIMPLE')), 'sublabel' => l_('CF_SETUP_MODE_DESC'))); ?>
 						<?php //echo $this->Html->formLine('Form[params][html_helper_set]', array('type' => 'dropdown', 'label' => l_('CF_DESIGNER_SET'), 'options' => array('div' => 'DIV', 'table' => 'TABLE', 'ul' => 'UL'), 'sublabel' => l_('CF_DESIGNER_SET_DESC'))); ?>
@@ -1031,191 +1252,296 @@ jQuery(window).scroll(function(){
 					</div>
 					<div id="layout-wizard" class="tab-pane">
 						<div id="wizard-area" class="actions_tabs">
-							<div id="designer-container" class="container" style="width:100%;">
-								<div class="row">
-									<?php
-										$foptions = array();
-										$field_cats = array('basic' => l_('CF_BASIC'));
-										foreach($fields_types as $type){
-											$class = '\GCore\Admin\Extensions\Chronoforms\Fields\\'.\GCore\Libs\Str::camilize($type).'\\'.\GCore\Libs\Str::camilize($type);
-											$foptions[$type] = $class::$title;
-											if(!empty($class::$cat_id)){
-												$field_cats[$class::$cat_id] = $class::$cat_title;
-											}
-										}
-										//$foptions['multi_field'] = l_('CF_MULTI_FIELD');
-										$groups_ids = array_keys($field_cats);
-										$first_group_id = $groups_ids[0];
-									?>
-									<div id="fields_list" class="col-md-2">
-										<div class="panel-group" id="fields-accordion">
-											<?php foreach($field_cats as $group_id => $group): ?>
-												<div class="panel panel-default">
-													<div class="panel-heading" style="padding:4px 15px;">
-														<h4 class="panel-title">
-															<a data-g-toggle="collapse" data-g-parent="#fields-accordion" href="#collapse-<?php echo $group_id; ?>"><?php echo $group; ?></a>
-														</h4>
-													</div>
-													<div id="collapse-<?php echo $group_id; ?>" class="panel-collapse<?php if($group_id == $first_group_id): ?> in<?php else: ?> collapse<?php endif; ?>">
-														<div class="panel-body">
-														<?php foreach($foptions as $field => $field_title): ?>
-															<?php $field_class = '\GCore\Admin\Extensions\Chronoforms\Fields\\'.\GCore\Libs\Str::camilize($field).'\\'.\GCore\Libs\Str::camilize($field); ?>
-															<?php if(class_exists($field_class) AND !empty($field_class::$cat_id) AND $field_class::$cat_id != $group_id)continue; ?>
-															<div class="field_source_item" id="<?php echo $field; ?>" title="<?php echo $field_title; ?>" style="margin:1px;">
-																<span class="btn btn-primary btn-xs btn-block"><?php echo $field_title; ?></span>
-																<?php
-																	if(class_exists($field_class)){
-																		$field_class::config();
-																	}
-																?>
+							<div class="panel panel-default">
+								<div class="panel-heading">
+									<ul class="nav nav-tabs">
+										<li class="active"><a href="#designer-layout" data-g-toggle="tab"><?php echo l_('CF_DESIGNER_LAYOUT'); ?></a></li>
+										<li><a href="#designer-events" data-g-toggle="tab"><?php echo l_('CF_DESIGNER_EVENTS'); ?></a></li>
+									</ul>
+								</div>
+								<div class="panel-body">
+									<div class="tab-content">
+										<div id="designer-layout" class="tab-pane active">
+										<div id="designer-container" class="container" style="width:100%;">
+											<div class="row">
+												<?php
+													$foptions = array();
+													$field_cats = array('basic' => l_('CF_BASIC'));
+													foreach($fields_types as $type){
+														$class = '\GCore\Admin\Extensions\Chronoforms\Fields\\'.\GCore\Libs\Str::camilize($type).'\\'.\GCore\Libs\Str::camilize($type);
+														$foptions[$type] = $class::$title;
+														if(!empty($class::$cat_id)){
+															$field_cats[$class::$cat_id] = $class::$cat_title;
+														}
+													}
+													//$foptions['multi_field'] = l_('CF_MULTI_FIELD');
+													$groups_ids = array_keys($field_cats);
+													$first_group_id = $groups_ids[0];
+												?>
+												<div id="fields_list" class="col-md-2">
+													<div class="panel-group" id="fields-accordion">
+														<?php foreach($field_cats as $group_id => $group): ?>
+															<div class="panel panel-default">
+																<div class="panel-heading" style="padding:4px 15px;">
+																	<h4 class="panel-title">
+																		<a data-g-toggle="collapse" data-g-parent="#fields-accordion" href="#collapse-<?php echo $group_id; ?>"><?php echo $group; ?></a>
+																	</h4>
+																</div>
+																<div id="collapse-<?php echo $group_id; ?>" class="panel-collapse<?php if($group_id == $first_group_id): ?> in<?php else: ?> collapse<?php endif; ?>">
+																	<div class="panel-body">
+																	<?php foreach($foptions as $field => $field_title): ?>
+																		<?php $field_class = '\GCore\Admin\Extensions\Chronoforms\Fields\\'.\GCore\Libs\Str::camilize($field).'\\'.\GCore\Libs\Str::camilize($field); ?>
+																		<?php if(class_exists($field_class) AND !empty($field_class::$cat_id) AND $field_class::$cat_id != $group_id)continue; ?>
+																		<div class="field_source_item" id="<?php echo $field; ?>" title="<?php echo $field_title; ?>" style="margin:1px;">
+																			<span class="btn btn-primary btn-xs btn-block"><?php echo $field_title; ?></span>
+																			<?php
+																				if(class_exists($field_class)){
+																					$field_class::config();
+																				}
+																			?>
+																		</div>
+																	<?php endforeach; ?>
+																	</div>
+																</div>
 															</div>
 														<?php endforeach; ?>
-														</div>
 													</div>
 												</div>
-											<?php endforeach; ?>
-										</div>
-									</div>
-									<div class="fields_panel col-md-10">
-										<div id="preview" container_num="0" class="fields_container alert alert-info">
-											<?php
-												$containers_ids = array();
-												$config_templates = array();
-												if(!empty($this->data['Form']['extras']['fields'])){
-													foreach($this->data['Form']['extras']['fields'] as $f_k => $f_info){
-														if(strpos($f_k, '{N}') !== false){
-															unset($this->data['Form']['extras']['fields'][$f_k]);
-														}
-													}
-													//pr($this->data['Form']['extras']['fields']);
-													foreach($this->data['Form']['extras']['fields'] as $k => $wizard_field){
-														$type = isset($wizard_field['render_type']) ? $wizard_field['render_type'] : $wizard_field['type'];
-														$class = '\GCore\Admin\Extensions\Chronoforms\Fields\\'.\GCore\Libs\Str::camilize($type).'\\'.\GCore\Libs\Str::camilize($type);
+												<div class="fields_panel col-md-10">
+													<div id="preview" container_num="0" class="fields_container alert alert-info">
+														<?php
+															$containers_ids = array();
+															$config_templates = array();
+															if(!empty($this->data['Form']['extras']['fields'])){
+																foreach($this->data['Form']['extras']['fields'] as $f_k => $f_info){
+																	if(strpos($f_k, '{N}') !== false){
+																		unset($this->data['Form']['extras']['fields'][$f_k]);
+																	}
+																}
+																//pr($this->data['Form']['extras']['fields']);
+																foreach($this->data['Form']['extras']['fields'] as $k => $wizard_field){
+																	$type = isset($wizard_field['render_type']) ? $wizard_field['render_type'] : $wizard_field['type'];
+																	$class = '\GCore\Admin\Extensions\Chronoforms\Fields\\'.\GCore\Libs\Str::camilize($type).'\\'.\GCore\Libs\Str::camilize($type);
 
-														if(!class_exists($class)){
-															continue;
-														}
-														if($wizard_field['type'] == 'container'){
-															//if this container is also a root container then close existing ones
-															if($wizard_field['container_id'] == 0){
-																//close all open containers
-																foreach($containers_ids as $containers_id){
-																	array_pop($containers_ids);
-																	//close container div and panel-body
+																	if(!class_exists($class)){
+																		continue;
+																	}
+																	if($wizard_field['type'] == 'container'){
+																		//if this container is also a root container then close existing ones
+																		if($wizard_field['container_id'] == 0){
+																			//close all open containers
+																			foreach($containers_ids as $containers_id){
+																				array_pop($containers_ids);
+																				//close container div and panel-body
+																				echo '</div></div>';
+																			}
+																		}else{
+																			//this container is a child of another container
+																			check_parent_container:
+																			if(!empty($containers_ids)){
+																				$last_container_id = array_pop($containers_ids);
+																				if($wizard_field['container_id'] == $last_container_id){
+																					//do nothing, we should add the field as regular
+																					array_push($containers_ids, $last_container_id);
+																				}else{
+																					//one container has just ended, because the element belongs to a differnt one, close it
+																					//close container div and panel-body
+																					echo '</div></div>';
+																					goto check_parent_container;
+																				}
+																			}
+																		}
+																		echo '<div class="fields_container_area element_box panel panel-success" id="fields_container_'.$k.'" container_num="'.$k.'" item_id="container" style="'.(($wizard_field['container_type'] == 'column') ? 'width:'.$wizard_field['size']['width'].'%' : '').'">';
+																		$container_heading = '
+																			<div class="panel-heading">
+																				<div class="pull-left">
+																					<span class="form_field_label container_label label label-primary">'.$wizard_field['label'].'</span>
+																					<span style="" class="label label-info action_icon_number">'.$k.'</span>
+																					<span style="" class="label label-info action_icon_number container_type">'.$wizard_field['container_type'].'</span>
+																				</div>
+																				<div id="field_icons_'.$k.'" class="field_icons pull-right">';
+																		$container_heading .= '<span class="paste_icon paste_container_icon action_icon label label-default" title="'.l_('CF_PASTE').'">'.l_('CF_PASTE').'</span>';
+																		$container_heading .= '<span class="collapse_icon collapse_container_icon action_icon label label-default" title="'.l_('CF_COLLAPSE').'">'.l_('CF_COLLAPSE').'</span>';
+																		$container_heading .= '<span class="edit_icon edit_container_icon action_icon label label-primary" title="'.l_('CF_EDIT').'">'.l_('CF_EDIT').'</span>';
+																		$container_heading .= '<span class="drag_icon action_icon label label-warning" title="'.l_('CF_DRAG').'">'.l_('CF_DRAG').'</span>';
+																		$container_heading .= '<span class="delete_icon delete_container_icon action_icon label label-danger" title="'.l_('CF_DELETE').'">'.l_('CF_DELETE').'</span>';
+																		$container_heading .= '</div>
+																				<div class="clearfix"></div>
+																			</div>';
+																		echo $container_heading;
+																		$class::config($wizard_field, $k);
+																		echo '<div container_num="'.$k.'" class="fields_container panel-body">';
+																		array_push($containers_ids, $k);
+																	}else{
+																		if(isset($wizard_field['container_id'])){
+																			if($wizard_field['container_id'] == 0){
+																				//close all open containers
+																				foreach($containers_ids as $containers_id){
+																					array_pop($containers_ids);
+																					//close container div and panel-body
+																					echo '</div></div>';
+																				}
+																			}else{
+																				check_container:
+																				if(!empty($containers_ids)){
+																					$last_container_id = array_pop($containers_ids);
+																					if($wizard_field['container_id'] == $last_container_id){
+																						//do nothing, we should add the field as regular
+																						array_push($containers_ids, $last_container_id);
+																					}else{
+																						//one container has just ended, because the element belongs to a differnt one, close it
+																						//close container div and panel-body
+																						echo '</div></div>';
+																						goto check_container;
+																					}
+																				}
+																			}
+																		}
+																		echo '<div class="element_box field_box panel panel-'.(($wizard_field['type'] == 'multi') ? 'warning' : 'default').'" item_id="'.$wizard_field['type'].'">';
+																		if(isset($wizard_field['name'])){
+																			$element_title = $wizard_field['name'];
+																		}else{
+																			$element_title = $wizard_field['type'];
+																		}
+																		echo '
+																			<div class="panel-heading">
+																				<div class="pull-left">
+																					<span class="form_field_label label label-primary">'.$element_title.'</span>
+																					<span style="" class="label label-info field_icon_number">'.$k.'</span>
+																				</div>
+																			</div>';
+																		$element_info = $wizard_field;
+																		if(isset($element_info['options'])){
+																			$options = array();
+																			if(!empty($element_info['options'])){
+																				$lines = explode("\n", $element_info['options']);
+																				foreach($lines as $line){
+																					$opts = explode("=", $line);
+																					$options[$opts[0]] = isset($opts[1]) ? $opts[1] : $opts[0];
+																				}
+																			}
+																			$element_info['options'] = $options;
+																		}
+																		if(isset($element_info['values'])){
+																			$values = array();
+																			if(!empty($element_info['values'])){
+																				$values = explode("\n", $element_info['values']);
+																			}
+																			$element_info['values'] = $values;
+																		}
+																		$class::element($element_info);
+																		ob_start();
+																		if(count($this->data['Form']['extras']['fields']) <= $chronoforms_settings->get('wizard.safe_loading_fields_count', 20)){
+																			$class::config($wizard_field, $k);
+																		}else{
+																			echo '<div class="field_config_replacer" field_id="'.$k.'"></div>';
+																		}
+																		$element_config = ob_get_clean();
+																		echo str_replace('{N}', $k, $element_config);
+																		echo '</div>';
+																	}
+																}
+																//close any empty containers with no fields after them
+																while($container_id = array_pop($containers_ids)){
 																	echo '</div></div>';
 																}
-															}else{
-																//this container is a child of another container
-																check_parent_container:
-																if(!empty($containers_ids)){
-																	$last_container_id = array_pop($containers_ids);
-																	if($wizard_field['container_id'] == $last_container_id){
-																		//do nothing, we should add the field as regular
-																		array_push($containers_ids, $last_container_id);
-																	}else{
-																		//one container has just ended, because the element belongs to a differnt one, close it
-																		//close container div and panel-body
-																		echo '</div></div>';
-																		goto check_parent_container;
-																	}
-																}
 															}
-															echo '<div class="fields_container_area element_box panel panel-success" id="fields_container_'.$k.'" container_num="'.$k.'" item_id="container">';
-															$container_heading = '
-																<div class="panel-heading">
-																	<div class="pull-left">
-																		<span class="form_field_label container_label label label-primary">'.$wizard_field['label'].'</span>
-																		<span style="" class="label label-info action_icon_number">'.$k.'</span>
-																		<span style="" class="label label-info action_icon_number container_type">'.$wizard_field['container_type'].'</span>
-																	</div>
-																	<div id="field_icons_'.$k.'" class="field_icons pull-right">';
-															$container_heading .= '<span class="paste_icon paste_container_icon action_icon label label-default" title="'.l_('CF_PASTE').'">'.l_('CF_PASTE').'</span>';
-															$container_heading .= '<span class="collapse_icon collapse_container_icon action_icon label label-default" title="'.l_('CF_COLLAPSE').'">'.l_('CF_COLLAPSE').'</span>';
-															$container_heading .= '<span class="edit_icon edit_container_icon action_icon label label-primary" title="'.l_('CF_EDIT').'">'.l_('CF_EDIT').'</span>';
-															$container_heading .= '<span class="drag_icon action_icon label label-warning" title="'.l_('CF_DRAG').'">'.l_('CF_DRAG').'</span>';
-															$container_heading .= '<span class="delete_icon delete_container_icon action_icon label label-danger" title="'.l_('CF_DELETE').'">'.l_('CF_DELETE').'</span>';
-															$container_heading .= '</div>
-																	<div class="clearfix"></div>
-																</div>';
-															echo $container_heading;
-															$class::config($wizard_field, $k);
-															echo '<div container_num="'.$k.'" class="fields_container panel-body">';
-															array_push($containers_ids, $k);
-														}else{
-															if(isset($wizard_field['container_id'])){
-																if($wizard_field['container_id'] == 0){
-																	//close all open containers
-																	foreach($containers_ids as $containers_id){
-																		array_pop($containers_ids);
-																		//close container div and panel-body
-																		echo '</div></div>';
-																	}
-																}else{
-																	check_container:
-																	if(!empty($containers_ids)){
-																		$last_container_id = array_pop($containers_ids);
-																		if($wizard_field['container_id'] == $last_container_id){
-																			//do nothing, we should add the field as regular
-																			array_push($containers_ids, $last_container_id);
-																		}else{
-																			//one container has just ended, because the element belongs to a differnt one, close it
-																			//close container div and panel-body
-																			echo '</div></div>';
-																			goto check_container;
-																		}
-																	}
-																}
-															}
-															echo '<div class="element_box field_box panel panel-'.(($wizard_field['type'] == 'multi') ? 'warning' : 'default').'" item_id="'.$wizard_field['type'].'">';
-															if(isset($wizard_field['name'])){
-																$element_title = $wizard_field['name'];
-															}else{
-																$element_title = $wizard_field['type'];
-															}
-															echo '
-																<div class="panel-heading">
-																	<div class="pull-left">
-																		<span class="form_field_label label label-primary">'.$element_title.'</span>
-																		<span style="" class="label label-info field_icon_number">'.$k.'</span>
-																	</div>
-																</div>';
-															$element_info = $wizard_field;
-															if(isset($element_info['options'])){
-																$options = array();
-																if(!empty($element_info['options'])){
-																	$lines = explode("\n", $element_info['options']);
-																	foreach($lines as $line){
-																		$opts = explode("=", $line);
-																		$options[$opts[0]] = isset($opts[1]) ? $opts[1] : $opts[0];
-																	}
-																}
-																$element_info['options'] = $options;
-															}
-															if(isset($element_info['values'])){
-																$values = array();
-																if(!empty($element_info['values'])){
-																	$values = explode("\n", $element_info['values']);
-																}
-																$element_info['values'] = $values;
-															}
-															$class::element($element_info);
-															ob_start();
-															if(count($this->data['Form']['extras']['fields']) <= $chronoforms_settings->get('wizard.safe_loading_fields_count', 20)){
-																$class::config($wizard_field, $k);
-															}else{
-																echo '<div class="field_config_replacer" field_id="'.$k.'"></div>';
-															}
-															$element_config = ob_get_clean();
-															echo str_replace('{N}', $k, $element_config);
-															echo '</div>';
+														?>
+													</div>
+												</div>
+											</div>
+										</div>
+										</div>
+										<div id="designer-events" class="tab-pane">
+											<div class="row">
+												<?php
+													$jseoptions = array();
+													$jsevents_cats = array('basic' => l_('CF_BASIC'));
+													foreach($jsevents_types as $type){
+														$class = '\GCore\Admin\Extensions\Chronoforms\Events\\'.\GCore\Libs\Str::camilize($type).'\\'.\GCore\Libs\Str::camilize($type);
+														$jseoptions[$type] = $class::$title;
+														if(!empty($class::$cat_id)){
+															$jsevents_cats[$class::$cat_id] = $class::$cat_title;
 														}
 													}
-													//close any empty containers with no fields after them
-													while($container_id = array_pop($containers_ids)){
-														echo '</div></div>';
-													}
-												}
-											?>
+													//$jseoptions['multi_field'] = l_('CF_MULTI_FIELD');
+													$groups_ids = array_keys($jsevents_cats);
+													$first_group_id = $groups_ids[0];
+												?>
+												<div id="jsevents_list" class="col-md-2">
+													<div class="panel-group" id="jsevents-accordion">
+														<?php foreach($jsevents_cats as $group_id => $group): ?>
+															<div class="panel panel-default">
+																<div class="panel-heading" style="padding:4px 15px;">
+																	<h4 class="panel-title">
+																		<a data-g-toggle="collapse" data-g-parent="#jsevents-accordion" href="#collapse-<?php echo $group_id; ?>"><?php echo $group; ?></a>
+																	</h4>
+																</div>
+																<div id="collapse-<?php echo $group_id; ?>" class="panel-collapse<?php if($group_id == $first_group_id): ?> in<?php else: ?> collapse<?php endif; ?>">
+																	<div class="panel-body">
+																	<?php foreach($jseoptions as $jsevent => $jsevent_title): ?>
+																		<?php $jsevent_class = '\GCore\Admin\Extensions\Chronoforms\Events\\'.\GCore\Libs\Str::camilize($jsevent).'\\'.\GCore\Libs\Str::camilize($jsevent); ?>
+																		<?php if(class_exists($jsevent_class) AND !empty($jsevent_class::$cat_id) AND $jsevent_class::$cat_id != $group_id)continue; ?>
+																		<div class="jsevent_source_item" id="<?php echo $jsevent; ?>" title="<?php echo $jsevent_title; ?>" style="margin:1px;">
+																			<span class="btn btn-primary btn-xs btn-block"><?php echo $jsevent_title; ?></span>
+																			<?php
+																				if(class_exists($jsevent_class)){
+																					$jsevent_class = new $jsevent_class(!empty($this->data['Form']['extras']) ? $this->data['Form']['extras'] : array());
+																					$jsevent_class::config();
+																				}
+																			?>
+																		</div>
+																	<?php endforeach; ?>
+																	</div>
+																</div>
+															</div>
+														<?php endforeach; ?>
+													</div>
+												</div>
+												<div class="jsevents_panel col-md-10">
+													<div id="jsevents" container_num="0" class="jsevents_container alert alert-warning">
+														<?php
+															if(!empty($this->data['Form']['extras']['jsevents'])){
+																foreach($this->data['Form']['extras']['jsevents'] as $f_k => $f_info){
+																	if(strpos($f_k, '{N}') !== false){
+																		unset($this->data['Form']['extras']['jsevents'][$f_k]);
+																	}
+																}
+																//pr($this->data['Form']['extras']['jsevents']);
+																//pr($this->data['Form']['extras']['fields']);
+																foreach($this->data['Form']['extras']['jsevents'] as $k => $wizard_jsevent){
+																	$type = $wizard_jsevent['type'];
+																	$class = '\GCore\Admin\Extensions\Chronoforms\Events\\'.\GCore\Libs\Str::camilize($type).'\\'.\GCore\Libs\Str::camilize($type);
+																	if(!class_exists($class)){
+																		continue;
+																	}
+																	$class = new $class($this->data['Form']['extras']);
+																	echo '<div class="jsevent_box panel panel-default">';
+																	echo '
+																		<div class="panel-heading">
+																			<div class="pull-left">
+																				<span class="form_jsevent_label label label-primary">'.$class::$title.'</span>
+																				<span style="" class="label label-info jsevent_icon_number">'.$k.'</span>
+																			</div>
+																			<div id="jsevent_icons_'.$k.'" class="jsevent_icons pull-right">
+																				<span class="delete_icon jsevent_icon label label-danger" title="'.l_('CF_DELETE').'">'.l_('CF_DELETE').'</span>
+																			</div>
+																			<div class="clearfix"></div>
+																		</div>
+																		';
+																	echo '<div class="jsevent_config panel-body">';
+																	ob_start();
+																	$class::config($wizard_jsevent, $k);
+																	$element_config = ob_get_clean();
+																	echo str_replace('{N}', $k, $element_config);
+																	echo '</div>';
+																	echo '</div>';
+																}
+															}
+														?>
+													</div>
+												</div>
+											</div>
 										</div>
 									</div>
 								</div>
@@ -1393,7 +1719,7 @@ jQuery(window).scroll(function(){
 									<?php echo $this->DnaBuilder->build($info, 'Form[extras][DNA]['.$event.']', isset($this->data['Form']['extras']['actions_config']) ? $this->data['Form']['extras']['actions_config'] : array()); ?>
 								</div>
 								<?php endforeach; ?>
-								<button class="btn btn-success" data-g-toggle="modal" data-g-target="#add_new_event" id="add_new_event_modal_toggler" onclick="jQuery('#add_new_event').css('top', jQuery(window).scrollTop());">
+								<button type="button" class="btn btn-success" data-g-toggle="modal" data-g-target="#add_new_event" id="add_new_event_modal_toggler" onclick="jQuery('#add_new_event').css('top', jQuery(window).scrollTop());">
 									<?php echo l_('CF_ADD_NEW_EVENT'); ?>
 								</button>
 								<br>
@@ -1421,7 +1747,7 @@ jQuery(window).scroll(function(){
 						</div>
 					</div>
 					<div id="locales" class="tab-pane">
-						<button class="btn btn-success" data-g-toggle="modal" data-g-target="#add_new_locale">
+						<button type="button" class="btn btn-success" data-g-toggle="modal" data-g-target="#add_new_locale">
 							<?php echo l_('CF_ADD_NEW_LOCALE'); ?>
 						</button>
 						<br>
@@ -1499,8 +1825,8 @@ jQuery(window).scroll(function(){
 					<div id="style" class="tab-pane">
 						<?php echo $this->Html->formStart(); ?>
 						<?php echo $this->Html->formSecStart(); ?>
-						<?php echo $this->Html->formLine('Form[params][theme]', array('type' => 'dropdown', 'id' => 'cform_bootstrap', 'label' => l_('CF_FORM_THEME'), 'values' => 'bootstrap3', 'options' => array('gcoreui' => l_('GCoreUI'), 'bootstrap3' => l_('Bootstrap3'), 'none' => l_('CF_NONE')/*, 'semantic1' => l_('Semantic 1')*/), 'sublabel' => l_('CF_FORM_THEME_DESC'))); ?>
-						<?php echo $this->Html->formLine('Form[params][responsive_layout]', array('type' => 'dropdown', 'label' => l_('CF_RESPONSIVE_LAYOUT'), 'options' => array(0 => l_('NO'), 1 => l_('YES')), 'sublabel' => l_('CF_RESPONSIVE_LAYOUT_DESC'))); ?>
+						<?php echo $this->Html->formLine('Form[params][theme]', array('type' => 'dropdown', 'id' => 'cform_bootstrap', 'label' => l_('CF_FORM_THEME'), 'values' => 'bootstrap3', 'options' => array('gcoreui' => l_('GCoreUI'), 'bootstrap3' => l_('Bootstrap3'), 'bootstrap3_pure' => l_('Pure Bootstrap3'), 'none' => l_('CF_NONE')/*, 'semantic1' => l_('Semantic 1')*/), 'sublabel' => l_('CF_FORM_THEME_DESC'))); ?>
+						<?php //echo $this->Html->formLine('Form[params][responsive_layout]', array('type' => 'dropdown', 'label' => l_('CF_RESPONSIVE_LAYOUT'), 'options' => array(0 => l_('NO'), 1 => l_('YES')), 'sublabel' => l_('CF_RESPONSIVE_LAYOUT_DESC'))); ?>
 						<?php echo $this->Html->formLine('Form[params][tight_layout]', array('type' => 'dropdown', 'label' => l_('CF_TIGHT_LAYOUT'), 'options' => array(0 => l_('NO'), 1 => l_('YES')), 'sublabel' => l_('CF_TIGHT_LAYOUT_DESC'))); ?>
 						<?php echo $this->Html->formLine('Form[params][rtl_support]', array('type' => 'dropdown', 'label' => l_('CF_RTL_SUPPORT'), 'options' => array(0 => l_('NO'), 1 => l_('YES')), 'sublabel' => l_('CF_RTL_SUPPORT_DESC'))); ?>
 						<?php echo $this->Html->formLine('Form[params][labels_right_aligned]', array('type' => 'dropdown', 'label' => l_('CF_LABELS_RIGHT_ALIGNED'), 'options' => array(0 => l_('NO'), 1 => l_('YES')), 'sublabel' => l_('CF_LABELS_RIGHT_ALIGNED_DESC'))); ?>
@@ -1535,6 +1861,7 @@ jQuery(window).scroll(function(){
 							'lv' => 'Latvian', 
 							'sl' => 'Slovenščina', 
 							'sk' => 'Slovak', 
+							'sv' => 'Swedish', 
 							'cz' => 'Čeština', 
 							'th' => 'Thai'
 						), 

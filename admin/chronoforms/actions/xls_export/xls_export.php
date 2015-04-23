@@ -34,7 +34,8 @@ Class XlsExport extends \GCore\Admin\Extensions\Chronoforms\Action{
 		}
 
 		$data_path = trim($config->get('data_path', ''));
-		$data = \GCore\Libs\Arr::getVal($form->data, explode('.', $data_path));
+		$data_path = !empty($data_path) ? explode('.', $data_path) : array();
+		$data = \GCore\Libs\Arr::getVal($form->data, $data_path);
 
 		if(!empty($data) AND is_array($data)){
 			$data = array_values($data);

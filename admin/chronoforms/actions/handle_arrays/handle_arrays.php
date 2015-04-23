@@ -13,12 +13,15 @@ Class HandleArrays extends \GCore\Admin\Extensions\Chronoforms\Action{
 	static $title = 'Handle Arrays';
 	var $defaults = array(
 		'enabled' => 1,
+		'skip_associative' => 1,
 	);
+	var $config;
 
 	public static function config(){
 		echo \GCore\Helpers\Html::formStart('action_config handle_arrays_action_config', 'handle_arrays_action_config_{N}');
 		echo \GCore\Helpers\Html::formSecStart();
 		echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][enabled]', array('type' => 'dropdown', 'label' => l_('CF_ENABLED'), 'options' => array(0 => l_('NO'), 1 => l_('YES'))));
+		echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][skip_associative]', array('type' => 'dropdown', 'label' => l_('CF_HANDLE_ARRAYS_SKIP_ASSOCIATIVE'), 'values' => 1, 'options' => array(0 => l_('NO'), 1 => l_('YES')), 'sublabel' => l_('CF_HANDLE_ARRAYS_SKIP_ASSOCIATIVE_DESC')));
 		echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][fields_list]', array('type' => 'text', 'label' => l_('CF_FIELDS_LIST'), 'class' => 'XL', 'sublabel' => l_('CF_FIELDS_LIST_DESC')));
 		echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][delimiter]', array('type' => 'text', 'label' => l_('CF_DELIMITER'), 'value' => ',', 'class' => 'SS', 'sublabel' => l_('CF_DELIMITER_DESC')));
 		echo \GCore\Helpers\Html::formLine('Form[extras][actions_config][{N}][skipped]', array('type' => 'text', 'label' => l_('CF_SKIPPED_FIELDS'), 'class' => 'XL', 'sublabel' => l_('CF_SKIPPED_FIELDS_DESC')));
@@ -28,7 +31,7 @@ Class HandleArrays extends \GCore\Admin\Extensions\Chronoforms\Action{
 
 	function execute(&$form, $action_id){
 		$config =  $form->actions_config[$action_id];
-		$config = new \GCore\Libs\Parameter($config);
+		$this->config = $config = new \GCore\Libs\Parameter($config);
 		if((bool)$config->get('enabled', 0) === false){
 			return;
 		}
@@ -60,6 +63,11 @@ Class HandleArrays extends \GCore\Admin\Extensions\Chronoforms\Action{
 	function array_handler($data = array(), $skipped = array(), $del = ','){
 		foreach($data as $name => $value){
 			if(is_array($value) AND !in_array($name, $skipped)){
+				if($this->config->get('skip_associative', 1) AND \GCore\Libs\Arr::is_assoc($value)){
+					$value = $this->array_handler($value, $skipped, $del);
+					$data[$name] = $value;
+					continue;
+				}
 				$value = $this->array_handler($value, $skipped, $del);
 				$data[$name] = implode($del, $value);
 			}

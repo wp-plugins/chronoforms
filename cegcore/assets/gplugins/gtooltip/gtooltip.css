@@ -1,23 +1,25 @@
 .gtooltip {
 	background-color: #000;
-	border: 1px solid #666666;
-	color: #fff !important;
+	border: 1px solid #000;
+	color: #fff;
 	font-size: 1em;
-	line-height: 1.3em;
+	font-weight:normal;
+	/*line-height: 1.3em;*/
 	margin: 0px auto;
 	padding: 10px;
 	position: absolute;
+	opacity:0.9;
 	/*text-align: center;*/
-	z-index:999999999;
+	z-index:3000;
 	width: auto;
-	min-width: 150px;
+	/*min-width: 150px;*/
 	max-width:300px;
 	border-radius: 0.2em;
 	-moz-border-radius: 0.2em;
 	-webkit-border-radius: 0.2em;
-	box-shadow: 0 0 5px #888888;
-	-moz-box-shadow: 0 0 5px #888888;
-	-webkit-box-shadow: 0 0 5px #888888;
+	box-shadow: 0 0 5px #DDDDDD;
+	-moz-box-shadow: 0 0 5px #DDDDDD;
+	-webkit-box-shadow: 0 0 5px #DDDDDD;
 }
 
 .gtooltip-arrow-border {
@@ -28,28 +30,28 @@
 	position: absolute;
 }
 .gtooltip-arrow-border-top {
-	border-color: #666666 transparent transparent transparent;
+	border-color: transparent transparent transparent transparent;
 	border-style: solid solid none solid;
 	border-width: 10px 10px 0px 10px;
 	bottom: -11px;
 	left: 30px;
 }
 .gtooltip-arrow-border-bottom {
-	border-color: transparent transparent #666666 transparent;
+	border-color: transparent transparent transparent transparent;
 	border-style: none solid solid solid;
 	border-width: 0px 10px 10px 10px;
 	top: -11px;
 	left: 30px;
 }
 .gtooltip-arrow-border-right {
-	border-color: transparent #666666 transparent transparent;
+	border-color: transparent transparent transparent transparent;
 	border-style: solid solid solid none;
 	border-width: 10px 10px 10px 0px;
 	top: 0px;
 	left: -11px;
 }
 .gtooltip-arrow-border-left {
-	border-color: transparent transparent transparent #666666;
+	border-color: transparent transparent transparent transparent;
 	border-style: solid none solid solid;
 	border-width: 10px 0px 10px 10px;
 	top: 0px;
@@ -64,28 +66,28 @@
 	position: absolute;
 }
 .gtooltip-arrow-top {
-	border-color: #000 transparent transparent transparent;
+	border-color: transparent transparent transparent transparent;
 	border-style: solid solid none solid;
 	border-width: 10px 10px 0px 10px;
 	bottom: -9px;
 	left: 30px;
 }
 .gtooltip-arrow-bottom {
-	border-color: transparent transparent #000 transparent;
+	border-color: transparent transparent transparent transparent;
 	border-style: none solid solid solid;
 	border-width: 0px 10px 10px 10px;
 	top: -9px;
 	left: 30px;
 }
 .gtooltip-arrow-right {
-	border-color: transparent #000 transparent transparent;
+	border-color: transparent transparent transparent transparent;
 	border-style: solid solid solid none;
 	border-width: 10px 10px 10px 0px;
 	top: 0px;
 	left: -9px;
 }
 .gtooltip-arrow-left {
-	border-color: transparent transparent transparent #000;
+	border-color: transparent transparent transparent transparent;
 	border-style: solid none solid solid;
 	border-width: 10px 0px 10px 10px;
 	top: 0px;

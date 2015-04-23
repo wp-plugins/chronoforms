@@ -18,7 +18,7 @@ class Captcha {
 		'type' => 'multi',
 		'name' => 'captcha',
 		'id' => 'captcha',
-		'label' => 'Captcha',
+		'label' => '',
 		'sublabel' => '',
 		'class' => '',
 		'title' => '',
@@ -29,6 +29,7 @@ class Captcha {
 				'name' => 'captcha',
 				'id' => 'captcha',
 				'sublabel' => '',
+				'label' => array('text' => 'Captcha Code'),
 			),
 			'image' => array(
 				'type' => 'custom',
@@ -39,8 +40,8 @@ class Captcha {
 	);
 
 	static $configs = array(
-		'label.text' => array('value' => 'Captcha', 'label' => 'Label', 'type' => 'text', 'class' => 'L', 'alt' => 'ghost'),
-		'label.position' => array('values' => 'left', 'label' => 'Label position', 'type' => 'dropdown', 'options' => array('left' => 'Left', 'top' => 'Top')),
+		'inputs.field.label.text' => array('value' => 'Captcha', 'label' => 'Label', 'type' => 'text', 'class' => 'L', 'alt' => 'ghost'),
+		'inputs.field.label.position' => array('values' => 'left', 'label' => 'Label position', 'type' => 'dropdown', 'options' => array('left' => 'Left', 'top' => 'Top')),
 		'inputs.field.sublabel' => array('value' => '', 'label' => 'Sub Label', 'type' => 'text', 'class' => 'L'),
 		'inputs.field.placeholder' => array('value' => '', 'label' => 'Placeholder', 'type' => 'text', 'class' => 'L'),
 		'inputs.field.maxlength' => array('value' => '', 'label' => 'Max Length', 'type' => 'text', 'class' => 'L'),
@@ -58,6 +59,10 @@ class Captcha {
 	}
 
 	public static function config($data = array(), $k = '{N}'){
+		//back check at v5.0.6
+		if(isset($data['label']) AND !isset($data['inputs']['field']['label'])){
+			$data['inputs']['field']['label'] = $data['label'];
+		}
 		echo \GCore\Helpers\Html::formStart('original_element_config single_element_config', 'captcha_origin_config');
 		?>
 		<ul class="nav nav-tabs">
@@ -71,8 +76,8 @@ class Captcha {
 			foreach(self::$configs as $name => $params){
 				$value = \GCore\Libs\Arr::getVal($data, explode('.', $name));
 				$field_name = implode('][', explode('.', $name));
-				$params['value'] = $value ? (($params['type'] == 'text') ? htmlspecialchars($value, ENT_QUOTES) : $value) : (isset($params['value']) ? $params['value'] : '');
-				$params['values'] = $value ? $value : (isset($params['values']) ? $params['values'] : '');
+				$params['value'] = !is_null($value) ? (($params['type'] == 'text') ? htmlspecialchars($value, ENT_QUOTES) : $value) : (isset($params['value']) ? $params['value'] : '');
+				$params['values'] = !is_null($value) ? $value : (isset($params['values']) ? $params['values'] : '');
 				echo \GCore\Helpers\Html::formLine('Form[extras][fields]['.$k.']['.$field_name.']', $params);
 			}
 			echo \GCore\Helpers\Html::input('Form[extras][fields]['.$k.'][inputs][field][type]', array('type' => 'hidden', 'alt' => 'ghost', 'value' => 'text'));

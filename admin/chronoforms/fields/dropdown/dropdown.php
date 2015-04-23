@@ -111,9 +111,9 @@ class Dropdown {
 						array('type' => 'custom', 'name' => 'Form[extras][fields]['.$k.'][events]['.$i.'][label]', 'code' => 'On'),
 						array('type' => 'dropdown', 'name' => 'Form[extras][fields]['.$k.'][events]['.$i.'][operator]', 'options' => array('=' => '=', '!=' => '!=')),
 						array('type' => 'text', 'name' => 'Form[extras][fields]['.$k.'][events]['.$i.'][state]', 'sublabel' => 'Value selected', 'class' => 'S'),
-						array('type' => 'dropdown', 'name' => 'Form[extras][fields]['.$k.'][events]['.$i.'][action]', 'options' => array('' => '', 'enable' => 'enable', 'disable' => 'disable', 'show' => 'show', 'hide' => 'hide', 'show_parent' => 'show parent', 'hide_parent' => 'hide parent', 'set_options' => 'Set Options', 'set_dynamic_options' => 'Set Dynamic Options', 'function' => 'function'), 'sublabel' => 'Action', 'style' => 'width:auto;'),
-						array('type' => 'text', 'name' => 'Form[extras][fields]['.$k.'][events]['.$i.'][target]', 'class' => 'S', 'sublabel' => 'field id, fn() or event'),
-						array('type' => 'textarea', 'name' => 'Form[extras][fields]['.$k.'][events]['.$i.'][options]', 'class' => 'A', 'rows' => 3, 'sublabel' => 'Options list or ajax event'),
+						array('type' => 'dropdown', 'name' => 'Form[extras][fields]['.$k.'][events]['.$i.'][action]', 'options' => array('' => '', 'enable' => 'enable', 'disable' => 'disable', 'show' => 'show', 'hide' => 'hide', 'show_parent' => 'show parent', 'hide_parent' => 'hide parent', 'set_options' => 'Set Options', 'set_dynamic_options' => 'Set Dynamic Options', 'set_dynamic_html' => 'Set Dynamic HTML', 'function' => 'function'), 'sublabel' => 'Action', 'style' => 'width:auto;'),
+						array('type' => 'text', 'name' => 'Form[extras][fields]['.$k.'][events]['.$i.'][target]', 'class' => 'S', 'sublabel' => 'Element ID/fn()/Event'),
+						array('type' => 'textarea', 'name' => 'Form[extras][fields]['.$k.'][events]['.$i.'][options]', 'class' => 'A', 'rows' => 3, 'sublabel' => 'Options list/AJAX event'),
 					)
 				));
 			}

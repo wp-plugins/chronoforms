@@ -40,7 +40,7 @@ defined("GCORE_SITE") or die;
 	<form action="<?php echo r_('index.php?ext=chronoforms'); ?>" method="post" name="admin_form" id="admin_form">
 		<?php
 			echo $this->DataTable->headerPanel($this->DataTable->_l('<h4>'.l_('FORMS_MANAGER').'</h4>').$this->DataTable->_r($this->Toolbar->renderBar()));
-			echo $this->DataTable->headerPanel($this->DataTable->_r($this->Paginator->getNav()));
+			echo $this->DataTable->headerPanel($this->DataTable->_l($this->Html->input('srch', array('type' => 'text', 'placeholder' => l_('CF_SEARCH_FORMS')))).$this->DataTable->_r($this->Paginator->getNav()));
 			$this->DataTable->create();
 			$columns_list = array(
 				'CHECK' => $this->Toolbar->selectAll(),
@@ -59,9 +59,11 @@ defined("GCORE_SITE") or die;
 
 			foreach($forms as $k => $form){
 				$tables = array();
-				foreach($forms[$k]['Form']['extras']['actions_config'] as $i => $action_config){
-					if(!empty($action_config['tablename'])){
-						$tables[] = $action_config['tablename'];
+				if(!empty($forms[$k]['Form']['extras']['actions_config'])){
+					foreach($forms[$k]['Form']['extras']['actions_config'] as $i => $action_config){
+						if(!empty($action_config['tablename'])){
+							$tables[] = $action_config['tablename'];
+						}
 					}
 				}
 				$tables = array_unique($tables);
@@ -75,7 +77,7 @@ defined("GCORE_SITE") or die;
 						<button type="button" class="btn btn-default btn-xs dropdown-toggle" data-g-toggle="dropdown">
 						<span class="caret"></span>
 						</button>
-						<ul class="dropdown-menu" role="menu">
+						<ul class="dropdown-menu gdropdown" role="menu">
 							'.$list.'
 						</ul>
 					</div>
@@ -86,7 +88,7 @@ defined("GCORE_SITE") or die;
 				$form_errors_list = array();
 				$form_warnings = 0;
 				$form_warnings_list = array();
-				$actions = $this->DnaBuilder->get_actions($forms[$k]['Form']['extras']['DNA']);
+				$actions = !empty($forms[$k]['Form']['extras']['DNA']) ? $this->DnaBuilder->get_actions($forms[$k]['Form']['extras']['DNA']) : array();
 				foreach($actions as $id => $action){
 					$id = str_replace('_', '', $id);
 					$action_class = '\GCore\Admin\Extensions\Chronoforms\Actions\\'.\GCore\Libs\Str::camilize($action).'\\'.\GCore\Libs\Str::camilize($action);
@@ -118,17 +120,28 @@ defined("GCORE_SITE") or die;
 				
 				$field_name_errors = false;
 				$field_name_warnings = false;
+				$invalid_names_j = array('event', 'option');
+				$invalid_names_wp = array('event', 'name');
 				//check invalid fields names
 				if(!empty($forms[$k]['Form']['extras']['fields'])){
 					foreach($forms[$k]['Form']['extras']['fields'] as $field){
-						if(strpos($field['name'], ' ') !== false){// OR strpos($field['name'], '-') !== false){
-							$field_name_errors = true;
-						}
-						if(preg_match("/^\d/", $field['name']) === 1){
-							$field_name_errors = true;
-						}
-						if($field['name'] == 'event' OR $field['name'] == 'option'){
-							$field_name_warnings = true;
+						if(isset($field['name'])){
+							if(strpos($field['name'], ' ') !== false){// OR strpos($field['name'], '-') !== false){
+								$field_name_errors = true;
+							}
+							if(preg_match("/^\d/", $field['name']) === 1){
+								$field_name_errors = true;
+							}
+							
+							if(\GCore\C::get('GSITE_PLATFORM') == 'wordpress'){
+								if(in_array($field['name'], $invalid_names_wp)){
+									$field_name_warnings = true;
+								}
+							}else{
+								if(in_array($field['name'], $invalid_names_j)){
+									$field_name_warnings = true;
+								}
+							}
 						}
 					}
 				}
@@ -136,7 +149,11 @@ defined("GCORE_SITE") or die;
 					$forms[$k]['Form']['diagnostics'] .= '<div class="alert alert-danger">'.l_('CF_FIELD_NAME_ERRORS').'</div>';
 				}
 				if($field_name_warnings){
-					$forms[$k]['Form']['diagnostics'] .= '<div class="alert alert-warning">'.l_('CF_FIELD_NAME_WARNINGS').'</div>';
+					if(\GCore\C::get('GSITE_PLATFORM') == 'wordpress'){
+						$forms[$k]['Form']['diagnostics'] .= '<div class="alert alert-warning">'.sprintf(l_('CF_FIELD_NAME_WARNINGS'), implode(", ", $invalid_names_wp), "Wordpress").'</div>';
+					}else{
+						$forms[$k]['Form']['diagnostics'] .= '<div class="alert alert-warning">'.sprintf(l_('CF_FIELD_NAME_WARNINGS'), implode(", ", $invalid_names_j), "Joomla").'</div>';
+					}
 				}
 			}
 

@@ -1,4 +1,4 @@
-GValidation.errors = {
+jQuery.gvalidation.errors = jQuery.extend(jQuery.gvalidation.errors, {
 	required: "Ovo polje je obavezno.",
 	alpha: "Ovo polje prima samo slova.",
 	alphanum: "Ovo polje prima samo slova i brojeve.",
@@ -26,4 +26,4 @@ GValidation.errors = {
 	select: "Odaberite vrijednost.",
 	group : 'Označite najmanje %1',
 	select_multiple : "Odaberite barem jednu vrijednost"
-}
+});

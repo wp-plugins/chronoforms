@@ -4,7 +4,7 @@
  * author
  *      Amir Hossein Hodjati Pour ~ Boplo.ir
 */
-GValidation.errors = {
+jQuery.gvalidation.errors = jQuery.extend(jQuery.gvalidation.errors, {
         required:"این فیلد الزامی است.",
         alpha:"لطفا فقط از حروف الفباء برای این بخش استفاده کنید. کاراکترهای دیگر و فاصله مجاز نیستند.",
         alphanum:"لطفا فقط از حروف الفباء و اعداد در این بخش استفاده کنید. کاراکترهای دیگر و فاصله مجاز نیستند.",
@@ -31,4 +31,4 @@ GValidation.errors = {
 		group: 'Please make at least %1 selection(s).',
         custom: "لطفا این گزینه را انتخاب کنید",
         select: "لطفا مقداری را انتخاب کنید"
-}
+});
