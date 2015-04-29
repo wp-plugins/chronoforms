@@ -5,7 +5,7 @@
  * Description: Add any type of forms to your WordPress site quickly & effeciently.
  * Author: chronoengine.com
  * Author URI: http://www.chronoengine.com
- * Version: 5.0.3
+ * Version: 5.0.9
  * License: GPL3
  * License URI: http://www.gnu.org/licenses/gpl.html
  */
